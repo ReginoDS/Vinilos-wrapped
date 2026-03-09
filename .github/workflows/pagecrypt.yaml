@@ -18,16 +18,14 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Encrypt Index
-        # Usamos --n con staticrypt para que no pida confirmación y forzamos el output
         run: |
-          npx staticrypt index.html "${{ secrets.PASSWORD }}" -o protected.html
-          # Reemplazamos el original por el protegido para que sea el que se suba
+          npx --yes staticrypt@latest index.html -p "${{ secrets.PASSWORD }}" -o protected.html --short
           mv protected.html index.html
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.' # Subimos la raíz, donde ahora index.html YA ESTÁ cifrado
+          path: '.'
 
   deploy:
     needs: build
@@ -39,4 +37,3 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-        
