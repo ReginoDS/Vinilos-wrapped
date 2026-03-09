@@ -11,36 +11,32 @@ permissions:
   id-token: write
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
       - name: Encrypt Index
+        # Usamos --n con staticrypt para que no pida confirmación y forzamos el output
         run: |
-          # 1. Creamos una carpeta temporal
-          mkdir out
-          
-          # 2. Ciframos el index.html original y lo metemos en 'out'
-          # Usamos npx para ejecutar staticrypt directamente
-          npx staticrypt index.html "${{ secrets.PASSWORD }}" -o out/index.html
-          
-          # 3. Copiamos tus carpetas de assets/imágenes a 'out' si existen
-          # Si no tienes carpetas extra, esto no hará nada malo
-          cp -r assets out/ 2>/dev/null || true
-          cp -r img out/ 2>/dev/null || true
+          npx staticrypt index.html "${{ secrets.PASSWORD }}" -o protected.html
+          # Reemplazamos el original por el protegido para que sea el que se suba
+          mv protected.html index.html
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: 'out'
+          path: '.' # Subimos la raíz, donde ahora index.html YA ESTÁ cifrado
 
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+        
