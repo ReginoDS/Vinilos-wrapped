@@ -708,6 +708,19 @@ function addGenreNew(){
 function removeGenreNew(i){ addGenres.splice(i,1); renderGenreTagsNew(); }
 document.getElementById('inGenreInput')?.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===','){e.preventDefault();addGenreNew();}});
 
+// Auto-convert Wikipedia media URLs to Special:FilePath on blur
+document.getElementById('inCover').addEventListener('blur', function() {
+  const v = this.value.trim();
+  if (!v) return;
+  // Match: https://en.wikipedia.org/wiki/...#/media/File:FileName.ext
+  // or the encoded version with File%3A
+  const m = v.match(/wikipedia\.org\/wiki\/[^#]*#\/media\/File[:%3A]+(.+)/i);
+  if (m) {
+    const filename = decodeURIComponent(m[1]);
+    this.value = `https://en.wikipedia.org/w/index.php?title=Special:FilePath/${encodeURIComponent(filename)}&width=300`;
+  }
+});
+
 function saveVinyl(){
   const ar=document.getElementById('inArtist').value.trim();
   const al=document.getElementById('inAlbum').value.trim();
