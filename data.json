@@ -2707,6 +2707,18 @@
       ],
       "country": "U.K.",
       "cover": "https://en.wikipedia.org/w/index.php?title=Special:FilePath/Arctic_Monkeys_-_AM.png&width=300"
+    },
+    {
+      "artist": "Hozier",
+      "album": "Wasteland, baby!",
+      "edition": "",
+      "year": 2019,
+      "genres": [
+        "indie"
+      ],
+      "country": "Irlanda",
+      "cover": "https://en.wikipedia.org/wiki/Wasteland,_Baby!#/media/File%3AHozier_-_Wasteland%2C_Baby!.png",
+      "id": 1773083042871
     }
   ]
 }
