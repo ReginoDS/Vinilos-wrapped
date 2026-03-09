@@ -1,38 +1,13 @@
-name: Deploy Protected Site
-
-on:
-  push:
-    branches: ["main"]
-  workflow_dispatch:
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-
-    - name: Install Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-
-    - name: Encrypt with StatiCrypt
+- name: Encrypt with StatiCrypt
       run: |
-        # Instalamos staticrypt de forma global temporalmente
-        npx staticrypt index.html "${{ secrets.PASSWORD }}" -o index.html
+        # Creamos una carpeta para el contenido público
+        mkdir public
+        # Ciframos el index.html y lo guardamos en la carpeta public
+        npx staticrypt index.html "${{ secrets.PASSWORD }}" -o public/index.html
+        # Copiamos cualquier otro archivo necesario (css, js, imágenes) a public
+        # cp -r assets public/  <-- Descomenta si tienes carpetas de assets
 
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
       with:
-        path: '.'
-
-    - name: Deploy to GitHub Pages
-      id: deployment
-      uses: actions/deploy-pages@v4
-      
+        path: './public'  # IMPORTANTE: Subimos la carpeta con el archivo cifrado
