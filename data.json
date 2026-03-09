@@ -1,90 +1,4 @@
 {
-  "vinyls": [
-    {
-      "id": 1,
-      "artist": "Dua Lipa",
-      "album": "Future Nostalgia",
-      "edition": "The Moonlight Edition",
-      "year": 2021,
-      "genres": [
-        "pop"
-      ],
-      "country": "U.K.",
-      "cover": "https://en.wikipedia.org/w/index.php?title=Special:FilePath/Dua_Lipa_-_Future_Nostalgia_The_Moonlight_Edition.png&width=300"
-    },
-    {
-      "id": 2,
-      "artist": "Dua Lipa",
-      "album": "Radical Optimism",
-      "edition": "Amazon Edition",
-      "year": 2024,
-      "genres": [
-        "pop"
-      ],
-      "country": "U.K.",
-      "cover": "https://en.wikipedia.org/w/index.php?title=Special:FilePath/Dua_Lipa_-_Radical_Optimism.png&width=300"
-    },
-    {
-      "id": 3,
-      "artist": "Imagine Dragons",
-      "album": "Evolve",
-      "edition": "",
-      "year": 2017,
-      "genres": [
-        "rock"
-      ],
-      "country": "U.S.A.",
-      "cover": "https://en.wikipedia.org/w/index.php?title=Special:FilePath/ImagineDragonsEvolve.jpg&width=300"
-    },
-    {
-      "id": 4,
-      "artist": "Hozier",
-      "album": "Hozier",
-      "edition": "10th Anniversary Edition",
-      "year": 2014,
-      "genres": [
-        "indie"
-      ],
-      "country": "Irlanda",
-      "cover": "https://en.wikipedia.org/w/index.php?title=Special:FilePath/Hozier_-_Hozier.png&width=300"
-    },
-    {
-      "id": 5,
-      "artist": "Coldplay",
-      "album": "A Rush of Blood to the Head",
-      "edition": "",
-      "year": 2002,
-      "genres": [
-        "pop"
-      ],
-      "country": "U.K.",
-      "cover": "https://en.wikipedia.org/w/index.php?title=Special:FilePath/Coldplay_-_A_Rush_of_Blood_to_the_Head_Cover.png&width=300"
-    },
-    {
-      "id": 6,
-      "artist": "ABBA",
-      "album": "ABBA Greatest Hits",
-      "edition": "",
-      "year": 1976,
-      "genres": [
-        "pop"
-      ],
-      "country": "Suecia",
-      "cover": "https://en.wikipedia.org/w/index.php?title=Special:FilePath/ABBA_-_Greatest_Hits_(UK).jpg&width=300"
-    },
-    {
-      "id": 7,
-      "artist": "Arctic Monkeys",
-      "album": "AM",
-      "edition": "",
-      "year": 2013,
-      "genres": [
-        "rock"
-      ],
-      "country": "U.K.",
-      "cover": "https://en.wikipedia.org/w/index.php?title=Special:FilePath/Arctic_Monkeys_-_AM.png&width=300"
-    }
-  ],
   "plays": [
     {
       "artist": "Arctic Monkeys",
@@ -1405,6 +1319,104 @@
       "album": "Radical Optimism",
       "ts": "2026-03-08T22:12:00",
       "user": "Novia"
+    }
+  ],
+  "vinyls": [
+    {
+      "id": 1,
+      "artist": "Dua Lipa",
+      "album": "Future Nostalgia",
+      "edition": "The Moonlight Edition",
+      "year": 2021,
+      "genres": [
+        "pop"
+      ],
+      "country": "U.K.",
+      "cover": "https://en.wikipedia.org/w/index.php?title=Special:FilePath/Dua_Lipa_-_Future_Nostalgia_The_Moonlight_Edition.png&width=300"
+    },
+    {
+      "id": 2,
+      "artist": "Dua Lipa",
+      "album": "Radical Optimism",
+      "edition": "Amazon Edition",
+      "year": 2024,
+      "genres": [
+        "pop"
+      ],
+      "country": "U.K.",
+      "cover": "https://en.wikipedia.org/w/index.php?title=Special:FilePath/Dua_Lipa_-_Radical_Optimism.png&width=300"
+    },
+    {
+      "id": 3,
+      "artist": "Imagine Dragons",
+      "album": "Evolve",
+      "edition": "",
+      "year": 2017,
+      "genres": [
+        "rock"
+      ],
+      "country": "U.S.A.",
+      "cover": "https://en.wikipedia.org/w/index.php?title=Special:FilePath/ImagineDragonsEvolve.jpg&width=300"
+    },
+    {
+      "id": 4,
+      "artist": "Hozier",
+      "album": "Hozier",
+      "edition": "10th Anniversary Edition",
+      "year": 2014,
+      "genres": [
+        "indie"
+      ],
+      "country": "Irlanda",
+      "cover": "https://en.wikipedia.org/w/index.php?title=Special:FilePath/Hozier_-_Hozier.png&width=300"
+    },
+    {
+      "id": 5,
+      "artist": "Coldplay",
+      "album": "A Rush of Blood to the Head",
+      "edition": "",
+      "year": 2002,
+      "genres": [
+        "pop"
+      ],
+      "country": "U.K.",
+      "cover": "https://en.wikipedia.org/w/index.php?title=Special:FilePath/Coldplay_-_A_Rush_of_Blood_to_the_Head_Cover.png&width=300"
+    },
+    {
+      "id": 6,
+      "artist": "ABBA",
+      "album": "ABBA Greatest Hits",
+      "edition": "",
+      "year": 1976,
+      "genres": [
+        "pop"
+      ],
+      "country": "Suecia",
+      "cover": "https://en.wikipedia.org/w/index.php?title=Special:FilePath/ABBA_-_Greatest_Hits_(UK).jpg&width=300"
+    },
+    {
+      "id": 7,
+      "artist": "Arctic Monkeys",
+      "album": "AM",
+      "edition": "",
+      "year": 2013,
+      "genres": [
+        "rock"
+      ],
+      "country": "U.K.",
+      "cover": "https://en.wikipedia.org/w/index.php?title=Special:FilePath/Arctic_Monkeys_-_AM.png&width=300"
+    },
+    {
+      "artist": "Hozier",
+      "album": "Wasteland, baby!",
+      "edition": "",
+      "year": 2019,
+      "genres": [
+        "indie"
+      ],
+      "country": "Irlanda",
+      "cover": "https://en.wikipedia.org/wiki/Wasteland,_Baby!#/media/File%3AHozier_-_Wasteland%2C_Baby!.png",
+      "id": 1773084071571
     }
   ]
 }
