@@ -2719,6 +2719,18 @@
       "country": "Irlanda",
       "cover": "https://en.wikipedia.org/wiki/Wasteland,_Baby!#/media/File%3AHozier_-_Wasteland%2C_Baby!.png",
       "id": 1773084071571
+    },
+    {
+      "artist": "H",
+      "album": "H",
+      "edition": "H",
+      "year": 6,
+      "genres": [
+        "indie"
+      ],
+      "country": "Irlanda",
+      "cover": "https://en.wikipedia.org/w/index.php?title=Special:FilePath/Hozier_-_Wasteland%2C_Baby!.png&width=300",
+      "id": 1773084205848
     }
   ]
 }
