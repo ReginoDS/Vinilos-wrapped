@@ -11,35 +11,28 @@ permissions:
   id-token: write
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
-    env:
-      PASS: ${{ secrets.PASSWORD }}
     steps:
     - name: Checkout
       uses: actions/checkout@v4
 
-    - name: Encrypt index.html
+    - name: Install Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Encrypt with StatiCrypt
       run: |
-        curl -sL https://pagecrypt.greenheartgames.com/pagecrypt-1.2.1.js > pagecrypt.js
-        node -e "
-          const fs = require('fs');
-          const PageCrypt = require('./pagecrypt.js');
-          const html = fs.readFileSync('index.html', 'utf8');
-          const encrypted = PageCrypt.encrypt(html, process.env.PASS);
-          fs.writeFileSync('index.html', encrypted);
-        "
+        # Instalamos staticrypt de forma global temporalmente
+        npx staticrypt index.html "${{ secrets.PASSWORD }}" -o index.html
 
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
+      with:
+        path: '.'
 
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
     - name: Deploy to GitHub Pages
       id: deployment
       uses: actions/deploy-pages@v4
+      
