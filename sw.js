@@ -1,5 +1,5 @@
 // Service Worker — Vinilos PWA
-const CACHE = 'vinilos-v2';
+const CACHE = 'vinilos-v3';
 const ASSETS = [
   './',
   './index.html',
