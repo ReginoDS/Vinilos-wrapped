@@ -52,10 +52,10 @@ header{padding:16px 18px 10px;flex-shrink:0;border-bottom:1px solid var(--border
 .user-chip{background:var(--s2);border:1px solid var(--border);color:var(--muted);font-size:10px;padding:5px 10px;border-radius:100px;text-transform:uppercase;letter-spacing:1px;}
 
 /* STATS ROW */
-.stats-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
-.stat-pill{background:var(--s2);border:1px solid var(--border);border-radius:var(--radius);padding:7px 10px;}
-.sp-label{font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:3px;}
-.sp-val{font-family:'DM Serif Display',serif;font-size:18px;color:var(--text);}
+.stats-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.stat-pill{background:var(--bg);padding:8px 6px;text-align:center;}
+.sp-label{font-size:8px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:3px;}
+.sp-val{font-family:'DM Serif Display',serif;font-size:22px;color:var(--accent);line-height:1;}
 
 /* SYNC */
 .sync{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted);margin-top:6px;}
@@ -145,7 +145,7 @@ header{padding:16px 18px 10px;flex-shrink:0;border-bottom:1px solid var(--border
 .vcard-title{font-family:'DM Serif Display',serif;font-size:12px;color:var(--text);line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
 .vcard-edition{font-style:italic;font-size:9px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .vcard-artist{font-size:10px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.vcard-meta{font-size:9px;color:var(--dim);margin-top:1px;}
+.vcard-meta{font-size:9px;color:#555;margin-top:1px;}
 
 .empty{grid-column:1/-1;text-align:center;padding:50px 20px;color:var(--muted);}
 .empty .big{font-size:44px;margin-bottom:14px;}
@@ -273,6 +273,30 @@ select.finput option{background:var(--s2);}
 /* LOADING */
 .loading{display:flex;align-items:center;justify-content:center;gap:8px;padding:40px;color:var(--muted);font-size:12px;}
 .spin-icon{animation:spin 1.5s linear infinite;display:inline-block;}
+
+/* ── MAIN TABS (3, uniform) ── */
+.tabs-main{display:flex;flex-shrink:0;border-bottom:1px solid var(--border);}
+.tabs-main .tab{flex:1;text-align:center;padding:11px 4px;}
+
+/* ── SUBTABS ── */
+.subtabs{display:flex;padding:0 18px;flex-shrink:0;border-bottom:1px solid var(--border);background:var(--surface);}
+.subtab{padding:9px 14px;font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;background:none;border-top:none;border-left:none;border-right:none;font-family:'DM Mono',monospace;transition:all .15s;}
+.subtab.active{color:var(--accent);border-bottom-color:var(--accent2);}
+.subview{display:none;flex:1;overflow:hidden;flex-direction:column;}
+.subview.active{display:flex;}
+
+/* ── EDIT BUTTON ── */
+.btn-e{background:var(--s2);color:var(--accent2);border:1px solid var(--accent2);}
+
+/* ── LOG VIEW ── */
+.log-item{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border);}
+.log-item:last-child{border-bottom:none;}
+.log-disc{width:38px;height:38px;border-radius:50%;flex-shrink:0;overflow:hidden;background:conic-gradient(from 0deg,#0d0d0d 0,#1a1a1a 18deg,#0d0d0d 36deg,#1a1a1a 54deg,#0d0d0d 72deg,#1a1a1a 90deg,#0d0d0d 108deg,#1a1a1a 126deg,#0d0d0d 144deg,#1a1a1a 162deg,#0d0d0d 180deg,#1a1a1a 198deg,#0d0d0d 216deg,#1a1a1a 234deg,#0d0d0d 252deg,#1a1a1a 270deg,#0d0d0d 288deg,#1a1a1a 306deg,#0d0d0d 324deg,#1a1a1a 342deg,#0d0d0d 360deg);border:1px solid #222;position:relative;}
+.log-disc img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.log-info{flex:1;min-width:0;}
+.log-album{font-family:'DM Serif Display',serif;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.log-artist{font-size:10px;color:var(--muted);margin-top:1px;}
+.log-time{font-size:9px;color:var(--dim);text-align:right;flex-shrink:0;line-height:1.6;}
 </style>
 </head>
 <body>
@@ -345,10 +369,49 @@ select.finput option{background:var(--s2);}
     <select id="inCountrySelect" class="finput" onchange="onCountrySelect()"><option value="">Selecciona…</option><option value="__new__">Otro país…</option></select>
     <input type="text" id="inCountryNew" class="finput" placeholder="Escribe el país" style="display:none;margin-top:6px" autocomplete="off">
   </div>
-  <div class="field"><label>URL portada <span style="color:var(--dim)">(opcional)</span></label><input type="url" id="inCover" class="finput" placeholder="https://…" autocomplete="off"></div>
+  <div class="field"><label>URL portada <span style="color:var(--dim)">(opcional)</span></label><input type="url" id="inCover" class="finput" placeholder="https://… o URL de Wikipedia" autocomplete="off"></div>
+  <div class="field"><label>Lista de YouTube <span style="color:var(--dim)">(opcional)</span></label><input type="url" id="inYoutube" class="finput" placeholder="https://youtube.com/playlist?list=…" autocomplete="off"></div>
   <div class="macts">
     <button class="btn btn-s" onclick="closeModal('addModal')" style="flex:.5">Cancelar</button>
     <button class="btn btn-p" onclick="saveVinyl()">Añadir vinilo</button>
+  </div>
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     EDIT VINYL MODAL
+══════════════════════════════════════════ -->
+<div class="moverlay" id="editModal">
+<div class="modal">
+  <div class="mhandle"></div>
+  <div class="mtitle">Editar vinilo</div>
+  <div class="msub">Modifica los datos o elimina el disco</div>
+  <div class="field"><label>Artista</label><input type="text" id="edArtist" class="finput" autocomplete="off"></div>
+  <div class="field"><label>Álbum</label><input type="text" id="edAlbum" class="finput" autocomplete="off"></div>
+  <div class="field"><label>Edición <span style="color:var(--dim)">(opcional)</span></label><input type="text" id="edEdition" class="finput" autocomplete="off"></div>
+  <div class="field"><label>Año</label><input type="number" id="edYear" class="finput" min="1900" max="2099"></div>
+  <div class="field">
+    <label>Géneros</label>
+    <div class="genres-wrap" id="genreTagsEdit"></div>
+    <div class="genre-add-row">
+      <input type="text" id="edGenreInput" class="finput" placeholder="ej: pop, indie…" autocomplete="off">
+      <button class="genre-add-btn" onclick="addGenreEdit()">+ Añadir</button>
+    </div>
+  </div>
+  <div class="field">
+    <label>País</label>
+    <select id="edCountrySelect" class="finput" onchange="onCountrySelectEdit()"><option value="">Selecciona…</option><option value="__new__">Otro país…</option></select>
+    <input type="text" id="edCountryNew" class="finput" placeholder="Escribe el país" style="display:none;margin-top:6px" autocomplete="off">
+  </div>
+  <div class="field"><label>URL portada <span style="color:var(--dim)">(opcional)</span></label><input type="url" id="edCover" class="finput" placeholder="https://… o URL de Wikipedia" autocomplete="off"></div>
+  <div class="field"><label>Lista de YouTube <span style="color:var(--dim)">(opcional)</span></label><input type="url" id="edYoutube" class="finput" placeholder="https://youtube.com/playlist?list=…" autocomplete="off"></div>
+  <div class="macts" style="flex-direction:column;gap:8px">
+    <div style="display:flex;gap:10px;width:100%">
+      <button class="btn btn-s" onclick="closeModal('editModal')" style="flex:.5">Cancelar</button>
+      <button class="btn btn-p" onclick="saveEdit()">Guardar cambios</button>
+    </div>
+    <button class="btn" style="background:#1a0a0a;color:#e05252;border:1px solid #3a1a1a;width:100%" onclick="deleteVinyl()">🗑 Eliminar vinilo</button>
   </div>
 </div>
 </div>
@@ -397,24 +460,36 @@ select.finput option{background:var(--s2);}
     <div class="sync"><div class="sdot" id="sdot"></div><span id="slabel">local</span></div>
   </header>
 
-  <div class="tabs">
-    <button class="tab active" data-tab="col" onclick="showTab('col')">Colección</button>
-    <button class="tab" data-tab="smonth" onclick="showTab('smonth')">Mes <span id="mBadge" style="display:none" class="wbadge">✦</span></button>
-    <button class="tab" data-tab="syear" onclick="showTab('syear')">Año <span id="yBadge" style="display:none" class="wbadge">✦</span></button>
-    <button class="tab" data-tab="hist" onclick="showTab('hist')">Historial</button>
+  <div class="tabs tabs-main">
+    <button class="tab active" data-tab="col" onclick="showMainTab('col')">Colección</button>
+    <button class="tab" data-tab="wrapped" onclick="showMainTab('wrapped')">Wrapped</button>
+    <button class="tab" data-tab="log" onclick="showMainTab('log')">Historial</button>
   </div>
 
+  <!-- COLECCIÓN -->
   <div class="view active" id="view-col">
     <div class="vgrid" id="vinylGrid"></div>
-    <div class="bbar">
-      <button class="btn btn-s" onclick="openAddVinyl()">+ Añadir</button>
-      <button class="btn btn-p" id="playBtn" disabled onclick="openPlayModal()">▶ Reproducir</button>
+    <div class="bbar" id="bbar">
+      <button class="btn btn-s" id="addBtn" onclick="openAddVinyl()">+ Añadir</button>
+      <button class="btn btn-e" id="editBtn" style="display:none" onclick="openEditVinyl()">✎ Editar</button>
+      <button class="btn btn-p" id="playBtn" style="display:none" onclick="openPlayModal()">▶ Reproducir</button>
     </div>
   </div>
 
-  <div class="view" id="view-smonth"><div class="sscroll" id="monthContent"></div></div>
-  <div class="view" id="view-syear"><div class="sscroll" id="yearContent"></div></div>
-  <div class="view" id="view-hist"><div class="sscroll" id="histContent"></div></div>
+  <!-- WRAPPED -->
+  <div class="view" id="view-wrapped">
+    <div class="subtabs">
+      <button class="subtab active" data-stab="smonth" onclick="showSubTab('smonth')">Mes <span id="mBadge" style="display:none" class="wbadge">✦</span></button>
+      <button class="subtab" data-stab="syear" onclick="showSubTab('syear')">Año <span id="yBadge" style="display:none" class="wbadge">✦</span></button>
+      <button class="subtab" data-stab="hist" onclick="showSubTab('hist')">Resumen histórico</button>
+    </div>
+    <div class="subview active" id="subview-smonth"><div class="sscroll" id="monthContent"></div></div>
+    <div class="subview" id="subview-syear"><div class="sscroll" id="yearContent"></div></div>
+    <div class="subview" id="subview-hist"><div class="sscroll" id="histContent"></div></div>
+  </div>
+
+  <!-- LOG CRONOLÓGICO -->
+  <div class="view" id="view-log"><div class="sscroll" id="logContent"></div></div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -600,19 +675,34 @@ let selV=null;
 let currentTab='col';
 let addGenres=[];
 
+
 // ════════════════════════════════════════════════════════════
-//  TABS
+//  MAIN TABS + SUBTABS
 // ════════════════════════════════════════════════════════════
-function showTab(tab){
-  currentTab=tab;
-  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.getElementById('view-'+tab).classList.add('active');
-  document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
-  if(tab==='smonth') renderMonth();
-  if(tab==='syear') renderYear();
-  if(tab==='hist') renderHist();
+let currentSubTab = 'smonth';
+
+function showMainTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.tabs-main .tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('view-' + tab).classList.add('active');
+  document.querySelector(`.tabs-main [data-tab="${tab}"]`).classList.add('active');
+  if (tab === 'wrapped') showSubTab(currentSubTab, false);
+  if (tab === 'log') renderLog();
 }
+
+function showSubTab(stab, rerender=true) {
+  currentSubTab = stab;
+  document.querySelectorAll('.subview').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.subtab').forEach(t => t.classList.remove('active'));
+  document.getElementById('subview-' + stab).classList.add('active');
+  document.querySelector(`[data-stab="${stab}"]`).classList.add('active');
+  if (stab === 'smonth') renderMonth();
+  if (stab === 'syear') renderYear();
+  if (stab === 'hist') renderHist();
+}
+
+
 
 // ════════════════════════════════════════════════════════════
 //  HEADER COUNTERS
@@ -628,7 +718,7 @@ function updateCounters(){
 // ════════════════════════════════════════════════════════════
 //  COLLECTION GRID
 // ════════════════════════════════════════════════════════════
-function ytUrl(ar,al){ return 'https://www.youtube.com/results?search_query='+encodeURIComponent(ar+' '+al+' full album'); }
+function ytUrl(v){ return v.youtube && v.youtube.trim() ? v.youtube : 'https://www.youtube.com/results?search_query='+encodeURIComponent(v.artist+' '+v.album+' full album'); }
 
 function renderCollection(){
   const vinyls=DB.vinyls;
@@ -651,7 +741,7 @@ function renderCollection(){
           ${cov}
           <div class="disc-hole"></div>
         </div>
-        <a class="yt-overlay" href="${ytUrl(v.artist,v.album)}" target="_blank" onclick="event.stopPropagation()" title="Buscar en YouTube">▶</a>
+        <a class="yt-overlay" href="${ytUrl(v)}" target="_blank" onclick="event.stopPropagation()" title="Buscar en YouTube">▶</a>
         <div class="sel-tick">${isSel?'✓':''}</div>
       </div>
       <div class="vcard-info">
@@ -669,6 +759,22 @@ function selectV(id){
   const v=DB.vinyls.find(x=>x.id===id);
   selV=selV?.id===id?null:v;
   renderCollection();
+  updateBbar();
+}
+
+function updateBbar(){
+  const addBtn=document.getElementById('addBtn');
+  const editBtn=document.getElementById('editBtn');
+  const playBtn=document.getElementById('playBtn');
+  if(selV){
+    addBtn.style.display='none';
+    editBtn.style.display='flex';
+    playBtn.style.display='flex';
+  } else {
+    addBtn.style.display='flex';
+    editBtn.style.display='none';
+    playBtn.style.display='none';
+  }
 }
 
 // ════════════════════════════════════════════════════════════
@@ -676,7 +782,7 @@ function selectV(id){
 // ════════════════════════════════════════════════════════════
 function openAddVinyl(){
   addGenres=[];
-  ['inArtist','inAlbum','inEdition','inCover','inGenreInput','inCountryNew'].forEach(id=>document.getElementById(id).value='');
+  ['inArtist','inAlbum','inEdition','inCover','inYoutube','inGenreInput','inCountryNew'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('inYear').value='';
   document.getElementById('inCountrySelect').value='';
   document.getElementById('inCountryNew').style.display='none';
@@ -728,13 +834,129 @@ function saveVinyl(){
   const ed=document.getElementById('inEdition').value.trim();
   const yr=parseInt(document.getElementById('inYear').value)||null;
   const cov=document.getElementById('inCover').value.trim();
+  const yt=document.getElementById('inYoutube').value.trim();
   const csel=document.getElementById('inCountrySelect').value;
   const country=csel==='__new__'?document.getElementById('inCountryNew').value.trim():csel;
-  DB.addVinyl({artist:ar,album:al,edition:ed,year:yr,genres:[...addGenres],country,cover:cov});
+  DB.addVinyl({artist:ar,album:al,edition:ed,year:yr,genres:[...addGenres],country,cover:cov,youtube:yt});
   closeModal('addModal');
   renderAll();
   showToast('Vinilo añadido ✓');
   if(GH.ok) syncNow();
+}
+
+
+// ════════════════════════════════════════════════════════════
+//  EDIT VINYL
+// ════════════════════════════════════════════════════════════
+let editGenres = [];
+
+function openEditVinyl(){
+  if(!selV) return;
+  const v = selV;
+  document.getElementById('edArtist').value = v.artist||'';
+  document.getElementById('edAlbum').value = v.album||'';
+  document.getElementById('edEdition').value = v.edition||'';
+  document.getElementById('edYear').value = v.year||'';
+  document.getElementById('edCover').value = v.cover||'';
+  document.getElementById('edYoutube').value = v.youtube||'';
+  editGenres = [...(v.genres||[])];
+  renderGenreTagsEdit();
+  // Populate country dropdown
+  const countries=[...new Set(DB.vinyls.map(x=>x.country).filter(Boolean))].sort();
+  const sel=document.getElementById('edCountrySelect');
+  sel.innerHTML='<option value="">Selecciona…</option>'+countries.map(c=>`<option value="${h(c)}"${c===v.country?' selected':''}>${h(c)}</option>`).join('')+'<option value="__new__">Otro país…</option>';
+  document.getElementById('edCountryNew').style.display='none';
+  openModal('editModal');
+}
+
+function onCountrySelectEdit(){
+  const v=document.getElementById('edCountrySelect').value;
+  document.getElementById('edCountryNew').style.display=(v==='__new__')?'block':'none';
+}
+
+function renderGenreTagsEdit(){
+  document.getElementById('genreTagsEdit').innerHTML=editGenres.map((g,i)=>
+    `<span class="genre-tag">${h(g)}<span class="rm" onclick="removeGenreEdit(${i})">×</span></span>`
+  ).join('');
+}
+function addGenreEdit(){
+  const inp=document.getElementById('edGenreInput');
+  const val=inp.value.trim().toLowerCase();
+  if(val&&!editGenres.includes(val)){ editGenres.push(val); renderGenreTagsEdit(); }
+  inp.value='';
+}
+function removeGenreEdit(i){ editGenres.splice(i,1); renderGenreTagsEdit(); }
+document.getElementById('edGenreInput')?.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===','){e.preventDefault();addGenreEdit();}});
+
+// Wikipedia URL converter for edit modal too
+document.getElementById('edCover').addEventListener('blur', function() {
+  const v = this.value.trim();
+  if (!v) return;
+  const m = v.match(/wikipedia\.org\/wiki\/[^#]*#\/media\/File[:%3A]+(.+)/i);
+  if (m) {
+    const filename = decodeURIComponent(m[1]);
+    this.value = `https://en.wikipedia.org/w/index.php?title=Special:FilePath/${encodeURIComponent(filename)}&width=300`;
+  }
+});
+
+function saveEdit(){
+  if(!selV) return;
+  const ar=document.getElementById('edArtist').value.trim();
+  const al=document.getElementById('edAlbum').value.trim();
+  if(!ar||!al){ showToast('Artista y álbum son obligatorios'); return; }
+  const ed=document.getElementById('edEdition').value.trim();
+  const yr=parseInt(document.getElementById('edYear').value)||null;
+  const cov=document.getElementById('edCover').value.trim();
+  const yt=document.getElementById('edYoutube').value.trim();
+  const csel=document.getElementById('edCountrySelect').value;
+  const country=csel==='__new__'?document.getElementById('edCountryNew').value.trim():csel;
+  const vinyls=DB.vinyls;
+  const idx=vinyls.findIndex(x=>x.id===selV.id);
+  if(idx<0) return;
+  vinyls[idx]={...vinyls[idx],artist:ar,album:al,edition:ed,year:yr,genres:[...editGenres],country,cover:cov,youtube:yt};
+  DB.vinyls=vinyls;
+  selV=vinyls[idx];
+  closeModal('editModal');
+  renderAll();
+  showToast('Vinilo actualizado ✓');
+  if(GH.ok) syncNow();
+}
+
+function deleteVinyl(){
+  if(!selV) return;
+  if(!confirm(`¿Eliminar "${selV.album}"? Esta acción no se puede deshacer.`)) return;
+  DB.vinyls=DB.vinyls.filter(x=>x.id!==selV.id);
+  selV=null;
+  closeModal('editModal');
+  updateBbar();
+  renderAll();
+  showToast('Vinilo eliminado');
+  if(GH.ok) syncNow();
+}
+
+// ════════════════════════════════════════════════════════════
+//  LOG CRONOLÓGICO
+// ════════════════════════════════════════════════════════════
+function renderLog(){
+  const c=document.getElementById('logContent');
+  const plays=[...DB.plays].reverse();
+  if(!plays.length){c.innerHTML='<div class="nodata">Sin reproducciones aún.</div>';return;}
+  const vinyls=DB.vinyls;
+  c.innerHTML='<div style="padding:0 18px 38px">'+plays.map(p=>{
+    const v=vinyls.find(x=>x.album===p.album&&x.artist===p.artist);
+    const dt=new Date(p.ts);
+    const dateStr=dt.toLocaleDateString('es-ES',{day:'numeric',month:'short'});
+    const timeStr=dt.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+    const img=v?.cover?`<img src="${h(v.cover)}" alt="" onerror="this.style.display='none'">`:'';
+    return `<div class="log-item">
+      <div class="log-disc">${img}</div>
+      <div class="log-info">
+        <div class="log-album">${h(p.album)}</div>
+        <div class="log-artist">${h(p.artist)}</div>
+      </div>
+      <div class="log-time">${dateStr}<br>${timeStr}</div>
+    </div>`;
+  }).join('')+'</div>';
 }
 
 // ════════════════════════════════════════════════════════════
@@ -782,7 +1004,7 @@ function openModal(id){
   document.getElementById(id).classList.add('open');
 }
 function closeModal(id){ document.getElementById(id).classList.remove('open'); }
-['addModal','playModal','configModal'].forEach(id=>{
+['addModal','editModal','playModal','configModal'].forEach(id=>{
   document.getElementById(id).addEventListener('click',function(e){if(e.target===this)closeModal(id);});
 });
 
@@ -864,10 +1086,7 @@ function renderMonth(){
   const MF=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   const c=document.getElementById('monthContent');
   const p=DB.plays.filter(x=>{const t=new Date(x.ts);return t.getMonth()===m&&t.getFullYear()===y;});
-  if(d<25){
-    c.innerHTML=`<div class="ssect"><div class="slabel">Mes actual — ${MF[m]} ${y}</div><div class="locked"><div class="locked-i">◷</div><div class="locked-t">El resumen mensual se activa el día 25.<br>Faltan <strong>${25-d}</strong> días.</div></div></div>`;
-    return;
-  }
+  // Month always unlocked (testing mode)
   if(!p.length){c.innerHTML=`<div class="nodata">Sin escuchas este mes.</div>`;return;}
   const ta=enrichAlbums(p),tar=enrichArtists(p),bd=topDay(p);
   c.innerHTML=`
@@ -1086,12 +1305,16 @@ function launchConfetti(){
 // ════════════════════════════════════════════════════════════
 function renderAll(){
   renderCollection();
+  updateBbar();
   updateCounters();
   updateBadges();
   document.getElementById('userChip').textContent=USER.name||'—';
-  if(currentTab==='smonth') renderMonth();
-  if(currentTab==='syear') renderYear();
-  if(currentTab==='hist') renderHist();
+  if(currentTab==='wrapped'){
+    if(currentSubTab==='smonth') renderMonth();
+    if(currentSubTab==='syear') renderYear();
+    if(currentSubTab==='hist') renderHist();
+  }
+  if(currentTab==='log') renderLog();
 }
 
 // ════════════════════════════════════════════════════════════
