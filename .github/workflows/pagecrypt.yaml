@@ -19,7 +19,7 @@ jobs:
 
       - name: Encrypt Index
         run: |
-          npx --yes staticrypt@latest index.html -p "${{ secrets.PASSWORD }}" -o protected.html --short
+          npx --yes staticrypt@3 index.html -p "${{ secrets.PASSWORD }}" -o protected.html --short
           mv protected.html index.html
 
       - name: Upload artifact
