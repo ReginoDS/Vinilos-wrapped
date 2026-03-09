@@ -22,25 +22,26 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Encrypt and Prepare
+      - name: Encrypt Index
         run: |
-          # 1. Creamos la carpeta limpia para el despliegue
-          mkdir public_site
+          # 1. Creamos una carpeta temporal
+          mkdir out
           
-          # 2. Copiamos TODO excepto el index.html original a la carpeta de salida
-          # Usamos rsync si está disponible o un cp selectivo
-          cp -r assets public_site/ 2>/dev/null || true
-          # (Si tienes más carpetas como 'css' o 'js', añádelas aquí)
-
-          # 3. Ciframos el index.html y lo guardamos DIRECTAMENTE en public_site
-          # Esto garantiza que el index.html en public_site SEA el cifrado
-          npx staticrypt index.html "${{ secrets.PASSWORD }}" -o public_site/index.html
+          # 2. Ciframos el index.html original y lo metemos en 'out'
+          # Usamos npx para ejecutar staticrypt directamente
+          npx staticrypt index.html "${{ secrets.PASSWORD }}" -o out/index.html
+          
+          # 3. Copiamos tus carpetas de assets/imágenes a 'out' si existen
+          # Si no tienes carpetas extra, esto no hará nada malo
+          cp -r assets out/ 2>/dev/null || true
+          cp -r img out/ 2>/dev/null || true
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: 'public_site'
+          path: 'out'
 
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+        
