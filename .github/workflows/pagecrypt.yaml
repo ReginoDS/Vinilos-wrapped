@@ -10,4 +10,4 @@
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
       with:
-        path: './public'  # IMPORTANTE: Subimos la carpeta con el archivo cifrado
+        path: './public'
