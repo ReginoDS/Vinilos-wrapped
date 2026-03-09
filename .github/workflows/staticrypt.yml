@@ -2,7 +2,7 @@ name: Deploy Protected Site
 
 on:
   push:
-    branches: ["main"]
+    branches: ["main"]  # ← EDITA tu rama
   workflow_dispatch:
 
 permissions:
@@ -17,23 +17,15 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
-    - name: Encrypt index.html
-      uses: robinmoisson/staticrypt@v2.0.0
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
       with:
-        path: index.html
-        password: ${{ secrets.PASSWORD }}
-        destination: index.html
-        config: |
-          {
-            "color": "#000000",
-            "backgroundColor": "#ffffff",
-            "image": {
-              "src": "https://staticrypt.net/img/logo.png",
-              "width": 300,
-              "height": 300
-            },
-            "title": "Acceso restringido"
-          }
+        node-version: '20'
+
+    - name: Encrypt index.html
+      run: |
+        npm install -g staticrypt@latest
+        npx staticrypt index.html "${{ secrets.PASSWORD }}" index.html --config '{"color":"#000000","backgroundColor":"#ffffff","title":"Acceso restringido"}'
 
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
