@@ -88,19 +88,17 @@ header{padding:16px 18px 10px;flex-shrink:0;border-bottom:1px solid var(--border
 .vcard.sel .vcard-disc{border-color:var(--accent2);animation:spin 3s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* Cover art lives INSIDE disc, rotates with it.
-   We counter-rotate it so the image always faces up. */
+/* Cover art fills the entire disc and spins with it */
 .disc-cover{
   position:absolute;
-  width:46%;height:46%;
+  inset:0;
+  width:100%;height:100%;
   border-radius:50%;
   object-fit:cover;
   z-index:2;
   pointer-events:none;
+  opacity:0.82;
 }
-/* counter-rotate cover so image stays upright while disc spins */
-.vcard.sel .disc-cover{animation:counter-spin 3s linear infinite;}
-@keyframes counter-spin{to{transform:rotate(-360deg)}}
 
 /* Centre hole on top of everything */
 .disc-hole{
@@ -815,7 +813,7 @@ function calcEdadMusical(plays, currentYear){
   });
   if(!sumW) return null;
   const avgYear=sumYW/sumW;
-  return Math.round(currentYear-avgYear);
+  return Math.round(currentYear-avgYear) + 18;
 }
 
 function edadCard(plays,label){
