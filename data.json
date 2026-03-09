@@ -2616,12 +2616,6 @@
       "ts": "2026-03-08T22:12:00",
       "user": "Novia"
     },
-    {
-      "artist": "Imagine Dragons",
-      "album": "Evolve",
-      "ts": "2026-03-09T19:01:53.001Z",
-      "user": "Regino"
-    }
   ],
   "vinyls": [
     {
@@ -2717,7 +2711,7 @@
         "indie"
       ],
       "country": "Irlanda",
-      "cover": "https://en.wikipedia.org/wiki/Wasteland,_Baby!#/media/File%3AHozier_-_Wasteland%2C_Baby!.png",
+      "cover": "https://upload.wikimedia.org/wikipedia/en/0/00/Hozier_-_Wasteland%2C_Baby%21.png",
       "id": 1773083042871
     }
   ]
