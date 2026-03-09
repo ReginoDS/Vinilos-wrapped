@@ -17,23 +17,27 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
-    - name: List files  # ← DEBUG: ve qué hay
-      run: ls -la
-
-    - name: Setup Node.js
+    - name: Setup Node.js 16
       uses: actions/setup-node@v4
       with:
-        node-version: '20'
+        node-version: '16'
 
-    - name: Install and encrypt
+    - name: Encrypt index.html
       run: |
-        npm install -g staticrypt@3.5.1  # ← Versión estable
+        npm install -g staticrypt@3.0.0  # ← Versión fija compatible
         npx staticrypt index.html "${{ secrets.PASSWORD }}" index.html \
           --config '{"color":"#000000","backgroundColor":"#ffffff","title":"Acceso restringido"}'
-      shell: bash
-
-    - name: Verify output
-      run: ls -la index.html*  # ← DEBUG
 
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
