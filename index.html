@@ -20,6 +20,17 @@
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;overflow:hidden;position:fixed;width:100%;}
 #app{display:flex;flex-direction:column;height:100dvh;max-width:480px;margin:0 auto;overflow:hidden;}
 
+/* ── LOGIN ── */
+#loginScreen{position:fixed;inset:0;background:var(--bg);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 32px;}
+.login-title{font-family:'DM Serif Display',serif;font-size:48px;color:var(--accent);margin-bottom:6px;}
+.login-sub{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:3px;margin-bottom:48px;}
+.login-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;align-self:flex-start;}
+.login-input{width:100%;background:var(--s2);border:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:20px;padding:14px 16px;border-radius:var(--radius);outline:none;margin-bottom:20px;letter-spacing:4px;}
+.login-input:focus{border-color:var(--accent2);}
+.login-btn{width:100%;padding:14px;border-radius:var(--radius);background:var(--accent);color:var(--bg);font-family:'DM Mono',monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;border:none;cursor:pointer;font-weight:500;}
+.login-err{font-size:11px;color:#e05252;margin-top:14px;opacity:0;transition:opacity .2s;}
+.login-err.show{opacity:1;}
+
 /* ── ONBOARDING ── */
 #onboarding{position:fixed;inset:0;background:var(--bg);z-index:300;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 32px;gap:0;}
 .ob-title{font-family:'DM Serif Display',serif;font-size:48px;color:var(--accent);margin-bottom:8px;}
@@ -268,15 +279,21 @@ select.finput option{background:var(--s2);}
 <canvas id="ccanvas"></canvas>
 
 <!-- ══════════════════════════════════════════
-     ONBOARDING — nombre de usuario
+     LOGIN — usuario + contraseña
 ══════════════════════════════════════════ -->
-<div id="onboarding" style="display:none">
-  <div class="ob-title">Vinilos</div>
-  <div class="ob-sub">Tu colección</div>
-  <div class="ob-label">¿Cómo te llamas?</div>
-  <input class="ob-input" id="obName" type="text" placeholder="Tu nombre" autocomplete="off" maxlength="30">
-  <button class="ob-btn" onclick="saveUsername()">Empezar →</button>
+<div id="loginScreen">
+  <div class="login-title">Vinilos</div>
+  <div class="login-sub">Acceso privado</div>
+  <div class="login-label">Tu nombre</div>
+  <input class="login-input" id="loginName" type="text" placeholder="Nombre" autocomplete="username" maxlength="30" style="letter-spacing:normal">
+  <div class="login-label">Contraseña</div>
+  <input class="login-input" id="loginInput" type="password" placeholder="••••••••" autocomplete="current-password">
+  <button class="login-btn" onclick="checkLogin()">Entrar →</button>
+  <div class="login-err" id="loginErr">Contraseña incorrecta</div>
 </div>
+
+<!-- onboarding ya no se usa, se elimina -->
+<div id="onboarding" style="display:none"></div>
 
 <!-- ══════════════════════════════════════════
      CONFIG MODAL
@@ -1081,6 +1098,43 @@ function h(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').re
 if('serviceWorker'in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
 
 // ════════════════════════════════════════════════════════════
+//  LOGIN
+// ════════════════════════════════════════════════════════════
+const PWD_HASH = '2851d9a3a5acc1b49662e36b6d9bac863ec6c16e97af81c4421133015cbd6f81';
+const AUTH_KEY = 'vinilos_auth';
+
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return [...new Uint8Array(buf)].map(x => x.toString(16).padStart(2,'0')).join('');
+}
+
+async function checkLogin() {
+  const name = document.getElementById('loginName').value.trim();
+  const pwd  = document.getElementById('loginInput').value;
+  if (!name) { showLoginErr('Escribe tu nombre'); return; }
+  const hash = await sha256(pwd);
+  if (hash === PWD_HASH) {
+    localStorage.setItem(AUTH_KEY, '1');
+    USER.name = name;
+    document.getElementById('loginScreen').style.display = 'none';
+    boot();
+  } else {
+    showLoginErr('Contraseña incorrecta');
+    document.getElementById('loginInput').value = '';
+  }
+}
+
+function showLoginErr(msg) {
+  const err = document.getElementById('loginErr');
+  err.textContent = msg;
+  err.classList.add('show');
+  setTimeout(() => err.classList.remove('show'), 2500);
+}
+
+document.getElementById('loginInput').addEventListener('keydown', e => { if(e.key==='Enter') checkLogin(); });
+document.getElementById('loginName').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('loginInput').focus(); });
+
+// ════════════════════════════════════════════════════════════
 //  BOOT
 // ════════════════════════════════════════════════════════════
 async function boot(){
@@ -1090,11 +1144,14 @@ async function boot(){
   else { setSS('','local'); }
 }
 
-// Show onboarding if no username set
-if(!USER.name){
-  document.getElementById('onboarding').style.display='flex';
-} else {
+// Si ya está autenticado (localStorage persiste), arranca directo
+if (localStorage.getItem(AUTH_KEY) && USER.name) {
+  document.getElementById('loginScreen').style.display = 'none';
+  // Pre-fill name in case they open login again (won't happen, but safe)
   boot();
+} else {
+  // Si tiene nombre guardado, pre-rellenarlo para comodidad
+  if (USER.name) document.getElementById('loginName').value = USER.name;
 }
 </script>
 </body>
