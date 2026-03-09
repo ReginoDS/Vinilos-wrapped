@@ -1,7 +1,7 @@
 {
   "name": "Vinilos",
   "short_name": "Vinilos",
-  "description": "Tu colección de vinilos, tus escuchas, tu historia.",
+  "description": "Wrapped de tu colección de vinilos.",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0a0a0a",
