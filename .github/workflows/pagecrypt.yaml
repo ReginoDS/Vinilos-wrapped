@@ -24,27 +24,23 @@ jobs:
 
       - name: Encrypt and Prepare
         run: |
-          # 1. Creamos la carpeta de salida
+          # 1. Creamos la carpeta limpia para el despliegue
           mkdir public_site
           
-          # 2. Ciframos el index y lo enviamos a la carpeta de salida
-          # Usamos --short para una URL más limpia
+          # 2. Copiamos TODO excepto el index.html original a la carpeta de salida
+          # Usamos rsync si está disponible o un cp selectivo
+          cp -r assets public_site/ 2>/dev/null || true
+          # (Si tienes más carpetas como 'css' o 'js', añádelas aquí)
+
+          # 3. Ciframos el index.html y lo guardamos DIRECTAMENTE en public_site
+          # Esto garantiza que el index.html en public_site SEA el cifrado
           npx staticrypt index.html "${{ secrets.PASSWORD }}" -o public_site/index.html
-          
-          # 3. COPIAR TODO LO DEMÁS (Imágenes, CSS, etc.)
-          # Esto evita el error 404 si tu index depende de otros archivos
-          cp -r * public_site/ 2>/dev/null || true
-          
-          # 4. Por seguridad, eliminamos el index.html ORIGINAL de la carpeta de salida
-          # para que no haya conflictos (StatiCrypt ya creó el suyo)
-          # (Opcional, pero recomendado)
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: 'public_site' # Aquí es donde GitHub buscará el index.html
+          path: 'public_site'
 
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-        
