@@ -2,7 +2,7 @@ name: Deploy Protected Site
 
 on:
   push:
-    branches: ["main"]  # ← EDITA tu rama
+    branches: ["main"]
   workflow_dispatch:
 
 permissions:
@@ -17,26 +17,23 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
+    - name: List files  # ← DEBUG: ve qué hay
+      run: ls -la
+
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '20'
 
-    - name: Encrypt index.html
+    - name: Install and encrypt
       run: |
-        npm install -g staticrypt@latest
-        npx staticrypt index.html "${{ secrets.PASSWORD }}" index.html --config '{"color":"#000000","backgroundColor":"#ffffff","title":"Acceso restringido"}'
+        npm install -g staticrypt@3.5.1  # ← Versión estable
+        npx staticrypt index.html "${{ secrets.PASSWORD }}" index.html \
+          --config '{"color":"#000000","backgroundColor":"#ffffff","title":"Acceso restringido"}'
+      shell: bash
+
+    - name: Verify output
+      run: ls -la index.html*  # ← DEBUG
 
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
-
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-    - name: Deploy to GitHub Pages
-      id: deployment
-      uses: actions/deploy-pages@v4
