@@ -1,13 +1,43 @@
-- name: Encrypt with StatiCrypt
-      run: |
-        # Creamos una carpeta para el contenido público
-        mkdir public
-        # Ciframos el index.html y lo guardamos en la carpeta public
-        npx staticrypt index.html "${{ secrets.PASSWORD }}" -o public/index.html
-        # Copiamos cualquier otro archivo necesario (css, js, imágenes) a public
-        # cp -r assets public/  <-- Descomenta si tienes carpetas de assets
+name: Deploy Protected Site
 
-    - name: Upload artifact
-      uses: actions/upload-pages-artifact@v3
-      with:
-        path: './public'
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Encrypt index.html
+        run: |
+          # 1. Creamos una carpeta temporal llamada 'dist'
+          mkdir dist
+          # 2. Ciframos tu index.html original y guardamos el resultado en 'dist/index.html'
+          # Usamos npx para que descargue la herramienta automáticamente
+          npx staticrypt index.html "${{ secrets.PASSWORD }}" -o dist/index.html
+          # 3. Si tienes otros archivos (CSS, Imágenes), los movemos a 'dist' para que se publiquen
+          # cp style.css dist/ 2>/dev/null || true 
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # IMPORTANTE: Aquí le decimos a GitHub que publique lo que hay en 'dist' (lo cifrado)
+          path: './dist'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
