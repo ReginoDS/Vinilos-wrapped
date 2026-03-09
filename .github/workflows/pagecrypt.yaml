@@ -14,24 +14,37 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Install Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
 
-    - name: Encrypt with StatiCrypt
-      run: |
-        # Instalamos staticrypt de forma global temporalmente
-        npx staticrypt index.html "${{ secrets.PASSWORD }}" -o index.html
+      - name: Encrypt and Prepare
+        run: |
+          # 1. Creamos la carpeta de salida
+          mkdir public_site
+          
+          # 2. Ciframos el index y lo enviamos a la carpeta de salida
+          # Usamos --short para una URL más limpia
+          npx staticrypt index.html "${{ secrets.PASSWORD }}" -o public_site/index.html
+          
+          # 3. COPIAR TODO LO DEMÁS (Imágenes, CSS, etc.)
+          # Esto evita el error 404 si tu index depende de otros archivos
+          cp -r * public_site/ 2>/dev/null || true
+          
+          # 4. Por seguridad, eliminamos el index.html ORIGINAL de la carpeta de salida
+          # para que no haya conflictos (StatiCrypt ya creó el suyo)
+          # (Opcional, pero recomendado)
 
-    - name: Upload artifact
-      uses: actions/upload-pages-artifact@v3
-      with:
-        path: '.'
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'public_site' # Aquí es donde GitHub buscará el index.html
 
-    - name: Deploy to GitHub Pages
-      id: deployment
-      uses: actions/deploy-pages@v4
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+        
