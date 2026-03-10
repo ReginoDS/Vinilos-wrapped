@@ -334,23 +334,32 @@ select.finput option{background:var(--s2);}
 .himno-lbl{font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:4px;}
 .himno-val{font-family:'DM Serif Display',serif;font-size:15px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .himno-sub{font-size:10px;color:var(--dim);margin-top:3px;}
+
+/* ── NFC TAG LIST ── */
+.nfc-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+.nfc-row:last-child{border-bottom:none;}
+.nfc-disc{width:32px;height:32px;border-radius:50%;flex-shrink:0;overflow:hidden;background:conic-gradient(from 0deg,#0d0d0d 0,#1a1a1a 18deg,#0d0d0d 36deg,#1a1a1a 54deg,#0d0d0d 72deg,#1a1a1a 90deg,#0d0d0d 108deg,#1a1a1a 126deg,#0d0d0d 144deg,#1a1a1a 162deg,#0d0d0d 180deg,#1a1a1a 198deg,#0d0d0d 216deg,#1a1a1a 234deg,#0d0d0d 252deg,#1a1a1a 270deg,#0d0d0d 288deg,#1a1a1a 306deg,#0d0d0d 324deg,#1a1a1a 342deg,#0d0d0d 360deg);border:1px solid #222;}
+.nfc-disc img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.nfc-info{flex:1;min-width:0;}
+.nfc-name{font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.nfc-url{font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;}
+.nfc-copy{background:var(--s2);border:1px solid var(--border);color:var(--accent);font-size:10px;padding:5px 10px;border-radius:6px;cursor:pointer;flex-shrink:0;font-family:'DM Mono',monospace;}
+.nfc-copy.copied{background:var(--accent2);color:var(--bg);border-color:var(--accent2);}
 </style>
 </head>
 <body>
 <canvas id="ccanvas"></canvas>
 
 <!-- ══════════════════════════════════════════
-     LOGIN — usuario + contraseña
+     LOGIN — nombre de usuario
 ══════════════════════════════════════════ -->
 <div id="loginScreen">
   <div class="login-title">Vinilos</div>
-  <div class="login-sub">Acceso privado</div>
+  <div class="login-sub">¿Cómo te llamas?</div>
   <div class="login-label">Tu nombre</div>
   <input class="login-input" id="loginName" type="text" placeholder="Nombre" autocomplete="username" maxlength="30" style="letter-spacing:normal">
-  <div class="login-label">Contraseña</div>
-  <input class="login-input" id="loginInput" type="password" placeholder="••••••••" autocomplete="current-password">
   <button class="login-btn" onclick="checkLogin()">Entrar →</button>
-  <div class="login-err" id="loginErr">Contraseña incorrecta</div>
+  <div class="login-err" id="loginErr"></div>
 </div>
 
 <!-- onboarding ya no se usa, se elimina -->
@@ -374,9 +383,12 @@ select.finput option{background:var(--s2);}
   <div class="field"><label>Usuario de GitHub</label><input type="text" id="cfgUser" class="finput" placeholder="tu-usuario" autocomplete="off"></div>
   <div class="field"><label>Repositorio de datos <span style="color:var(--dim)">(por defecto: vinilos-datos)</span></label><input type="text" id="cfgDataRepo" class="finput" placeholder="vinilos-datos" autocomplete="off"></div>
   <div class="field"><label>Personal Access Token</label><input type="password" id="cfgToken" class="finput" placeholder="ghp_xxxxxxxxxxxx" autocomplete="off"></div>
-  <div class="macts">
-    <button class="btn btn-s" onclick="closeModal('configModal')" style="flex:.5">Cancelar</button>
-    <button class="btn btn-p" onclick="saveConfig()">Guardar y sincronizar</button>
+  <div class="macts" style="flex-direction:column;gap:8px;">
+    <div style="display:flex;gap:8px;width:100%">
+      <button class="btn btn-s" onclick="closeModal('configModal')" style="flex:.5">Cancelar</button>
+      <button class="btn btn-p" onclick="saveConfig()">Guardar y sincronizar</button>
+    </div>
+    <button class="btn btn-s" onclick="openNfcTags()" style="width:100%">📡 Ver URLs para tags NFC</button>
   </div>
 </div>
 </div>
@@ -530,6 +542,48 @@ select.finput option{background:var(--s2);}
 </div>
 
 <div class="toast" id="toast"></div>
+
+
+<!-- ══════════════════════════════════════════
+     NFC PLAY MODAL
+══════════════════════════════════════════ -->
+<div class="moverlay" id="nfcModal">
+<div class="modal">
+  <div class="mhandle"></div>
+  <div class="mtitle" style="font-size:22px">📀 Vinilo detectado</div>
+  <div class="msub" id="nfcSub">Confirma la reproducción</div>
+  <div id="nfcDisc" style="display:flex;align-items:center;gap:16px;margin:18px 0;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);">
+    <div id="nfcDiscImg" style="width:56px;height:56px;border-radius:50%;flex-shrink:0;overflow:hidden;background:conic-gradient(from 0deg,#0d0d0d 0,#1a1a1a 18deg,#0d0d0d 36deg,#1a1a1a 54deg,#0d0d0d 72deg,#1a1a1a 90deg,#0d0d0d 108deg,#1a1a1a 126deg,#0d0d0d 144deg,#1a1a1a 162deg,#0d0d0d 180deg,#1a1a1a 198deg,#0d0d0d 216deg,#1a1a1a 234deg,#0d0d0d 252deg,#1a1a1a 270deg,#0d0d0d 288deg,#1a1a1a 306deg,#0d0d0d 324deg,#1a1a1a 342deg,#0d0d0d 360deg);border:1px solid #222;"></div>
+    <div style="flex:1;min-width:0;">
+      <div id="nfcAlbum" style="font-family:'DM Serif Display',serif;font-size:16px;color:var(--text)"></div>
+      <div id="nfcEdition" style="font-style:italic;font-size:11px;color:var(--muted);margin-top:2px"></div>
+      <div id="nfcArtist" style="font-size:11px;color:var(--muted);margin-top:4px"></div>
+    </div>
+  </div>
+  <div class="macts">
+    <button class="btn btn-s" onclick="closeModal('nfcModal')" style="flex:.5">Cancelar</button>
+    <button class="btn btn-p" id="nfcConfirmBtn" onclick="confirmNfcPlay()">◎ Registrar</button>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     NFC TAGS MODAL
+══════════════════════════════════════════ -->
+<div class="moverlay" id="nfcTagsModal">
+<div class="modal" style="max-height:85vh;overflow-y:auto;">
+  <div class="mhandle"></div>
+  <div class="mtitle">Tags NFC</div>
+  <div class="msub">URLs para programar en tus tags</div>
+  <div style="font-size:10px;color:var(--muted);margin-bottom:14px;line-height:1.6;">
+    Copia la URL de cada vinilo y escríbela en su tag NFC con cualquier app (NFC Tools, NFC TagWriter…). Al acercar el móvil a un tag se registra la reproducción automáticamente.
+  </div>
+  <div id="nfcTagsList"></div>
+  <div class="macts">
+    <button class="btn btn-p" onclick="closeModal('nfcTagsModal')">Cerrar</button>
+  </div>
+</div>
+</div>
 
 <script>
 'use strict';
@@ -773,6 +827,7 @@ async function syncNow(){
 
     setSS('ok','sincronizado');
     renderAll();
+    resolveNfcPlay(); // show NFC modal if a tag scan triggered this boot
     showToast('Sincronizado ✓');
   } catch(e){
     setSS('err','error de sync');
@@ -1224,7 +1279,7 @@ function openModal(id){
   document.getElementById(id).classList.add('open');
 }
 function closeModal(id){ document.getElementById(id).classList.remove('open'); }
-['addModal','editModal','playModal','configModal'].forEach(id=>{
+['addModal','editModal','playModal','configModal','nfcModal','nfcTagsModal'].forEach(id=>{
   document.getElementById(id).addEventListener('click',function(e){if(e.target===this)closeModal(id);});
 });
 
@@ -1649,28 +1704,15 @@ if('serviceWorker'in navigator) navigator.serviceWorker.register('./sw.js').catc
 // ════════════════════════════════════════════════════════════
 //  LOGIN
 // ════════════════════════════════════════════════════════════
-const PWD_HASH = '2851d9a3a5acc1b49662e36b6d9bac863ec6c16e97af81c4421133015cbd6f81';
 const AUTH_KEY = 'vinilos_auth';
 
-async function sha256(str) {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-  return [...new Uint8Array(buf)].map(x => x.toString(16).padStart(2,'0')).join('');
-}
-
-async function checkLogin() {
+function checkLogin() {
   const name = document.getElementById('loginName').value.trim();
-  const pwd  = document.getElementById('loginInput').value;
   if (!name) { showLoginErr('Escribe tu nombre'); return; }
-  const hash = await sha256(pwd);
-  if (hash === PWD_HASH) {
-    localStorage.setItem(AUTH_KEY, '1');
-    USER.name = name;
-    document.getElementById('loginScreen').style.display = 'none';
-    boot();
-  } else {
-    showLoginErr('Contraseña incorrecta');
-    document.getElementById('loginInput').value = '';
-  }
+  localStorage.setItem(AUTH_KEY, '1');
+  USER.name = name;
+  document.getElementById('loginScreen').style.display = 'none';
+  boot();
 }
 
 function showLoginErr(msg) {
@@ -1680,13 +1722,13 @@ function showLoginErr(msg) {
   setTimeout(() => err.classList.remove('show'), 2500);
 }
 
-document.getElementById('loginInput').addEventListener('keydown', e => { if(e.key==='Enter') checkLogin(); });
-document.getElementById('loginName').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('loginInput').focus(); });
+document.getElementById('loginName').addEventListener('keydown', e => { if(e.key==='Enter') checkLogin(); });
 
 // ════════════════════════════════════════════════════════════
 //  BOOT
 // ════════════════════════════════════════════════════════════
 async function boot(){
+  checkNfcParam(); // read ?play= before any async work
   if(GH.ok){
     setSS('syncing','sincronizando');
     await syncNow();  // loads from GitHub, merges, writes back, calls renderAll internally
@@ -1694,6 +1736,7 @@ async function boot(){
     await initData();
     renderAll();
     setSS('','local');
+    resolveNfcPlay(); // data ready, show NFC modal if pending
   }
 }
 
@@ -1706,6 +1749,104 @@ if (localStorage.getItem(AUTH_KEY) && USER.name) {
   // Si tiene nombre guardado, pre-rellenarlo para comodidad
   if (USER.name) document.getElementById('loginName').value = USER.name;
 }
+
+// ════════════════════════════════════════════════════════════
+//  NFC — URL parameter handling + tag management
+// ════════════════════════════════════════════════════════════
+
+let _nfcPendingId = null;
+
+function checkNfcParam() {
+  const params = new URLSearchParams(window.location.search);
+  const playParam = params.get('play');
+  if (!playParam) return;
+  _nfcPendingId = isNaN(playParam) ? playParam : parseInt(playParam);
+  // Clear param from URL immediately so reload doesn't re-trigger
+  window.history.replaceState({}, '', window.location.pathname + window.location.hash);
+}
+
+// Called after data is ready (post-sync or post-boot)
+function resolveNfcPlay() {
+  if (_nfcPendingId === null) return;
+  const id = _nfcPendingId;
+  const v = DB.vinyls.find(x => x.id === id);
+  if (!v) {
+    showToast('Tag NFC: vinilo no encontrado en la coleccion');
+    _nfcPendingId = null;
+    return;
+  }
+  _nfcPendingId = null;
+  openNfcModal(v);
+}
+
+function openNfcModal(v) {
+  const discEl = document.getElementById('nfcDiscImg');
+  discEl.innerHTML = v.cover
+    ? '<img src="' + h(v.cover) + '" alt="" onerror="this.style.display=\'none\'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">'
+    : '';
+  document.getElementById('nfcAlbum').textContent = v.album;
+  document.getElementById('nfcEdition').textContent = v.edition || '';
+  document.getElementById('nfcArtist').textContent = v.artist;
+  document.getElementById('nfcSub').textContent =
+    new Date().toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'}) + ' · ' +
+    new Date().toLocaleDateString('es-ES', {weekday:'long', day:'numeric', month:'long'});
+  document.getElementById('nfcConfirmBtn').dataset.vinylId = v.id;
+  openModal('nfcModal');
+}
+
+function confirmNfcPlay() {
+  const id = parseInt(document.getElementById('nfcConfirmBtn').dataset.vinylId);
+  const v = DB.vinyls.find(x => x.id === id);
+  if (!v) { closeModal('nfcModal'); return; }
+  DB.addPlay(id);
+  closeModal('nfcModal');
+  renderAll();
+  showToast('◎ ' + v.album + ' registrado');
+  if (GH.ok) syncNow();
+}
+
+function openNfcTags() {
+  closeModal('configModal');
+  const vinyls = DB.vinyls;
+  const base = window.location.origin + window.location.pathname;
+  const list = document.getElementById('nfcTagsList');
+  if (!vinyls.length) {
+    list.innerHTML = '<div class="nodata">Sin vinilos en la coleccion.</div>';
+  } else {
+    list.innerHTML = vinyls.map(v => {
+      const url = base + '?play=' + v.id;
+      const img = v.cover ? '<img src="' + h(v.cover) + '" alt="" onerror="this.style.display=\'none\'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">' : '';
+      const eid = 'nfc_' + v.id;
+      return '<div class="nfc-row">' +
+        '<div class="nfc-disc">' + img + '</div>' +
+        '<div class="nfc-info">' +
+          '<div class="nfc-name">' + h(v.album) + (v.edition ? ' <span style="color:var(--muted);font-style:italic">' + h(v.edition) + '</span>' : '') + '</div>' +
+          '<div class="nfc-url" id="' + eid + '">' + h(url) + '</div>' +
+        '</div>' +
+        '<button class="nfc-copy" onclick="copyNfcUrl(this,\'' + eid + '\')">Copiar</button>' +
+      '</div>';
+    }).join('');
+  }
+  openModal('nfcTagsModal');
+}
+
+function copyNfcUrl(btn, elemId) {
+  const url = document.getElementById(elemId).textContent;
+  const finish = () => {
+    btn.textContent = '✓'; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copiar'; btn.classList.remove('copied'); }, 2000);
+  };
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(url).then(finish).catch(finish);
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value = url; ta.style.cssText = 'position:fixed;opacity:0';
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta); finish();
+  }
+}
+
 </script>
+
 </body>
 </html>
