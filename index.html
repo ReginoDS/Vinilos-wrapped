@@ -508,7 +508,7 @@ select.finput option{background:var(--s2);}
       <div class="stat-pill"><div class="sp-label">Este año</div><div class="sp-val" id="cntYear">0</div></div>
       <div class="stat-pill"><div class="sp-label">Total</div><div class="sp-val" id="cntTotal">0</div></div>
     </div>
-    <div class="sync"><div class="sdot" id="sdot"></div><span id="slabel">local</span></div>
+    <div class="sync"><div class="sdot" id="sdot"></div><span id="slabel">Local</span></div>
   </header>
 
   <div class="tabs tabs-main">
@@ -773,8 +773,8 @@ function setSS(st,lbl){
   if(_dotsInterval){clearInterval(_dotsInterval);_dotsInterval=null;}
   if(st==='syncing'){
     let dots=1;
-    el.textContent='sincronizando.';
-    _dotsInterval=setInterval(()=>{dots=(dots%3)+1;el.textContent='sincronizando'+'.'.repeat(dots);},500);
+    el.textContent='Sincronizando.';
+    _dotsInterval=setInterval(()=>{dots=(dots%3)+1;el.textContent='Sincronizando'+'.'.repeat(dots);},500);
   } else {
     el.textContent=lbl;
   }
@@ -798,7 +798,7 @@ function setSS(st,lbl){
 // ════════════════════════════════════════════════════════════
 async function syncNow(){
   if(!GH.ok){ openModal('configModal'); return; }
-  setSS('syncing','sincronizando');
+  setSS('syncing','Sincronizando');
   // Also check for app updates — if a new SW is waiting, activate it
   checkForAppUpdate();
   try{
@@ -829,12 +829,12 @@ async function syncNow(){
     await GH.writeFile('collection.json', {vinylLog:mergedLog, users, _sha:remCol?._sha});
     await GH.writeFile('plays.json', {plays:merged.plays, deletedPlayIds:merged.deletedIds, _sha:remPls?._sha});
 
-    setSS('ok','sincronizado');
+    setSS('ok','Sincronizado');
     renderAll();
     resolveNfcPlay(); // show NFC modal if a tag scan triggered this boot
     showToast('Sincronizado ✓');
   } catch(e){
-    setSS('err','error de sync');
+    setSS('err','Error de sync');
     const msg = e.message||'';
     // Show meaningful Spanish error
     if(msg.includes('401')||msg.includes('Bad credentials')) showToast('Token inválido o sin permisos');
@@ -1756,12 +1756,12 @@ document.getElementById('loginName').addEventListener('keydown', e => { if(e.key
 async function boot(){
   checkNfcParam(); // read ?play= before any async work
   if(GH.ok){
-    setSS('syncing','sincronizando');
+    setSS('syncing','Sincronizando');
     await syncNow();  // loads from GitHub, merges, writes back, calls renderAll internally
   } else {
     await initData();
     renderAll();
-    setSS('','local');
+    setSS('','Local');
     resolveNfcPlay(); // data ready, show NFC modal if pending
   }
 }
