@@ -574,18 +574,32 @@ const GH = {
   async readFile(file){
     const r=await fetch(this._url(file),{headers:this._headers()});
     if(r.status===404) return null;
-    if(!r.ok) throw new Error('GH read '+r.status);
+    if(!r.ok){
+      let msg='GH read '+r.status;
+      try{ const j=await r.json(); msg+=': '+(j.message||JSON.stringify(j)); }catch(_){}
+      throw new Error(msg);
+    }
     const j=await r.json();
-    const d=JSON.parse(atob(j.content.replace(/\n/g,'')));
+    // Safe base64 → Unicode via TextDecoder
+    const raw=atob(j.content.replace(/\n/g,''));
+    const bytes=Uint8Array.from(raw,c=>c.charCodeAt(0));
+    const d=JSON.parse(new TextDecoder().decode(bytes));
     d._sha=j.sha; return d;
   },
   async writeFile(file,data){
     const sha=data._sha; const body={...data}; delete body._sha;
-    const enc=btoa(unescape(encodeURIComponent(JSON.stringify(body,null,2))));
+    // Safe Unicode → base64 via TextEncoder (chunked to avoid stack overflow on large files)
+    const bytes=new TextEncoder().encode(JSON.stringify(body,null,2));
+    let bin=''; for(let i=0;i<bytes.length;i+=8192) bin+=String.fromCharCode(...bytes.subarray(i,i+8192));
+    const enc=btoa(bin);
     const pay={message:`sync ${file}`,content:enc}; if(sha) pay.sha=sha;
     const r=await fetch(this._url(file),{method:'PUT',headers:{...this._headers(),'Content-Type':'application/json'},body:JSON.stringify(pay)});
-    if(!r.ok) throw new Error('GH write '+r.status);
-    const j=await r.json(); return j.content.sha;
+    if(!r.ok){
+      let msg='GH write '+r.status;
+      try{ const j=await r.json(); msg+=': '+(j.message||JSON.stringify(j)); }catch(_){}
+      throw new Error(msg);
+    }
+    const j=await r.json(); return j.content?.sha;
   }
 };
 
@@ -641,8 +655,14 @@ const DB = {
     const ts=new Date().toISOString();
     this.logEvent({op:'add',id,data:{...obj},ts});
   },
+  get deletedPlayIds(){ return JSON.parse(localStorage.getItem('deletedPlayIds')||'null')||[]; },
+  set deletedPlayIds(v){ localStorage.setItem('deletedPlayIds',JSON.stringify(v)); },
   deletePlay(playId){
+    // Remove from plays array
     this.plays=this.plays.filter(p=>p.id!==playId);
+    // Record deletion so it survives merge with remote
+    const del=this.deletedPlayIds;
+    if(!del.includes(playId)){ del.push(playId); this.deletedPlayIds=del; }
   },
   editVinyl(id,obj){
     const ts=new Date().toISOString();
@@ -668,10 +688,15 @@ function mergeVinylLogs(a, b){
   return [...map.values()].sort((x,y)=>x.ts.localeCompare(y.ts));
 }
 
-function mergePlays(a,b){
+function mergePlays(a, b, delA=[], delB=[]){
+  // Union of all deleted ids from both sides
+  const deleted=new Set([...delA,...delB]);
   const m=new Map();
-  [...a,...b].forEach(p=>{if(p.id&&!m.has(p.id))m.set(p.id,p);});
-  return[...m.values()].sort((x,y)=>x.ts.localeCompare(y.ts));
+  [...a,...b].forEach(p=>{if(p.id&&!m.has(p.id)&&!deleted.has(p.id))m.set(p.id,p);});
+  return{
+    plays:[...m.values()].sort((x,y)=>x.ts.localeCompare(y.ts)),
+    deletedIds:[...deleted]
+  };
 }
 
 // ════════════════════════════════════════════════════════════
@@ -711,44 +736,46 @@ async function syncNow(){
   if(!GH.ok){ openModal('configModal'); return; }
   setSS('syncing','sincronizando');
   try{
-    // Read both files in parallel
-    const [remCol, remPls] = await Promise.all([
-      GH.readFile('collection.json'),
-      GH.readFile('plays.json')
-    ]);
+    // Read both files sequentially to avoid SHA race conditions
+    const remCol = await GH.readFile('collection.json');
+    const remPls = await GH.readFile('plays.json');
 
-    // Merge vinyl log
-    const remLog   = remCol?.vinylLog || [];
+    // Merge vinyl log (event-sourced, fully commutative)
+    const remLog    = remCol?.vinylLog || [];
     const mergedLog = mergeVinylLogs(DB.vinylLog, remLog);
 
-    // Merge plays
-    const remPlays   = remPls?.plays || [];
-    const mergedPlays = mergePlays(DB.plays, remPlays);
+    // Merge plays respecting deleted ids from both sides
+    const remPlays      = remPls?.plays || [];
+    const remDeletedIds = remPls?.deletedPlayIds || [];
+    const merged = mergePlays(DB.plays, remPlays, DB.deletedPlayIds, remDeletedIds);
 
-    // Users table always comes from collection (source of truth)
+    // Users table comes from collection
     const users = remCol?.users || DB.users || [];
 
-    // Persist locally
-    DB.vinylLog = mergedLog;
-    DB.plays    = mergedPlays;
-    DB.users    = users;
-
-    // Resolve current user's id from the users table
+    // Persist merged state locally
+    DB.vinylLog       = mergedLog;
+    DB.plays          = merged.plays;
+    DB.deletedPlayIds = merged.deletedIds;
+    DB.users          = users;
     USER.resolve(users);
 
-    // Write back both files in parallel
-    await Promise.all([
-      GH.writeFile('collection.json', {vinylLog:mergedLog, users, _sha:remCol?._sha}),
-      GH.writeFile('plays.json',      {plays:mergedPlays,         _sha:remPls?._sha})
-    ]);
+    // Write sequentially — each write needs the current SHA
+    await GH.writeFile('collection.json', {vinylLog:mergedLog, users, _sha:remCol?._sha});
+    await GH.writeFile('plays.json', {plays:merged.plays, deletedPlayIds:merged.deletedIds, _sha:remPls?._sha});
 
     setSS('ok','sincronizado');
     renderAll();
     showToast('Sincronizado ✓');
   } catch(e){
-    setSS('err','error sync');
-    showToast('Error al sincronizar');
-    console.error(e);
+    setSS('err','error de sync');
+    const msg = e.message||'';
+    // Show meaningful Spanish error
+    if(msg.includes('401')||msg.includes('Bad credentials')) showToast('Token inválido o sin permisos');
+    else if(msg.includes('404')) showToast('Repositorio no encontrado');
+    else if(msg.includes('409')||msg.includes('conflict')) showToast('Conflicto de sincronización — reintenta');
+    else if(msg.includes('422')) showToast('Error de escritura en GitHub');
+    else showToast('Error al sincronizar');
+    console.error('SYNC ERROR:', e.message);
   }
 }
 
