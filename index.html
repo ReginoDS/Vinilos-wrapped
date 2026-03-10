@@ -326,6 +326,14 @@ select.finput option{background:var(--s2);}
 .log-del:hover{background:#5a1010;}
 .log-del svg{width:20px;height:20px;fill:none;stroke:#e05252;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 .log-item.swiped{transform:translateX(-64px);}
+
+/* ── HIMNO CARD ── */
+.himno-card{display:flex;align-items:center;gap:13px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:13px;margin-top:9px;}
+.himno-icon{font-size:28px;flex-shrink:0;line-height:1;}
+.himno-info{flex:1;min-width:0;}
+.himno-lbl{font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:4px;}
+.himno-val{font-family:'DM Serif Display',serif;font-size:15px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.himno-sub{font-size:10px;color:var(--dim);margin-top:3px;}
 </style>
 </head>
 <body>
@@ -1290,6 +1298,39 @@ function calcEdadMusical(plays, currentYear){
   return Math.round(currentYear-avgYear) + 18;
 }
 
+// ── HIMNO (top álbum por franja horaria) ─────────────────────
+function himnoCard(plays, label){
+  // mañanas 6-12, tardes 12-20, noches 20-6
+  const franjas = {
+    mañanas: plays.filter(p=>{ const h=new Date(p.ts).getHours(); return h>=6&&h<12; }),
+    tardes:  plays.filter(p=>{ const h=new Date(p.ts).getHours(); return h>=12&&h<20; }),
+    noches:  plays.filter(p=>{ const h=new Date(p.ts).getHours(); return h>=20||h<6; }),
+  };
+  const labels = {mañanas:'mañanas',tardes:'tardes',noches:'noches'};
+  const icons  = {mañanas:'☀️',tardes:'🌇',noches:'🌙'};
+  // Pick franja with most plays; if tie, prefer noches > tardes > mañanas
+  const order = ['noches','tardes','mañanas'];
+  let best = null, bestFranja = null;
+  for(const f of ['mañanas','tardes','noches']){
+    const cnt = franjas[f].length;
+    if(cnt > 0 && (!best || cnt >= best.length)) { best = franjas[f]; bestFranja = f; }
+  }
+  if(!best||!best.length) return '';
+  // Top album in that franja
+  const ac = countBy(best,'album');
+  const top = topN(ac,1)[0];
+  if(!top) return '';
+  const [albumName, cnt] = top;
+  return `<div class="himno-card">
+    <div class="himno-icon">${icons[bestFranja]}</div>
+    <div class="himno-info">
+      <div class="himno-lbl">Tu himno de las ${labels[bestFranja]} ${label}</div>
+      <div class="himno-val">${h(albumName)}</div>
+      <div class="himno-sub">${cnt} escucha${cnt!==1?'s':''} en esa franja</div>
+    </div>
+  </div>`;
+}
+
 function edadCard(plays,label){
   const currentYear=new Date().getFullYear();
   const edad=calcEdadMusical(plays,currentYear);
@@ -1318,6 +1359,7 @@ function renderMonth(){
         <div class="scard"><div class="scard-lbl">Álbum del mes</div><div class="scard-val">${h(ta[0]?.[0]||'—')}</div></div>
         <div class="scard"><div class="scard-lbl">Artista del mes</div><div class="scard-val">${h(tar[0]?.[0]||'—')}</div></div>
       </div>
+      ${himnoCard(p,'del mes')}
       ${edadCard(p,'del mes')}
       ${bd?`<div class="scard"><div class="scard-lbl">Día con más escuchas</div><div class="sday"><div class="sday-n">${bd.count}</div><div class="sday-u">escuchas · ${bd.label}</div></div></div>`:''}
     </div>
@@ -1359,7 +1401,7 @@ function renderYear(forceYear){
   const topAlbumCover=topAlbumV?.cover||'';
   const topAlbumEd=topAlbumV?.edition||'';
 
-  // Cumulative data per artist per month
+  // Cumulative data per artist per month — only include if they have plays
   const artists=tar.slice(0,6).map(([a],i)=>{
     let cum=0;
     const data=Array.from({length:12},(_,m)=>{
@@ -1367,7 +1409,7 @@ function renderYear(forceYear){
       return cum;
     });
     return{name:a,color:COLS[i],data};
-  });
+  }).filter(a=>a.data[11]>0);  // drop artists with 0 cumulative plays
 
   const yearOpts=years.map(y=>`<option value="${y}"${y===YEAR?' selected':''}>${y}</option>`).join('');
 
@@ -1383,7 +1425,7 @@ function renderYear(forceYear){
         <div class="clegend" id="clegend"></div>
       </div>
       <div id="chartReveal" style="opacity:0;transition:opacity 1s;">
-        <div class="rev-win"><div class="rev-lbl">Tu artista más escuchado de ${YEAR} es…</div><div class="rev-name">${h(tar[0]?.[0]||'—')}</div></div>
+        <div class="rev-win"><div class="rev-lbl">Tu${tar.filter(([,c])=>c===tar[0]?.[1]).length>1?'s artistas más escuchados de':'  artista más escuchado de'} ${YEAR}…</div><div class="rev-name">${tar.filter(([,c])=>c===tar[0]?.[1]).map(([a])=>h(a)).join(' · ')}</div></div>
       </div>
     </div>
     <div id="afterAnim" style="display:none">
@@ -1397,11 +1439,11 @@ function renderYear(forceYear){
           </div>
         </div>
         <div class="two" style="margin-top:9px">
-          <div class="scard"><div class="scard-lbl">Artista del año</div><div class="scard-val">${h(tar[0]?.[0]||'—')}</div></div>
+          ${bd?`<div class="scard"><div class="scard-lbl">Día con más escuchas</div><div class="sday"><div class="sday-n">${bd.count}</div><div class="sday-u">escuchas · ${bd.label}</div></div></div>`:''}
           ${tm?`<div class="scard"><div class="scard-lbl">Mes más activo</div><div class="scard-val">${h(tm[0])}</div><div class="scard-sub">${tm[1]} escuchas</div></div>`:''}
         </div>
+        ${himnoCard(p,'del año')}
         ${edadCard(p,'del año')}
-        ${bd?`<div class="scard"><div class="scard-lbl">Día con más escuchas</div><div class="sday"><div class="sday-n">${bd.count}</div><div class="sday-u">escuchas · ${bd.label}</div></div></div>`:''}
       </div>
       <div class="ssect"><div class="slabel">Ranking álbumes del año</div><div class="scard">${rankBars(ta,true)}</div></div>
       <div class="ssect"><div class="slabel">Ranking artistas del año</div><div class="scard">${rankBars(tar)}</div></div>
