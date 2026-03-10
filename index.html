@@ -799,6 +799,8 @@ function setSS(st,lbl){
 async function syncNow(){
   if(!GH.ok){ openModal('configModal'); return; }
   setSS('syncing','sincronizando');
+  // Also check for app updates — if a new SW is waiting, activate it
+  checkForAppUpdate();
   try{
     // Read both files sequentially to avoid SHA race conditions
     const remCol = await GH.readFile('collection.json');
@@ -1262,9 +1264,9 @@ function confirmPlay(){
 // ════════════════════════════════════════════════════════════
 function saveConfig(){
   const u=document.getElementById('cfgUser').value.trim();
-  const dr=document.getElementById('cfgDataRepo').value.trim()||'vinilos-datos';
+  const dr=document.getElementById('cfgDataRepo').value.trim();
   const t=document.getElementById('cfgToken').value.trim();
-  if(!u||!t){ showToast('Usuario y token son obligatorios'); return; }
+  if(!u||!t||!dr){ showToast('Usuario, repositorio y token son obligatorios'); return; }
   GH.save(u,t,dr); closeModal('configModal'); showToast('Configuración guardada');
   syncNow();
 }
@@ -1275,7 +1277,9 @@ function saveConfig(){
 function openModal(id){
   if(id==='configModal'){
     document.getElementById('cfgUser').value=GH.user;
-    document.getElementById('cfgDataRepo').value=GH.dataRepo;
+    // Only show saved repo name if user actually set one (not the default fallback)
+    const savedRepo=localStorage.getItem('gh_data_repo')||'';
+    document.getElementById('cfgDataRepo').value=savedRepo;
     document.getElementById('cfgToken').value=GH.token;
   }
   document.getElementById(id).classList.add('open');
@@ -1697,7 +1701,31 @@ function h(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').re
 // ════════════════════════════════════════════════════════════
 //  SERVICE WORKER
 // ════════════════════════════════════════════════════════════
-if('serviceWorker'in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+if('serviceWorker'in navigator){
+  navigator.serviceWorker.register('./sw.js').then(reg=>{
+    // When a new SW installs, reload the page to get the fresh HTML
+    reg.addEventListener('updatefound',()=>{
+      const newSW=reg.installing;
+      newSW.addEventListener('statechange',()=>{
+        if(newSW.state==='installed'&&navigator.serviceWorker.controller){
+          // New version available — tell it to activate, then reload
+          newSW.postMessage('skipWaiting');
+          navigator.serviceWorker.addEventListener('controllerchange',()=>{
+            showToast('Nueva versión disponible — actualizando…');
+            setTimeout(()=>window.location.reload(),1200);
+          },{once:true});
+        }
+      });
+    });
+  }).catch(()=>{});
+}
+
+function checkForAppUpdate(){
+  if(!('serviceWorker'in navigator)) return;
+  navigator.serviceWorker.getRegistration().then(reg=>{
+    if(reg) reg.update(); // triggers network check for new sw.js
+  });
+}
 
 // ════════════════════════════════════════════════════════════
 //  LOGIN
