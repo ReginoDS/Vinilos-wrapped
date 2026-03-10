@@ -1702,29 +1702,31 @@ function h(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').re
 //  SERVICE WORKER
 // ════════════════════════════════════════════════════════════
 if('serviceWorker'in navigator){
-  // Listen for controller change at top level — fires when new SW takes over
+  // When a new SW takes control, reload to get fresh HTML
   navigator.serviceWorker.addEventListener('controllerchange',()=>{
-    showToast('Nueva versión — actualizando…');
-    setTimeout(()=>window.location.reload(),800);
+    window.location.reload();
   });
 
-  navigator.serviceWorker.register('./sw.js?v=2').then(reg=>{
-    reg.addEventListener('updatefound',()=>{
-      const newSW=reg.installing;
-      newSW.addEventListener('statechange',()=>{
-        // As soon as installed, skip waiting so it activates immediately
-        if(newSW.state==='installed'){
-          newSW.postMessage('skipWaiting');
-        }
-      });
-    });
-  }).catch(()=>{});
+  navigator.serviceWorker.register('./sw.js?v=2').catch(()=>{});
 }
 
 function checkForAppUpdate(){
   if(!('serviceWorker'in navigator)) return;
   navigator.serviceWorker.getRegistration().then(reg=>{
-    if(reg) reg.update();
+    if(!reg) return;
+    // If a new SW is already waiting, activate it now
+    if(reg.waiting){
+      reg.waiting.postMessage('skipWaiting');
+      return;
+    }
+    // Otherwise check for a new version — if found, it will install then activate
+    reg.addEventListener('updatefound',()=>{
+      const newSW=reg.installing;
+      newSW.addEventListener('statechange',()=>{
+        if(newSW.state==='installed') newSW.postMessage('skipWaiting');
+      });
+    });
+    reg.update();
   });
 }
 
