@@ -1702,18 +1702,19 @@ function h(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').re
 //  SERVICE WORKER
 // ════════════════════════════════════════════════════════════
 if('serviceWorker'in navigator){
+  // Listen for controller change at top level — fires when new SW takes over
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{
+    showToast('Nueva versión — actualizando…');
+    setTimeout(()=>window.location.reload(),800);
+  });
+
   navigator.serviceWorker.register('./sw.js?v=2').then(reg=>{
-    // When a new SW installs, reload the page to get the fresh HTML
     reg.addEventListener('updatefound',()=>{
       const newSW=reg.installing;
       newSW.addEventListener('statechange',()=>{
-        if(newSW.state==='installed'&&navigator.serviceWorker.controller){
-          // New version available — tell it to activate, then reload
+        // As soon as installed, skip waiting so it activates immediately
+        if(newSW.state==='installed'){
           newSW.postMessage('skipWaiting');
-          navigator.serviceWorker.addEventListener('controllerchange',()=>{
-            showToast('Nueva versión disponible — actualizando…');
-            setTimeout(()=>window.location.reload(),1200);
-          },{once:true});
         }
       });
     });
@@ -1723,7 +1724,7 @@ if('serviceWorker'in navigator){
 function checkForAppUpdate(){
   if(!('serviceWorker'in navigator)) return;
   navigator.serviceWorker.getRegistration().then(reg=>{
-    if(reg) reg.update(); // triggers network check for new sw.js
+    if(reg) reg.update();
   });
 }
 
