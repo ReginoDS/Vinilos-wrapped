@@ -51,11 +51,12 @@ header{padding:16px 18px 10px;flex-shrink:0;border-bottom:1px solid var(--border
 .icon-btn:active{transform:scale(.91);}
 .user-chip{background:var(--s2);border:1px solid var(--border);color:var(--muted);font-size:10px;padding:5px 10px;border-radius:100px;text-transform:uppercase;letter-spacing:1px;}
 
-/* STATS ROW */
-.stats-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
-.stat-pill{background:var(--bg);padding:8px 6px;text-align:center;}
-.sp-label{font-size:8px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:3px;}
-.sp-val{font-family:'DM Serif Display',serif;font-size:22px;color:var(--accent);line-height:1;}
+/* STATS ROW — single line */
+.stats-row{display:flex;gap:0;background:var(--border);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.stat-pill{flex:1;background:var(--bg);padding:6px 8px;display:flex;align-items:center;justify-content:center;gap:6px;}
+.stat-pill+.stat-pill{border-left:1px solid var(--border);}
+.sp-label{font-size:8px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);}
+.sp-val{font-family:'DM Serif Display',serif;font-size:18px;color:var(--accent);line-height:1;}
 
 /* SYNC */
 .sync{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted);margin-top:6px;}
@@ -83,6 +84,7 @@ header{padding:16px 18px 10px;flex-shrink:0;border-bottom:1px solid var(--border
   position:relative;
   width:calc(100% - 16px); /* leave a little padding so badges don't clip */
   aspect-ratio:1;
+  isolation:isolate;
 }
 
 /* The vinyl itself — a full circle */
@@ -96,8 +98,9 @@ header{padding:16px 18px 10px;flex-shrink:0;border-bottom:1px solid var(--border
   background:conic-gradient(from 0deg,#0d0d0d 0,#1a1a1a 18deg,#0d0d0d 36deg,#1a1a1a 54deg,#0d0d0d 72deg,#1a1a1a 90deg,#0d0d0d 108deg,#1a1a1a 126deg,#0d0d0d 144deg,#1a1a1a 162deg,#0d0d0d 180deg,#1a1a1a 198deg,#0d0d0d 216deg,#1a1a1a 234deg,#0d0d0d 252deg,#1a1a1a 270deg,#0d0d0d 288deg,#1a1a1a 306deg,#0d0d0d 324deg,#1a1a1a 342deg,#0d0d0d 360deg);
   transition:border-color .2s;
 }
-.vcard.sel .vcard-disc{border-color:var(--accent2);animation:spin 3s linear infinite;}
+.vcard.sel .vcard-disc{border-color:var(--accent2);animation:spin 3s linear infinite;will-change:transform;}
 @keyframes spin{to{transform:rotate(360deg)}}
+.bbar{contain:layout style;}
 
 /* Cover art fills the entire disc and spins with it */
 .disc-cover{
@@ -199,8 +202,7 @@ select.finput option{background:var(--s2);}
 /* CONFIG */
 .cfg-info{font-size:11px;color:var(--muted);line-height:1.9;margin-bottom:16px;background:var(--s2);border:1px solid var(--border);border-radius:var(--radius);padding:11px;}
 .cfg-info a{color:var(--accent2);text-decoration:none;}
-.cfg-note{font-size:10px;color:var(--dim);line-height:1.7;margin-top:8px;}
-.cfg-note strong{color:var(--muted);}
+.cfg-note{font-size:10px;color:var(--muted);line-height:1.7;margin-top:8px;}
 
 /* ── STATS ── */
 .sscroll{flex:1;overflow-y:auto;padding:16px 18px 38px;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
@@ -295,7 +297,7 @@ select.finput option{background:var(--s2);}
 .log-info{flex:1;min-width:0;}
 .log-album{font-family:'DM Serif Display',serif;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .log-artist{font-size:10px;color:var(--muted);margin-top:1px;}
-.log-time{font-size:9px;color:var(--dim);text-align:right;flex-shrink:0;line-height:1.6;}
+.log-time{font-size:9px;color:var(--muted);text-align:right;flex-shrink:0;line-height:1.6;}
 
 /* ── YEAR SELECT ── */
 .year-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:13px;padding-bottom:7px;border-bottom:1px solid var(--border);}
@@ -374,14 +376,14 @@ select.finput option{background:var(--s2);}
   <div class="mtitle">Sincronización</div>
   <div class="msub">Datos compartidos en GitHub</div>
   <div class="cfg-info">
-    Los datos se guardan en el repositorio privado <strong>vinilos-datos</strong> en GitHub (<code>collection.json</code> y <code>plays.json</code>), sincronizando automáticamente entre dispositivos.<br><br>
-    Crea un <a href="https://github.com/settings/tokens" target="_blank">→ Fine-grained Personal Access Token</a> con acceso solo al repositorio <strong>vinilos-datos</strong>, permiso <strong>Contents: Read and write</strong>.
+    Los datos se guardan en un repositorio privado de tu elección en GitHub (<code>collection.json</code> y <code>plays.json</code>), sincronizando automáticamente entre dispositivos.<br><br>
+    Crea un <a href="https://github.com/settings/tokens" target="_blank">→ Fine-grained Personal Access Token</a> con acceso solo a ese repositorio, permiso <strong>Contents: Read and write</strong>.
     <div class="cfg-note">
-      <strong>Seguridad:</strong> Tu token se guarda <em>solo</em> en este dispositivo (localStorage), nunca en el código fuente. El repositorio de datos es privado — nadie puede ver tu colección.
+      Tu token se guarda solo en este dispositivo (localStorage), nunca en el código fuente. El repositorio de datos es privado — nadie puede ver tu colección.
     </div>
   </div>
   <div class="field"><label>Usuario de GitHub</label><input type="text" id="cfgUser" class="finput" placeholder="tu-usuario" autocomplete="off"></div>
-  <div class="field"><label>Repositorio de datos <span style="color:var(--dim)">(por defecto: vinilos-datos)</span></label><input type="text" id="cfgDataRepo" class="finput" placeholder="vinilos-datos" autocomplete="off"></div>
+  <div class="field"><label>Repositorio de datos</label><input type="text" id="cfgDataRepo" class="finput" placeholder="tu-repositorio" autocomplete="off"></div>
   <div class="field"><label>Personal Access Token</label><input type="password" id="cfgToken" class="finput" placeholder="ghp_xxxxxxxxxxxx" autocomplete="off"></div>
   <div class="macts" style="flex-direction:column;gap:8px;">
     <div style="display:flex;gap:8px;width:100%">
@@ -1558,20 +1560,18 @@ function animChart(artists,months){
       ctx.shadowColor=a.color;
       ctx.shadowBlur=4;
 
-      // We draw a smooth continuous line parameterized by t in [0, cm]
-      // For integer month m: value = a.data[m]
-      // For fractional position t: lerp between data[floor(t)] and data[ceil(t)]
-      const steps=Math.ceil(cm*8)+1; // enough segments for smooth curve
+      // Shared interpolation function — same formula used by both line and dot
+      // so they always agree on position
+      function interp(t){
+        if(t>=11) return a.data[11];
+        const m0=Math.floor(t);
+        const vStart=m0>0?a.data[m0-1]:0;
+        return vStart+(a.data[m0]-vStart)*(t-m0);
+      }
+      const steps=Math.ceil(cm*8)+1;
       for(let s=0;s<=steps;s++){
         const t=Math.min((s/steps)*cm, cm);
-        const m0=Math.floor(t), m1=Math.min(m0+1,11);
-        const frac=t-m0;
-        const v0=m0===0?0:a.data[m0-1]; // value entering month m0
-        // wait — cumulative means data[m] is total up to end of month m
-        // at position t inside month m0, value = lerp(data[m0-1 or 0], data[m0], frac)
-        const vStart=m0>0?a.data[m0-1]:0;
-        const vEnd=a.data[m0];
-        const val=vStart+(vEnd-vStart)*frac;
+        const val=interp(t);
         const px=P.l+(t/11)*cW;
         const py=P.t+cH-(val/mx)*cH;
         s===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
@@ -1579,10 +1579,8 @@ function animChart(artists,months){
       ctx.stroke();
       ctx.shadowBlur=0;
 
-      // Dot at current leading edge
-      const m0=Math.floor(cm), frac=cm-m0;
-      const vStart=m0>0?a.data[m0-1]:0;
-      const val=m0<11 ? vStart+(a.data[m0]-vStart)*frac : a.data[11];
+      // Dot at current leading edge — uses exact same interp, guaranteed to match line end
+      const val=interp(cm);
       const dotX=P.l+(cm/11)*cW;
       const dotY=P.t+cH-(val/mx)*cH;
       ctx.beginPath();ctx.arc(dotX,dotY,3.5,0,Math.PI*2);
