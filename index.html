@@ -74,7 +74,7 @@ header{padding:16px 18px 10px;flex-shrink:0;border-bottom:1px solid var(--border
 .view{display:none;flex-direction:column;flex:1;overflow:hidden;}.view.active{display:flex;}
 
 /* ── VINYL GRID (2-col) ── */
-.vgrid{flex:1;overflow-y:auto;padding:14px 14px 8px;display:grid;grid-template-columns:1fr 1fr;gap:16px 12px;align-content:start;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+.vgrid{flex:1;overflow-y:auto;padding:14px 14px 8px;display:grid;grid-template-columns:1fr 1fr;gap:16px 12px;align-content:start;scrollbar-width:thin;scrollbar-color:var(--border) transparent;box-sizing:border-box;}
 
 .vcard{cursor:pointer;transition:transform .15s;display:flex;flex-direction:column;align-items:center;}
 .vcard:active{transform:scale(.95);}
@@ -82,7 +82,7 @@ header{padding:16px 18px 10px;flex-shrink:0;border-bottom:1px solid var(--border
 /* The outer positioning wrapper — gives room for badges outside the circle */
 .vcard-disc-wrap{
   position:relative;
-  width:calc(100% - 16px); /* leave a little padding so badges don't clip */
+  width:100%;
   aspect-ratio:1;
   isolation:isolate;
 }
@@ -499,7 +499,6 @@ select.finput option{background:var(--s2);}
       <div><div class="app-title">Vinilos</div><div class="app-sub">Tu colección</div></div>
       <div class="hbtns">
         <span class="user-chip" id="userChip">—</span>
-        <div class="icon-btn" id="syncBtn" onclick="syncNow()" title="Sincronizar">↻</div>
         <div class="icon-btn" onclick="window.location.reload()" title="Actualizar app">⟳</div>
         <div class="icon-btn" onclick="openModal('configModal')" title="Config">⚙</div>
       </div>
@@ -509,7 +508,7 @@ select.finput option{background:var(--s2);}
       <div class="stat-pill"><div class="sp-label">Este año</div><div class="sp-val" id="cntYear">0</div></div>
       <div class="stat-pill"><div class="sp-label">Total</div><div class="sp-val" id="cntTotal">0</div></div>
     </div>
-    <div class="sync"><div class="sdot" id="sdot"></div><span id="slabel">Local</span></div>
+    <div class="sync"><button id="syncBtn" onclick="syncNow()" style="display:none;background:none;border:none;color:var(--accent2);font-size:13px;cursor:pointer;padding:0;margin-right:6px;line-height:1;">↻</button><div class="sdot" id="sdot"></div><span id="slabel">Local</span></div>
   </header>
 
   <div class="tabs tabs-main">
@@ -779,6 +778,9 @@ function setSS(st,lbl){
   } else {
     el.textContent=lbl;
   }
+  // Show sync button only when GitHub is configured (not local mode)
+  const sb=document.getElementById('syncBtn');
+  if(sb) sb.style.display=(st===''||st==='local')?'none':'inline';
 }
 
 // ════════════════════════════════════════════════════════════
