@@ -158,7 +158,7 @@ header{padding:16px 18px 10px;flex-shrink:0;border-bottom:1px solid var(--border
 .btn-p{background:var(--accent);color:var(--bg);font-weight:500;}
 .btn-p:disabled{background:var(--dim);color:#555;cursor:default;}
 .btn-p:disabled:active{transform:none;}
-.btn-s{background:var(--s2);color:var(--muted);border:1px solid var(--border);}
+.btn-s{background:transparent;color:var(--accent2);border:1px solid var(--accent2);}
 
 /* ── MODALS ── */
 .moverlay{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:100;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;}
@@ -279,8 +279,8 @@ select.finput option{background:var(--s2);}
 .tabs-main .tab{flex:1;text-align:center;padding:11px 4px;}
 
 /* ── SUBTABS ── */
-.subtabs{display:flex;padding:0 18px;flex-shrink:0;border-bottom:1px solid var(--border);background:var(--surface);}
-.subtab{padding:9px 14px;font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;background:none;border-top:none;border-left:none;border-right:none;font-family:'DM Mono',monospace;transition:all .15s;}
+.subtabs{display:flex;flex-shrink:0;border-bottom:1px solid var(--border);background:var(--surface);}
+.subtab{flex:1;text-align:center;padding:9px 4px;font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;background:none;border-top:none;border-left:none;border-right:none;font-family:'DM Mono',monospace;transition:all .15s;}
 .subtab.active{color:var(--accent);border-bottom-color:var(--accent2);}
 .subview{display:none;flex:1;overflow:hidden;flex-direction:column;}
 .subview.active{display:flex;}
@@ -289,14 +289,43 @@ select.finput option{background:var(--s2);}
 .btn-e{background:var(--s2);color:var(--accent2);border:1px solid var(--accent2);}
 
 /* ── LOG VIEW ── */
-.log-item{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border);}
-.log-item:last-child{border-bottom:none;}
+/* log-item border now on .log-wrap */
 .log-disc{width:38px;height:38px;border-radius:50%;flex-shrink:0;overflow:hidden;background:conic-gradient(from 0deg,#0d0d0d 0,#1a1a1a 18deg,#0d0d0d 36deg,#1a1a1a 54deg,#0d0d0d 72deg,#1a1a1a 90deg,#0d0d0d 108deg,#1a1a1a 126deg,#0d0d0d 144deg,#1a1a1a 162deg,#0d0d0d 180deg,#1a1a1a 198deg,#0d0d0d 216deg,#1a1a1a 234deg,#0d0d0d 252deg,#1a1a1a 270deg,#0d0d0d 288deg,#1a1a1a 306deg,#0d0d0d 324deg,#1a1a1a 342deg,#0d0d0d 360deg);border:1px solid #222;position:relative;}
 .log-disc img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
 .log-info{flex:1;min-width:0;}
 .log-album{font-family:'DM Serif Display',serif;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .log-artist{font-size:10px;color:var(--muted);margin-top:1px;}
 .log-time{font-size:9px;color:var(--dim);text-align:right;flex-shrink:0;line-height:1.6;}
+
+/* ── YEAR SELECT ── */
+.year-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:13px;padding-bottom:7px;border-bottom:1px solid var(--border);}
+.year-select{background:var(--s2);border:1px solid var(--border);color:var(--accent);font-family:'DM Mono',monospace;font-size:13px;padding:5px 10px;border-radius:var(--radius);outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;padding-right:26px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23c9a96e' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;}
+
+/* ── ALBUM TOP CARD (year) ── */
+.album-top-card{display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:13px;}
+.album-top-cover{width:56px;height:56px;border-radius:6px;object-fit:cover;flex-shrink:0;}
+.album-top-info{flex:1;min-width:0;}
+.album-top-ed{font-style:italic;font-size:10px;color:var(--muted);margin-top:3px;font-family:'DM Serif Display',serif;}
+
+/* ── RANK BAR COUNT ── */
+.rcnt{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);width:22px;text-align:right;flex-shrink:0;}
+
+/* ── CHART CANVAS ── */
+#yearChart{width:100%;display:block;margin:0;}
+.chart-c{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:12px;}
+
+/* ── LOG SWIPE TO DELETE ── */
+.log-wrap{position:relative;overflow:hidden;border-bottom:1px solid var(--border);}
+.log-wrap:last-child{border-bottom:none;}
+.log-item{display:flex;align-items:center;gap:12px;padding:11px 0;
+  transform:translateX(0);transition:transform .25s cubic-bezier(.4,0,.2,1);
+  background:var(--bg);position:relative;border-bottom:none;}
+.log-del{position:absolute;right:0;top:0;bottom:0;width:64px;
+  background:#3a0a0a;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:background .15s;}
+.log-del:hover{background:#5a1010;}
+.log-del svg{width:20px;height:20px;fill:none;stroke:#e05252;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.log-item.swiped{transform:translateX(-64px);}
 </style>
 </head>
 <body>
@@ -328,14 +357,14 @@ select.finput option{background:var(--s2);}
   <div class="mtitle">Sincronización</div>
   <div class="msub">Datos compartidos en GitHub</div>
   <div class="cfg-info">
-    Los datos se guardan en <strong>data.json</strong> en tu repositorio de GitHub, sincronizando automáticamente ambos móviles.<br><br>
-    Crea un <a href="https://github.com/settings/tokens/new?scopes=repo&description=Vinilos" target="_blank">→ Personal Access Token</a> con permiso <strong>repo</strong>.
+    Los datos se guardan en el repositorio privado <strong>vinilos-datos</strong> en GitHub (<code>collection.json</code> y <code>plays.json</code>), sincronizando automáticamente entre dispositivos.<br><br>
+    Crea un <a href="https://github.com/settings/tokens" target="_blank">→ Fine-grained Personal Access Token</a> con acceso solo al repositorio <strong>vinilos-datos</strong>, permiso <strong>Contents: Read and write</strong>.
     <div class="cfg-note">
-      <strong>Seguridad:</strong> Tu token se guarda <em>solo</em> en este dispositivo (localStorage), nunca en el código ni en data.json. Es exactamente como funcionan las apps móviles de GitHub — nadie puede verlo salvo quien tenga acceso físico a tu móvil.
+      <strong>Seguridad:</strong> Tu token se guarda <em>solo</em> en este dispositivo (localStorage), nunca en el código fuente. El repositorio de datos es privado — nadie puede ver tu colección.
     </div>
   </div>
   <div class="field"><label>Usuario de GitHub</label><input type="text" id="cfgUser" class="finput" placeholder="tu-usuario" autocomplete="off"></div>
-  <div class="field"><label>Repositorio</label><input type="text" id="cfgRepo" class="finput" placeholder="vinilos-app" autocomplete="off"></div>
+  <div class="field"><label>Repositorio de datos <span style="color:var(--dim)">(por defecto: vinilos-datos)</span></label><input type="text" id="cfgDataRepo" class="finput" placeholder="vinilos-datos" autocomplete="off"></div>
   <div class="field"><label>Personal Access Token</label><input type="password" id="cfgToken" class="finput" placeholder="ghp_xxxxxxxxxxxx" autocomplete="off"></div>
   <div class="macts">
     <button class="btn btn-s" onclick="closeModal('configModal')" style="flex:.5">Cancelar</button>
@@ -352,8 +381,8 @@ select.finput option{background:var(--s2);}
   <div class="mhandle"></div>
   <div class="mtitle">Nuevo vinilo</div>
   <div class="msub">Añade un disco a tu colección</div>
-  <div class="field"><label>Artista</label><input type="text" id="inArtist" class="finput" placeholder="Nombre del artista" autocomplete="off"></div>
   <div class="field"><label>Álbum</label><input type="text" id="inAlbum" class="finput" placeholder="Título del álbum" autocomplete="off"></div>
+  <div class="field"><label>Artista</label><input type="text" id="inArtist" class="finput" placeholder="Nombre del artista" autocomplete="off"></div>
   <div class="field"><label>Edición <span style="color:var(--dim)">(opcional)</span></label><input type="text" id="inEdition" class="finput" placeholder="ej: 10th Anniversary Edition" autocomplete="off"></div>
   <div class="field"><label>Año</label><input type="number" id="inYear" class="finput" placeholder="ej: 2021" min="1900" max="2099"></div>
   <div class="field">
@@ -387,8 +416,8 @@ select.finput option{background:var(--s2);}
   <div class="mhandle"></div>
   <div class="mtitle">Editar vinilo</div>
   <div class="msub">Modifica los datos o elimina el disco</div>
-  <div class="field"><label>Artista</label><input type="text" id="edArtist" class="finput" autocomplete="off"></div>
   <div class="field"><label>Álbum</label><input type="text" id="edAlbum" class="finput" autocomplete="off"></div>
+  <div class="field"><label>Artista</label><input type="text" id="edArtist" class="finput" autocomplete="off"></div>
   <div class="field"><label>Edición <span style="color:var(--dim)">(opcional)</span></label><input type="text" id="edEdition" class="finput" autocomplete="off"></div>
   <div class="field"><label>Año</label><input type="number" id="edYear" class="finput" min="1900" max="2099"></div>
   <div class="field">
@@ -496,58 +525,23 @@ select.finput option{background:var(--s2);}
 
 <script>
 'use strict';
-// ════════════════════════════════════════════════════════════
-//  SEED DATA  (bootstraps data.json the first time)
-// ════════════════════════════════════════════════════════════
-const SEED_VINYLS = [
-  {id:1,artist:'Dua Lipa',album:'Future Nostalgia',edition:'The Moonlight Edition',year:2021,genres:['pop'],country:'U.K.',cover:'https://en.wikipedia.org/w/index.php?title=Special:FilePath/Dua_Lipa_-_Future_Nostalgia_The_Moonlight_Edition.png&width=300'},
-  {id:2,artist:'Dua Lipa',album:'Radical Optimism',edition:'Amazon Edition',year:2024,genres:['pop'],country:'U.K.',cover:'https://en.wikipedia.org/w/index.php?title=Special:FilePath/Dua_Lipa_-_Radical_Optimism.png&width=300'},
-  {id:3,artist:'Imagine Dragons',album:'Evolve',edition:'',year:2017,genres:['rock'],country:'U.S.A.',cover:'https://en.wikipedia.org/w/index.php?title=Special:FilePath/ImagineDragonsEvolve.jpg&width=300'},
-  {id:4,artist:'Hozier',album:'Hozier',edition:'10th Anniversary Edition',year:2014,genres:['indie'],country:'Irlanda',cover:'https://en.wikipedia.org/w/index.php?title=Special:FilePath/Hozier_-_Hozier.png&width=300'},
-  {id:5,artist:'Coldplay',album:'A Rush of Blood to the Head',edition:'',year:2002,genres:['pop'],country:'U.K.',cover:'https://en.wikipedia.org/w/index.php?title=Special:FilePath/Coldplay_-_A_Rush_of_Blood_to_the_Head_Cover.png&width=300'},
-  {id:6,artist:'ABBA',album:'ABBA Greatest Hits',edition:'',year:1976,genres:['pop'],country:'Suecia',cover:'https://en.wikipedia.org/w/index.php?title=Special:FilePath/ABBA_-_Greatest_Hits_(UK).jpg&width=300'},
-  {id:7,artist:'Arctic Monkeys',album:'AM',edition:'',year:2013,genres:['rock'],country:'U.K.',cover:'https://en.wikipedia.org/w/index.php?title=Special:FilePath/Arctic_Monkeys_-_AM.png&width=300'},
-];
-
-function seededRng(s){return function(){s=(s*1664525+1013904223)&0xffffffff;return(s>>>0)/0xffffffff;};}
-function buildSeedPlays(){
-  const W=[
-    {artist:'Hozier',album:'Hozier',w:9},
-    {artist:'Arctic Monkeys',album:'AM',w:8},
-    {artist:'Dua Lipa',album:'Future Nostalgia',w:6},
-    {artist:'Coldplay',album:'A Rush of Blood to the Head',w:5},
-    {artist:'Dua Lipa',album:'Radical Optimism',w:4},
-    {artist:'Imagine Dragons',album:'Evolve',w:3},
-    {artist:'ABBA',album:'ABBA Greatest Hits',w:2},
-  ];
-  const users=['Alho','Novia'];
-  const pool=[];W.forEach(w=>{for(let i=0;i<w.w;i++)pool.push(w);});
-  const ma=[8,6,7,5,4,3,3,4,6,7,8,10];
-  const rng=seededRng(42),out=[];
-  for(let m=0;m<12;m++){
-    const cnt=Math.round(ma[m]*(2+rng()*2));
-    for(let i=0;i<cnt;i++){
-      const p=pool[Math.floor(rng()*pool.length)];
-      const d=1+Math.floor(rng()*28),hh=10+Math.floor(rng()*14),mi=Math.floor(rng()*60);
-      const usr=users[Math.floor(rng()*2)];
-      out.push({artist:p.artist,album:p.album,ts:new Date(2025,m,d,hh,mi,0).toISOString(),user:usr});
-    }
-  }
-  return out;
-}
-const REAL_PLAYS=[
-  {artist:'Hozier',album:'Hozier',ts:'2026-03-08T15:20:00',user:'Alho'},
-  {artist:'Hozier',album:'Hozier',ts:'2026-03-08T22:12:00',user:'Alho'},
-  {artist:'Imagine Dragons',album:'Evolve',ts:'2026-03-08T22:12:00',user:'Novia'},
-  {artist:'Dua Lipa',album:'Radical Optimism',ts:'2026-03-08T22:12:00',user:'Novia'},
-];
 
 // ════════════════════════════════════════════════════════════
 //  USER MANAGEMENT
+//  Name is resolved to an id via the users table in collection.
+//  userId is cached in localStorage after first sync.
 // ════════════════════════════════════════════════════════════
 const USER = {
   get name(){ return localStorage.getItem('username') || ''; },
-  set name(v){ localStorage.setItem('username', v); }
+  set name(v){ localStorage.setItem('username', v); },
+  get id(){ const n=parseInt(localStorage.getItem('userId')); return isNaN(n)?null:n; },
+  set id(v){ localStorage.setItem('userId', v); },
+  // Resolve name → id from loaded users table, cache it
+  resolve(users){
+    if(!this.name||!users?.length) return;
+    const u=users.find(x=>x.name===this.name);
+    if(u) this.id=u.id;
+  }
 };
 
 function saveUsername(){
@@ -559,113 +553,213 @@ function saveUsername(){
 }
 
 // ════════════════════════════════════════════════════════════
-//  GITHUB SYNC
-//  PAT stored only in localStorage — never in code/data.json
+//  GITHUB API
+//  - Data repo (private): vinilos-datos → collection.json + plays.json
+//  - PAT needs Contents read+write on vinilos-datos only
+//  - PAT stored only in localStorage — never in source code
 // ════════════════════════════════════════════════════════════
 const GH = {
-  get user(){ return localStorage.getItem('gh_user')||''; },
-  get repo(){ return localStorage.getItem('gh_repo')||''; },
+  get user(){  return localStorage.getItem('gh_user')||''; },
   get token(){ return localStorage.getItem('gh_token')||''; },
-  get ok(){ return !!(this.user&&this.repo&&this.token); },
-  save(u,r,t){ localStorage.setItem('gh_user',u); localStorage.setItem('gh_repo',r); localStorage.setItem('gh_token',t); },
-  url(){ return `https://api.github.com/repos/${this.user}/${this.repo}/contents/data.json`; },
-  async read(){
-    const r=await fetch(this.url(),{headers:{'Authorization':`token ${this.token}`,'Accept':'application/vnd.github.v3+json'}});
+  get dataRepo(){ return localStorage.getItem('gh_data_repo')||'vinilos-datos'; },
+  get ok(){ return !!(this.user&&this.token); },
+  save(u,t,dr){
+    localStorage.setItem('gh_user',u);
+    localStorage.setItem('gh_token',t);
+    localStorage.setItem('gh_data_repo',dr||'vinilos-datos');
+  },
+  _url(file){ return `https://api.github.com/repos/${this.user}/${this.dataRepo}/contents/${file}`; },
+  _headers(){ return {'Authorization':`token ${this.token}`,'Accept':'application/vnd.github.v3+json'}; },
+
+  async readFile(file){
+    const r=await fetch(this._url(file),{headers:this._headers()});
     if(r.status===404) return null;
-    if(!r.ok) throw new Error('GH '+r.status);
+    if(!r.ok) throw new Error('GH read '+r.status);
     const j=await r.json();
     const d=JSON.parse(atob(j.content.replace(/\n/g,'')));
     d._sha=j.sha; return d;
   },
-  async write(data){
+  async writeFile(file,data){
     const sha=data._sha; const body={...data}; delete body._sha;
     const enc=btoa(unescape(encodeURIComponent(JSON.stringify(body,null,2))));
-    const pay={message:'update plays',content:enc}; if(sha) pay.sha=sha;
-    const r=await fetch(this.url(),{method:'PUT',headers:{'Authorization':`token ${this.token}`,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(pay)});
+    const pay={message:`sync ${file}`,content:enc}; if(sha) pay.sha=sha;
+    const r=await fetch(this._url(file),{method:'PUT',headers:{...this._headers(),'Content-Type':'application/json'},body:JSON.stringify(pay)});
     if(!r.ok) throw new Error('GH write '+r.status);
     const j=await r.json(); return j.content.sha;
   }
 };
 
-function setSS(st,lbl){ document.getElementById('sdot').className='sdot '+st; document.getElementById('slabel').textContent=lbl; }
+// ════════════════════════════════════════════════════════════
+//  LOCAL DB  (localStorage mirror + event log)
+// ════════════════════════════════════════════════════════════
+const DB = {
+  // ── plays ──────────────────────────────────────────────────
+  get plays(){ return JSON.parse(localStorage.getItem('plays')||'null')||[]; },
+  get users(){ return JSON.parse(localStorage.getItem('users')||'null')||[]; },
+  set users(v){ localStorage.setItem('users',JSON.stringify(v)); },
+  set plays(v){ localStorage.setItem('plays',JSON.stringify(v)); },
+  addPlay(vinylId){
+    const p=this.plays;
+    p.push({id:Date.now()+'_'+Math.random().toString(36).slice(2,7),vinylId,ts:new Date().toISOString(),userId:USER.id});
+    this.plays=p;
+  },
 
-async function syncNow(){
-  if(!GH.ok){ openModal('configModal'); return; }
-  setSS('syncing','sincronizando…');
-  try{
-    const rem=await GH.read();
-    if(rem){
-      const mp=mergePlays(DB.plays, rem.plays||[]);
-      const mv=mergeVinyls(DB.vinyls, rem.vinyls||[]);
-      DB.plays=mp; DB.vinyls=mv;
-      await GH.write({plays:mp,vinyls:mv,_sha:rem._sha});
-    } else {
-      await GH.write({plays:DB.plays,vinyls:DB.vinyls});
-    }
-    setSS('ok','sincronizado'); renderAll(); showToast('Sincronizado ✓');
-  } catch(e){ setSS('err','error sync'); showToast('Error al sincronizar'); console.error(e); }
+  // ── vinyl event log ─────────────────────────────────────────
+  // Each event: {op:'add'|'edit'|'delete', id, data?, ts}
+  // The current vinyl list is always derived by replaying the log.
+  get vinylLog(){ return JSON.parse(localStorage.getItem('vinylLog')||'null')||[]; },
+  set vinylLog(v){ localStorage.setItem('vinylLog',JSON.stringify(v)); },
+
+  // Derived vinyl state from log
+  get vinyls(){
+    const log=this.vinylLog;
+    const map=new Map();
+    log.forEach(e=>{
+      if(e.op==='add')    map.set(e.id,{...e.data,id:e.id});
+      if(e.op==='edit')   map.set(e.id,{...e.data,id:e.id});
+      if(e.op==='delete') map.delete(e.id);
+    });
+    return [...map.values()];
+  },
+  // Allow direct set (used when loading seed/remote data — rebuilds log)
+  set vinyls(arr){
+    const now=new Date().toISOString();
+    // Replace log with a single 'add' event per vinyl at timestamp 0
+    // (so any future local events are always newer)
+    this.vinylLog=arr.map(v=>({op:'add',id:v.id,data:v,ts:v._ts||'1970-01-01T00:00:00.000Z'}));
+  },
+
+  // Append a vinyl event
+  logEvent(ev){
+    const log=this.vinylLog;
+    log.push(ev);
+    this.vinylLog=log;
+  },
+
+  addVinyl(obj){
+    const id=Date.now();
+    const ts=new Date().toISOString();
+    this.logEvent({op:'add',id,data:{...obj},ts});
+  },
+  deletePlay(playId){
+    this.plays=this.plays.filter(p=>p.id!==playId);
+  },
+  editVinyl(id,obj){
+    const ts=new Date().toISOString();
+    this.logEvent({op:'edit',id,data:{...obj},ts});
+  },
+  deleteVinyl(id){
+    const ts=new Date().toISOString();
+    this.logEvent({op:'delete',id,ts});
+  }
+};
+
+// ════════════════════════════════════════════════════════════
+//  EVENT LOG MERGE
+//  Merges two event logs by timestamp — union of all events,
+//  deduped by (op+id+ts). Order determines final state.
+// ════════════════════════════════════════════════════════════
+function mergeVinylLogs(a, b){
+  const map=new Map();
+  [...a,...b].forEach(e=>{
+    const k=e.op+'|'+e.id+'|'+e.ts;
+    if(!map.has(k)) map.set(k,e);
+  });
+  return [...map.values()].sort((x,y)=>x.ts.localeCompare(y.ts));
 }
 
 function mergePlays(a,b){
   const m=new Map();
-  [...a,...b].forEach(p=>{const k=p.ts+'|'+p.album+'|'+(p.user||'');if(!m.has(k))m.set(k,p);});
+  [...a,...b].forEach(p=>{if(p.id&&!m.has(p.id))m.set(p.id,p);});
   return[...m.values()].sort((x,y)=>x.ts.localeCompare(y.ts));
 }
-function mergeVinyls(a,b){
-  const m=new Map();
-  [...a,...b].forEach(v=>{const k=v.artist+'|'+v.album;if(!m.has(k))m.set(k,v);});
-  return[...m.values()];
+
+// ════════════════════════════════════════════════════════════
+//  SYNC STATUS
+// ════════════════════════════════════════════════════════════
+let _dotsInterval=null;
+function setSS(st,lbl){
+  document.getElementById('sdot').className='sdot '+st;
+  const el=document.getElementById('slabel');
+  if(_dotsInterval){clearInterval(_dotsInterval);_dotsInterval=null;}
+  if(st==='syncing'){
+    let dots=1;
+    el.textContent='sincronizando.';
+    _dotsInterval=setInterval(()=>{dots=(dots%3)+1;el.textContent='sincronizando'+'.'.repeat(dots);},500);
+  } else {
+    el.textContent=lbl;
+  }
 }
 
 // ════════════════════════════════════════════════════════════
-//  LOCAL DB
+//  SYNC  (event-sourced, two-file)
+//
+//  Private repo (vinilos-datos):
+//    collection.json → { vinylLog, users }
+//    plays.json      → { plays }
+//
+//  On every sync:
+//    1. Read both files from GitHub
+//    2. Merge local + remote (union by ts, deduped)
+//    3. Write merged result back to both files
+//    4. Update localStorage
+//
+//  Guarantees: no data lost offline, deletes respected,
+//  edits resolved by timestamp, plays always appended.
 // ════════════════════════════════════════════════════════════
-const DB = {
-  get vinyls(){ return JSON.parse(localStorage.getItem('vinyls')||'null')||[]; },
-  set vinyls(v){ localStorage.setItem('vinyls',JSON.stringify(v)); },
-  get plays(){ return JSON.parse(localStorage.getItem('plays')||'null')||[]; },
-  set plays(v){ localStorage.setItem('plays',JSON.stringify(v)); },
-  addPlay(ar,al){
-    const p=this.plays;
-    p.push({artist:ar,album:al,ts:new Date().toISOString(),user:USER.name});
-    this.plays=p;
-  },
-  addVinyl(obj){
-    const v=this.vinyls;
-    v.push({...obj,id:Date.now()});
-    this.vinyls=v;
-  }
-};
+async function syncNow(){
+  if(!GH.ok){ openModal('configModal'); return; }
+  setSS('syncing','sincronizando');
+  try{
+    // Read both files in parallel
+    const [remCol, remPls] = await Promise.all([
+      GH.readFile('collection.json'),
+      GH.readFile('plays.json')
+    ]);
 
+    // Merge vinyl log
+    const remLog   = remCol?.vinylLog || [];
+    const mergedLog = mergeVinylLogs(DB.vinylLog, remLog);
+
+    // Merge plays
+    const remPlays   = remPls?.plays || [];
+    const mergedPlays = mergePlays(DB.plays, remPlays);
+
+    // Users table always comes from collection (source of truth)
+    const users = remCol?.users || DB.users || [];
+
+    // Persist locally
+    DB.vinylLog = mergedLog;
+    DB.plays    = mergedPlays;
+    DB.users    = users;
+
+    // Resolve current user's id from the users table
+    USER.resolve(users);
+
+    // Write back both files in parallel
+    await Promise.all([
+      GH.writeFile('collection.json', {vinylLog:mergedLog, users, _sha:remCol?._sha}),
+      GH.writeFile('plays.json',      {plays:mergedPlays,         _sha:remPls?._sha})
+    ]);
+
+    setSS('ok','sincronizado');
+    renderAll();
+    showToast('Sincronizado ✓');
+  } catch(e){
+    setSS('err','error sync');
+    showToast('Error al sincronizar');
+    console.error(e);
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+//  INIT DATA
+//  Only called when GitHub is NOT configured.
+//  When GitHub IS configured, boot() calls syncNow() directly.
+// ════════════════════════════════════════════════════════════
 async function initData(){
-  // 1. Try to load data.json from the repo (via GitHub API if configured, else relative URL)
-  let remote = null;
-  if(GH.ok){
-    try { remote = await GH.read(); } catch(e){ console.warn('GH read failed',e); }
-  }
-  if(!remote){
-    // Try loading data.json as a relative file (works when hosted on GitHub Pages)
-    try{
-      const r = await fetch('./data.json');
-      if(r.ok){ remote = await r.json(); }
-    } catch(e){ console.warn('data.json fetch failed',e); }
-  }
-
-  if(remote){
-    // data.json is the source of truth — always overwrite local
-    if(remote.vinyls?.length) DB.vinyls = remote.vinyls;
-    if(remote.plays?.length)  DB.plays  = remote.plays;
-    if(remote._sha) window._ghSha = remote._sha;
-  } else {
-    // Fully offline first load — seed from hardcoded defaults
-    if(!DB.vinyls.length){
-      DB.vinyls = SEED_VINYLS;
-    }
-    if(!DB.plays.length){
-      const seed = buildSeedPlays();
-      DB.plays = [...seed, ...REAL_PLAYS].sort((a,b)=>a.ts.localeCompare(b.ts));
-    }
-  }
+  // Nothing to do — local state (vinylLog + plays) is already in localStorage
+  // from a previous session. If localStorage is empty, the app starts blank.
 }
 
 // ════════════════════════════════════════════════════════════
@@ -682,6 +776,7 @@ let addGenres=[];
 let currentSubTab = 'smonth';
 
 function showMainTab(tab) {
+  if(currentTab==='wrapped' && tab!=='wrapped' && currentSubTab==='syear') stopConfetti();
   currentTab = tab;
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.querySelectorAll('.tabs-main .tab').forEach(t => t.classList.remove('active'));
@@ -692,6 +787,7 @@ function showMainTab(tab) {
 }
 
 function showSubTab(stab, rerender=true) {
+  if(currentSubTab==='syear' && stab!=='syear') stopConfetti();
   currentSubTab = stab;
   document.querySelectorAll('.subview').forEach(v => v.classList.remove('active'));
   document.querySelectorAll('.subtab').forEach(t => t.classList.remove('active'));
@@ -910,12 +1006,8 @@ function saveEdit(){
   const yt=document.getElementById('edYoutube').value.trim();
   const csel=document.getElementById('edCountrySelect').value;
   const country=csel==='__new__'?document.getElementById('edCountryNew').value.trim():csel;
-  const vinyls=DB.vinyls;
-  const idx=vinyls.findIndex(x=>x.id===selV.id);
-  if(idx<0) return;
-  vinyls[idx]={...vinyls[idx],artist:ar,album:al,edition:ed,year:yr,genres:[...editGenres],country,cover:cov,youtube:yt};
-  DB.vinyls=vinyls;
-  selV=vinyls[idx];
+  DB.editVinyl(selV.id,{artist:ar,album:al,edition:ed,year:yr,genres:[...editGenres],country,cover:cov,youtube:yt});
+  selV=DB.vinyls.find(x=>x.id===selV.id)||null;
   closeModal('editModal');
   renderAll();
   showToast('Vinilo actualizado ✓');
@@ -925,7 +1017,7 @@ function saveEdit(){
 function deleteVinyl(){
   if(!selV) return;
   if(!confirm(`¿Eliminar "${selV.album}"? Esta acción no se puede deshacer.`)) return;
-  DB.vinyls=DB.vinyls.filter(x=>x.id!==selV.id);
+  DB.deleteVinyl(selV.id);
   selV=null;
   closeModal('editModal');
   updateBbar();
@@ -939,24 +1031,117 @@ function deleteVinyl(){
 // ════════════════════════════════════════════════════════════
 function renderLog(){
   const c=document.getElementById('logContent');
-  const plays=[...DB.plays].reverse();
-  if(!plays.length){c.innerHTML='<div class="nodata">Sin reproducciones aún.</div>';return;}
+  // Keep original indices (chronological) for deletion; display in reverse
+  const rawPlays=DB.plays;
+  const enriched=enrichPlays([...rawPlays]).reverse();
+  if(!enriched.length){c.innerHTML='<div class="nodata">Sin reproducciones aún.</div>';return;}
   const vinyls=DB.vinyls;
-  c.innerHTML='<div style="padding:0 18px 38px">'+plays.map(p=>{
-    const v=vinyls.find(x=>x.album===p.album&&x.artist===p.artist);
+  const trash=`<svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>`;
+  c.innerHTML='<div style="padding:0 18px 38px">'+enriched.map(p=>{
+    const v=vinyls.find(x=>x.id===p.vinylId);
     const dt=new Date(p.ts);
     const dateStr=dt.toLocaleDateString('es-ES',{day:'numeric',month:'short'});
     const timeStr=dt.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
     const img=v?.cover?`<img src="${h(v.cover)}" alt="" onerror="this.style.display='none'">`:'';
-    return `<div class="log-item">
-      <div class="log-disc">${img}</div>
-      <div class="log-info">
-        <div class="log-album">${h(p.album)}</div>
-        <div class="log-artist">${h(p.artist)}</div>
+    return `<div class="log-wrap" data-playid="${h(p.id||p.ts)}">
+      <div class="log-del" data-playid="${h(p.id||p.ts)}">${trash}</div>
+      <div class="log-item">
+        <div class="log-disc">${img}</div>
+        <div class="log-info">
+          <div class="log-album">${h(p.album)}</div>
+          <div class="log-artist">${h(p.artist)}</div>
+        </div>
+        <div class="log-time">${dateStr}<br>${timeStr}</div>
       </div>
-      <div class="log-time">${dateStr}<br>${timeStr}</div>
     </div>`;
   }).join('')+'</div>';
+  initLogSwipe();
+}
+
+function confirmDeletePlay(playId, albumName){
+  if(!confirm('¿Borrar la escucha de "' + albumName + '"?')) return;
+  DB.deletePlay(playId);
+  renderLog();
+  updateCounters();
+  updateBadges();
+  showToast('Escucha borrada');
+  if(GH.ok) syncNow();
+}
+
+function initLogSwipe(){
+  const items=document.querySelectorAll('.log-wrap');
+  items.forEach(wrap=>{
+    const item=wrap.querySelector('.log-item');
+    const delBtn=wrap.querySelector('.log-del');
+    const playId=wrap.dataset.playid;
+    const albumEl=wrap.querySelector('.log-album');
+    const albumName=albumEl?albumEl.textContent:'esta escucha';
+    if(delBtn){
+      delBtn.addEventListener('click',e=>{
+        e.stopPropagation();
+        confirmDeletePlay(playId, albumName);
+      });
+    }
+    let startX=0,startY=0,dx=0,dragging=false,locked=false;
+
+    function onStart(e){
+      // Close any other open items first
+      document.querySelectorAll('.log-item.swiped').forEach(el=>{
+        if(el!==item) el.classList.remove('swiped');
+      });
+      const touch=e.touches?e.touches[0]:e;
+      startX=touch.clientX; startY=touch.clientY;
+      dx=0; dragging=true; locked=false;
+      item.style.transition='none';
+    }
+    function onMove(e){
+      if(!dragging) return;
+      const touch=e.touches?e.touches[0]:e;
+      const cx=touch.clientX,cy=touch.clientY;
+      if(!locked){
+        // lock axis after 5px
+        if(Math.abs(cx-startX)<5&&Math.abs(cy-startY)<5) return;
+        if(Math.abs(cy-startY)>Math.abs(cx-startX)){dragging=false;return;}
+        locked=true;
+      }
+      e.preventDefault();
+      dx=Math.min(0,Math.max(-80,cx-startX));
+      item.style.transform='translateX('+dx+'px)';
+    }
+    function onEnd(){
+      if(!dragging){return;}
+      dragging=false;
+      item.style.transition='';
+      if(dx<-32){
+        item.classList.add('swiped');
+        item.style.transform='';
+      } else {
+        item.classList.remove('swiped');
+        item.style.transform='';
+      }
+    }
+
+    // Touch
+    item.addEventListener('touchstart',onStart,{passive:true});
+    item.addEventListener('touchmove',onMove,{passive:false});
+    item.addEventListener('touchend',onEnd);
+    // Mouse (desktop fallback)
+    item.addEventListener('mousedown',e=>{if(e.button!==0)return;onStart(e);
+      const mm=ev=>onMove(ev),mu=()=>{onEnd();document.removeEventListener('mousemove',mm);document.removeEventListener('mouseup',mu);};
+      document.addEventListener('mousemove',mm);document.addEventListener('mouseup',mu);
+    });
+    // Tap on item while swiped → close it
+    item.addEventListener('click',()=>{
+      if(item.classList.contains('swiped')){item.classList.remove('swiped');return;}
+    });
+  });
+
+  // Tap anywhere else → close all open
+  document.getElementById('logContent').addEventListener('click',e=>{
+    if(!e.target.closest('.log-item')&&!e.target.closest('.log-del')){
+      document.querySelectorAll('.log-item.swiped').forEach(el=>el.classList.remove('swiped'));
+    }
+  },{once:false});
 }
 
 // ════════════════════════════════════════════════════════════
@@ -973,7 +1158,7 @@ function openPlayModal(){
 }
 function confirmPlay(){
   if(!selV) return;
-  DB.addPlay(selV.artist,selV.album);
+  DB.addPlay(selV.id);
   closeModal('playModal'); selV=null;
   renderAll(); showToast('Escucha registrada ◎');
   updateBadges();
@@ -985,10 +1170,10 @@ function confirmPlay(){
 // ════════════════════════════════════════════════════════════
 function saveConfig(){
   const u=document.getElementById('cfgUser').value.trim();
-  const r=document.getElementById('cfgRepo').value.trim();
+  const dr=document.getElementById('cfgDataRepo').value.trim()||'vinilos-datos';
   const t=document.getElementById('cfgToken').value.trim();
-  if(!u||!r||!t){ showToast('Rellena todos los campos'); return; }
-  GH.save(u,r,t); closeModal('configModal'); showToast('Configuración guardada');
+  if(!u||!t){ showToast('Usuario y token son obligatorios'); return; }
+  GH.save(u,t,dr); closeModal('configModal'); showToast('Configuración guardada');
   syncNow();
 }
 
@@ -998,7 +1183,7 @@ function saveConfig(){
 function openModal(id){
   if(id==='configModal'){
     document.getElementById('cfgUser').value=GH.user;
-    document.getElementById('cfgRepo').value=GH.repo;
+    document.getElementById('cfgDataRepo').value=GH.dataRepo;
     document.getElementById('cfgToken').value=GH.token;
   }
   document.getElementById(id).classList.add('open');
@@ -1025,6 +1210,15 @@ function updateBadges(){
 function countBy(arr,k){ return arr.reduce((a,x)=>{a[x[k]]=(a[x[k]]||0)+1;return a;},{}); }
 function topN(o,n=99){ return Object.entries(o).sort((a,b)=>b[1]-a[1]).slice(0,n); }
 
+// Enrich plays with artist/album from vinyls (for stats that filter by string)
+function enrichPlays(plays){
+  const vinyls=DB.vinyls;
+  return plays.map(p=>{
+    const v=vinyls.find(x=>x.id===p.vinylId);
+    return v ? {...p, artist:v.artist, album:v.album} : p;
+  }).filter(p=>p.artist); // drop plays whose vinyl was deleted
+}
+
 function topDay(plays){
   const d=countBy(plays.map(p=>({day:p.ts.slice(0,10)})),'day');
   const s=topN(d,1); if(!s.length) return null;
@@ -1040,6 +1234,7 @@ function rankBars(arr,showSub){
       <div class="rn">${i+1}</div>
       <div class="rinfo"><div class="rname">${h(name)}</div>${sub?`<div class="rsub">${h(sub)}</div>`:''}</div>
       <div class="rbar-w"><div class="rbar" style="width:${Math.round(count/max*44)}px"></div></div>
+      <div class="rcnt">${count}</div>
     </div>`).join('');
 }
 
@@ -1060,7 +1255,7 @@ function calcEdadMusical(plays, currentYear){
   // weighted average year of albums played
   let sumW=0, sumYW=0;
   plays.forEach(p=>{
-    const v=vinyls.find(x=>x.album===p.album);
+    const v=vinyls.find(x=>x.id===p.vinylId) || vinyls.find(x=>x.album===p.album);
     if(v&&v.year){ sumW++; sumYW+=v.year; }
   });
   if(!sumW) return null;
@@ -1085,7 +1280,7 @@ function renderMonth(){
   const now=new Date(),d=now.getDate(),m=now.getMonth(),y=now.getFullYear();
   const MF=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   const c=document.getElementById('monthContent');
-  const p=DB.plays.filter(x=>{const t=new Date(x.ts);return t.getMonth()===m&&t.getFullYear()===y;});
+  const p=enrichPlays(DB.plays.filter(x=>{const t=new Date(x.ts);return t.getMonth()===m&&t.getFullYear()===y;}));
   // Month always unlocked (testing mode)
   if(!p.length){c.innerHTML=`<div class="nodata">Sin escuchas este mes.</div>`;return;}
   const ta=enrichAlbums(p),tar=enrichArtists(p),bd=topDay(p);
@@ -1104,20 +1299,38 @@ function renderMonth(){
 }
 
 // ════════════════════════════════════════════════════════════
-//  YEAR STATS  (2025 unlocked for demo; locks Dec 25+ for future years)
+//  YEAR STATS
 // ════════════════════════════════════════════════════════════
 let chartAnimId=null;
-function renderYear(){
-  const YEAR=2025;
+let selectedYear=null; // null = auto (latest year with data)
+
+function getAvailableYears(){
+  const ys=[...new Set(DB.plays.map(p=>new Date(p.ts).getFullYear()))].sort((a,b)=>b-a);
+  return ys;
+}
+
+function renderYear(forceYear){
   const MF=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   const MS=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
   const c=document.getElementById('yearContent');
-  const p=DB.plays.filter(x=>new Date(x.ts).getFullYear()===YEAR);
+  const years=getAvailableYears();
+  if(!years.length){c.innerHTML=`<div class="nodata">Sin escuchas registradas.</div>`;return;}
+  if(forceYear!==undefined) selectedYear=forceYear;
+  if(!selectedYear||!years.includes(selectedYear)) selectedYear=years[0];
+  const YEAR=selectedYear;
+
+  const p=enrichPlays(DB.plays.filter(x=>new Date(x.ts).getFullYear()===YEAR));
   if(!p.length){c.innerHTML=`<div class="nodata">Sin escuchas en ${YEAR}.</div>`;return;}
   const ta=enrichAlbums(p),tar=enrichArtists(p),bd=topDay(p);
   const mc={};for(let m=0;m<12;m++){const cnt=p.filter(x=>new Date(x.ts).getMonth()===m).length;if(cnt)mc[MF[m]]=cnt;}
   const tm=topN(mc,1)[0];
   const COLS=['#e8d5b0','#c9a96e','#7faadc','#52c87a','#e0956a','#e05252','#b48eff'];
+
+  // Top album details
+  const topAlbumName=ta[0]?.[0]||'—';
+  const topAlbumV=DB.vinyls.find(x=>x.album===topAlbumName);
+  const topAlbumCover=topAlbumV?.cover||'';
+  const topAlbumEd=topAlbumV?.edition||'';
 
   // Cumulative data per artist per month
   const artists=tar.slice(0,6).map(([a],i)=>{
@@ -1129,13 +1342,17 @@ function renderYear(){
     return{name:a,color:COLS[i],data};
   });
 
-  // Render: chart section first, then hidden "afterAnim" section
+  const yearOpts=years.map(y=>`<option value="${y}"${y===YEAR?' selected':''}>${y}</option>`).join('');
+
   c.innerHTML=`
     <div class="ssect">
-      <div class="slabel">Wrapped Anual ${YEAR}</div>
+      <div class="year-header">
+        <div class="slabel" style="margin-bottom:0;border:none;padding:0">Wrapped Anual</div>
+        <select class="year-select" onchange="renderYear(parseInt(this.value))">${yearOpts}</select>
+      </div>
       <div class="chart-c">
         <div class="chart-ttl">Escuchas acumuladas por artista</div>
-        <canvas id="yearChart" width="380" height="160"></canvas>
+        <canvas id="yearChart"></canvas>
         <div class="clegend" id="clegend"></div>
       </div>
       <div id="chartReveal" style="opacity:0;transition:opacity 1s;">
@@ -1144,102 +1361,114 @@ function renderYear(){
     </div>
     <div id="afterAnim" style="display:none">
       <div class="ssect">
-        <div class="two">
-          <div class="scard"><div class="scard-lbl">Álbum del año</div><div class="scard-val">${h(ta[0]?.[0]||'—')}</div></div>
+        <div class="album-top-card">
+          ${topAlbumCover?`<img class="album-top-cover" src="${h(topAlbumCover)}" alt="" onerror="this.style.display='none'">`:'' }
+          <div class="album-top-info">
+            <div class="scard-lbl">Álbum del año</div>
+            <div class="scard-val">${h(topAlbumName)}</div>
+            ${topAlbumEd?`<div class="album-top-ed">${h(topAlbumEd)}</div>`:''}
+          </div>
+        </div>
+        <div class="two" style="margin-top:9px">
           <div class="scard"><div class="scard-lbl">Artista del año</div><div class="scard-val">${h(tar[0]?.[0]||'—')}</div></div>
+          ${tm?`<div class="scard"><div class="scard-lbl">Mes más activo</div><div class="scard-val">${h(tm[0])}</div><div class="scard-sub">${tm[1]} escuchas</div></div>`:''}
         </div>
         ${edadCard(p,'del año')}
         ${bd?`<div class="scard"><div class="scard-lbl">Día con más escuchas</div><div class="sday"><div class="sday-n">${bd.count}</div><div class="sday-u">escuchas · ${bd.label}</div></div></div>`:''}
-        ${tm?`<div class="scard"><div class="scard-lbl">Mes más activo</div><div class="scard-val">${h(tm[0])}</div><div class="scard-sub">${tm[1]} escuchas</div></div>`:''}
       </div>
       <div class="ssect"><div class="slabel">Ranking álbumes del año</div><div class="scard">${rankBars(ta,true)}</div></div>
       <div class="ssect"><div class="slabel">Ranking artistas del año</div><div class="scard">${rankBars(tar)}</div></div>
     </div>`;
 
   document.getElementById('clegend').innerHTML=artists.map(a=>`<div class="cli"><div class="cldot" style="background:${a.color}"></div><span>${h(a.name)}</span></div>`).join('');
-  setTimeout(()=>animChart(artists,MS),400);
+  // Size canvas after render
+  const cv=document.getElementById('yearChart');
+  cv.style.width='100%'; cv.style.display='block';
+  setTimeout(()=>animChart(artists,MS),50);
 }
 
 function animChart(artists,months){
   const cv=document.getElementById('yearChart'); if(!cv) return;
   const ctx=cv.getContext('2d');
-  const W=cv.offsetWidth||360,H=160; cv.width=W; cv.height=H;
-  const P={t:12,r:16,b:22,l:28},cW=W-P.l-P.r,cH=H-P.t-P.b;
-  // Max is the highest cumulative value across all artists (month 11)
+  // Size canvas to its CSS width, tall enough to be readable
+  const W=cv.offsetWidth||cv.parentElement?.offsetWidth||340;
+  const H=Math.round(W*0.52); // ~52% aspect ratio — bigger than before
+  cv.width=W; cv.height=H;
+  const P={t:14,r:18,b:24,l:32},cW=W-P.l-P.r,cH=H-P.t-P.b;
   const mx=Math.max(...artists.map(a=>a.data[11]),1);
   let start=null;
-  const DUR=4200; // slower = more fluid
+  const DUR=3800;
   if(chartAnimId) cancelAnimationFrame(chartAnimId);
   const rev=document.getElementById('chartReveal'); if(rev) rev.style.opacity='0';
 
-  // Smooth easing: cubic ease-in-out
-  function ease(t){ return t<.5?4*t*t*t:(t-1)*(2*t-2)*(2*t-2)+1; }
-
   function draw(ts){
     if(!start) start=ts;
-    const raw=Math.min((ts-start)/DUR,1);
-    const prog=ease(raw);          // eased 0→1
-    const cm=prog*11;              // current month position 0→11
+    // LINEAR progress — no easing, so speed is constant
+    const prog=Math.min((ts-start)/DUR,1);
+    // prog maps 0→1 linearly across all 12 months
+    // cm is a continuous position from 0 to 11
+    const cm=prog*11;
 
     ctx.clearRect(0,0,W,H);
 
     // Grid lines
     ctx.strokeStyle='#1e1e1e'; ctx.lineWidth=1;
     for(let i=0;i<=4;i++){
-      const y=P.t+(cH/4)*i;
-      ctx.beginPath();ctx.moveTo(P.l,y);ctx.lineTo(P.l+cW,y);ctx.stroke();
+      const gy=P.t+(cH/4)*i;
+      ctx.beginPath();ctx.moveTo(P.l,gy);ctx.lineTo(P.l+cW,gy);ctx.stroke();
     }
 
-    // Month labels (reveal progressively)
-    ctx.fillStyle='#3a3a3a'; ctx.font='7px DM Mono,monospace'; ctx.textAlign='center';
-    for(let m=0;m<=Math.min(Math.floor(cm),11);m++){
-      ctx.fillText(months[m],P.l+(m/11)*cW,H-5);
+    // Month labels (reveal when that month is reached)
+    ctx.fillStyle='#444'; ctx.font=`${Math.max(7,Math.round(W/52))}px DM Mono,monospace`; ctx.textAlign='center';
+    for(let m=0;m<=11;m++){
+      if(m<=cm) ctx.fillText(months[m],P.l+(m/11)*cW,H-5);
     }
 
-    // Draw lines — cumulative so they only go up
+    // Draw each artist line using continuous interpolation
     artists.forEach(a=>{
       ctx.beginPath();
       ctx.strokeStyle=a.color;
       ctx.lineWidth=2;
       ctx.lineJoin='round';
+      ctx.lineCap='round';
       ctx.shadowColor=a.color;
-      ctx.shadowBlur=5;
+      ctx.shadowBlur=4;
 
-      let first=true;
-      for(let m=0;m<=11;m++){
-        if(m>cm) break;
-        // interpolate between month m-1 and m for the fractional position
-        const frac=(cm>=m)?1:cm-Math.floor(cm);
-        let val;
-        if(m<Math.floor(cm)){
-          val=a.data[m];
-        } else {
-          const prev=m>0?a.data[m-1]:0;
-          val=prev+(a.data[m]-prev)*(cm-Math.floor(cm));
-        }
-        const x=P.l+(m/11)*cW;
-        const y=P.t+cH-(val/mx)*cH;
-        if(first){ctx.moveTo(x,y);first=false;}else ctx.lineTo(x,y);
+      // We draw a smooth continuous line parameterized by t in [0, cm]
+      // For integer month m: value = a.data[m]
+      // For fractional position t: lerp between data[floor(t)] and data[ceil(t)]
+      const steps=Math.ceil(cm*8)+1; // enough segments for smooth curve
+      for(let s=0;s<=steps;s++){
+        const t=Math.min((s/steps)*cm, cm);
+        const m0=Math.floor(t), m1=Math.min(m0+1,11);
+        const frac=t-m0;
+        const v0=m0===0?0:a.data[m0-1]; // value entering month m0
+        // wait — cumulative means data[m] is total up to end of month m
+        // at position t inside month m0, value = lerp(data[m0-1 or 0], data[m0], frac)
+        const vStart=m0>0?a.data[m0-1]:0;
+        const vEnd=a.data[m0];
+        const val=vStart+(vEnd-vStart)*frac;
+        const px=P.l+(t/11)*cW;
+        const py=P.t+cH-(val/mx)*cH;
+        s===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
       }
       ctx.stroke();
       ctx.shadowBlur=0;
 
-      // Dot at leading edge
-      const floorM=Math.min(Math.floor(cm),11);
-      const fracM=cm-Math.floor(cm);
-      const dotVal=floorM<11
-        ?(floorM>0?a.data[floorM-1]:0)+(a.data[floorM]-( floorM>0?a.data[floorM-1]:0))*Math.min(fracM,1)
-        :a.data[11];
-      const dotX=P.l+(Math.min(cm,11)/11)*cW;
-      const dotY=P.t+cH-(dotVal/mx)*cH;
+      // Dot at current leading edge
+      const m0=Math.floor(cm), frac=cm-m0;
+      const vStart=m0>0?a.data[m0-1]:0;
+      const val=m0<11 ? vStart+(a.data[m0]-vStart)*frac : a.data[11];
+      const dotX=P.l+(cm/11)*cW;
+      const dotY=P.t+cH-(val/mx)*cH;
       ctx.beginPath();ctx.arc(dotX,dotY,3.5,0,Math.PI*2);
       ctx.fillStyle=a.color;ctx.fill();
     });
 
-    if(raw<1){
+    if(prog<1){
       chartAnimId=requestAnimationFrame(draw);
     } else {
-      // Animation done — reveal winner and stats
+      chartAnimId=null;
       if(rev) setTimeout(()=>{
         rev.style.opacity='1';
         launchConfetti();
@@ -1260,7 +1489,7 @@ function animChart(artists,months){
 //  HISTORY
 // ════════════════════════════════════════════════════════════
 function renderHist(){
-  const c=document.getElementById('histContent'); const p=DB.plays;
+  const c=document.getElementById('histContent'); const p=enrichPlays(DB.plays);
   if(!p.length){c.innerHTML=`<div class="nodata">Sin historial aún.</div>`;return;}
   const MF=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   const g={};
@@ -1291,13 +1520,28 @@ function renderHist(){
 // ════════════════════════════════════════════════════════════
 //  CONFETTI
 // ════════════════════════════════════════════════════════════
+let _confettiAnimId=null;
 function launchConfetti(){
   const cv=document.getElementById('ccanvas'),ctx=cv.getContext('2d');
   cv.width=window.innerWidth; cv.height=window.innerHeight;
   const ps=Array.from({length:90},()=>({x:Math.random()*cv.width,y:-10-Math.random()*120,vx:(Math.random()-.5)*3,vy:2+Math.random()*3,w:4+Math.random()*6,h:8+Math.random()*8,r:Math.random()*Math.PI*2,rv:(Math.random()-.5)*.2,col:['#e8d5b0','#c9a96e','#e05252','#52c87a','#7faadc','#fff'][Math.floor(Math.random()*6)]}));
   let f=0;
-  function dc(){ctx.clearRect(0,0,cv.width,cv.height);ps.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.05;p.r+=p.rv;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.r);ctx.fillStyle=p.col;ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx.restore();});f++;if(f<220)requestAnimationFrame(dc);else ctx.clearRect(0,0,cv.width,cv.height);}
-  requestAnimationFrame(dc);
+  if(_confettiAnimId) cancelAnimationFrame(_confettiAnimId);
+  function dc(){
+    ctx.clearRect(0,0,cv.width,cv.height);
+    ps.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.05;p.r+=p.rv;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.r);ctx.fillStyle=p.col;ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx.restore();});
+    f++;
+    if(f<220) _confettiAnimId=requestAnimationFrame(dc);
+    else{ ctx.clearRect(0,0,cv.width,cv.height); _confettiAnimId=null; }
+  }
+  _confettiAnimId=requestAnimationFrame(dc);
+}
+function stopConfetti(){
+  // Stop chart animation too — otherwise it fires confetti after we've left
+  if(chartAnimId){ cancelAnimationFrame(chartAnimId); chartAnimId=null; }
+  if(_confettiAnimId){ cancelAnimationFrame(_confettiAnimId); _confettiAnimId=null; }
+  const cv=document.getElementById('ccanvas');
+  if(cv) cv.getContext('2d').clearRect(0,0,cv.width,cv.height);
 }
 
 // ════════════════════════════════════════════════════════════
@@ -1374,10 +1618,14 @@ document.getElementById('loginName').addEventListener('keydown', e => { if(e.key
 //  BOOT
 // ════════════════════════════════════════════════════════════
 async function boot(){
-  await initData();
-  renderAll();
-  if(GH.ok){ setSS('ok','configurado'); }
-  else { setSS('','local'); }
+  if(GH.ok){
+    setSS('syncing','sincronizando');
+    await syncNow();  // loads from GitHub, merges, writes back, calls renderAll internally
+  } else {
+    await initData();
+    renderAll();
+    setSS('','local');
+  }
 }
 
 // Si ya está autenticado (localStorage persiste), arranca directo
