@@ -83,8 +83,13 @@ header{padding:16px 18px 10px;flex-shrink:0;border-bottom:1px solid var(--border
 .vcard-disc-wrap{
   position:relative;
   width:100%;
-  aspect-ratio:1;
+  padding-bottom:100%;
+  height:0;
   isolation:isolate;
+}
+.vcard-disc-wrap > *{
+  position:absolute;
+  inset:0;
 }
 
 /* The vinyl itself — a full circle */
@@ -208,14 +213,20 @@ select.finput option{background:var(--s2);}
 .sscroll{flex:1;overflow-y:auto;padding:16px 18px 38px;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
 .ssect{margin-bottom:26px;}
 .slabel{font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:13px;padding-bottom:7px;border-bottom:1px solid var(--border);}
-.scard{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:13px;margin-bottom:9px;}
+.scard{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:13px;margin-bottom:9px;box-sizing:border-box;}
+.scard-center{text-align:center;display:flex;flex-direction:column;align-items:center;}
+.scard-gold{border-color:var(--accent2);}
+.two-6535>.scard{margin-bottom:0;}
 .scard-lbl{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:6px;}
 .scard-val{font-family:'DM Serif Display',serif;font-size:21px;color:var(--accent);line-height:1.1;}
 .scard-sub{font-size:11px;color:var(--muted);margin-top:3px;}
 .sday{display:flex;align-items:baseline;gap:7px;}
-.sday-n{font-family:'DM Serif Display',serif;font-size:30px;color:var(--text);}
-.sday-u{font-size:11px;color:var(--muted);}
+.sday-n{font-family:'DM Serif Display',serif;font-size:30px;color:var(--text);line-height:1;}
+.sday-u{font-size:11px;color:var(--muted);margin-top:2px;}
+.sday-date{font-size:11px;color:var(--muted);margin-top:5px;font-style:italic;}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.two-6535{display:grid;grid-template-columns:65fr 35fr;gap:9px;align-items:stretch;}
+.two-6535>*{min-width:0;height:100%;box-sizing:border-box;}
 .three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;}
 .ri{display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid var(--border);}
 .ri:last-child{border-bottom:none;}
@@ -250,11 +261,16 @@ select.finput option{background:var(--s2);}
 
 /* HISTORY */
 .hcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:13px;margin-bottom:9px;cursor:pointer;}
+.hcard.year{background:var(--s2);border-color:var(--accent2);}
 .hcard-hdr{display:flex;justify-content:space-between;align-items:center;}
 .hcard-ttl{font-family:'DM Serif Display',serif;font-size:15px;color:var(--accent);}
+.hcard.year .hcard-ttl{font-size:17px;}
 .hcard-meta{font-size:10px;color:var(--muted);margin-top:2px;}
 .hcard-body{display:none;margin-top:11px;border-top:1px solid var(--border);padding-top:11px;}
 .hcard.exp .hcard-body{display:block;}
+.hcard-rank{overflow-y:auto;max-height:160px;}
+.hcard-wrapped-btn{display:inline-block;margin-top:10px;background:none;border:1px solid var(--accent2);color:var(--accent2);font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1.5px;padding:5px 10px;border-radius:var(--radius);cursor:pointer;}
+.hcard-wrapped-btn:active{opacity:.7;}
 .hdet{font-size:11px;color:var(--muted);line-height:2;}
 .hdet span{color:var(--text);}
 
@@ -281,8 +297,8 @@ select.finput option{background:var(--s2);}
 .tabs-main .tab{flex:1;text-align:center;padding:11px 4px;}
 
 /* ── SUBTABS ── */
-.subtabs{display:flex;flex-shrink:0;border-bottom:1px solid var(--border);background:var(--surface);}
-.subtab{flex:1;text-align:center;padding:9px 4px;font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;background:none;border-top:none;border-left:none;border-right:none;font-family:'DM Mono',monospace;transition:all .15s;}
+.subtabs{display:flex;flex-shrink:0;border-bottom:1px solid var(--border);background:var(--s2);margin-top:4px;border-top:1px solid var(--border);}
+.subtab{flex:1;text-align:center;padding:7px 4px;font-size:8px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;background:none;border-top:none;border-left:none;border-right:none;font-family:'DM Mono',monospace;transition:all .15s;}
 .subtab.active{color:var(--accent);border-bottom-color:var(--accent2);}
 .subview{display:none;flex:1;overflow:hidden;flex-direction:column;}
 .subview.active{display:flex;}
@@ -330,11 +346,21 @@ select.finput option{background:var(--s2);}
 .log-item.swiped{transform:translateX(-64px);}
 
 /* ── HIMNO CARD ── */
-.himno-card{display:flex;align-items:center;gap:13px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:13px;margin-top:9px;}
-.himno-icon{font-size:28px;flex-shrink:0;line-height:1;}
-.himno-info{flex:1;min-width:0;}
-.himno-lbl{font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:4px;}
-.himno-val{font-family:'DM Serif Display',serif;font-size:15px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.himno-card{display:flex;align-items:center;gap:12px;border-radius:var(--radius);padding:12px;box-sizing:border-box;border:1px solid var(--border);position:relative;overflow:hidden;}
+.himno-card.manana{background:linear-gradient(160deg,#1a1608 0%,#2a2010 60%,#1a1608 100%);border-color:#3d3010;}
+.himno-card.tarde{background:linear-gradient(200deg,#1a1008 0%,#221408 60%,#160e08 100%);border-color:#3d2010;}
+.himno-card.noche{background:#080812;border-color:#181828;}
+/* Star dots for noche */
+.himno-card.noche::before{content:'';position:absolute;inset:0;background-image:radial-gradient(1px 1px at 15% 20%,#fff6 0%,transparent 100%),radial-gradient(1px 1px at 35% 60%,#fff4 0%,transparent 100%),radial-gradient(1px 1px at 55% 30%,#fff5 0%,transparent 100%),radial-gradient(1px 1px at 70% 70%,#fff3 0%,transparent 100%),radial-gradient(1px 1px at 85% 45%,#fff6 0%,transparent 100%),radial-gradient(1.5px 1.5px at 25% 85%,#fff4 0%,transparent 100%),radial-gradient(1px 1px at 90% 15%,#fff5 0%,transparent 100%),radial-gradient(1.5px 1.5px at 60% 80%,#fff3 0%,transparent 100%);pointer-events:none;}
+.himno-art{width:44px;height:44px;flex-shrink:0;border-radius:50%;overflow:hidden;border:1px solid rgba(255,255,255,0.08);background:var(--s2);position:relative;z-index:1;}
+.himno-art img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.himno-art-placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:18px;}
+.himno-info{flex:1;min-width:0;position:relative;z-index:1;}
+.himno-lbl{font-size:9px;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px;}
+.himno-card.manana .himno-lbl{color:#a89060;}
+.himno-card.tarde .himno-lbl{color:#a07040;}
+.himno-card.noche .himno-lbl{color:#7070a0;}
+.himno-val{font-family:'DM Serif Display',serif;font-size:15px;color:var(--text);overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
 .himno-sub{font-size:10px;color:var(--dim);margin-top:3px;}
 
 /* ── NFC TAG LIST ── */
@@ -715,7 +741,7 @@ const DB = {
   },
 
   addVinyl(obj){
-    const id=Date.now();
+    const id=Math.max(0,...this.vinyls.map(v=>v.id||0))+1;
     const ts=new Date().toISOString();
     this.logEvent({op:'add',id,data:{...obj},ts});
   },
@@ -802,8 +828,6 @@ function setSS(st,lbl){
 async function syncNow(){
   if(!GH.ok){ openModal('configModal'); return; }
   setSS('syncing','Sincronizando');
-  // Also check for app updates — if a new SW is waiting, activate it
-  checkForAppUpdate();
   try{
     // Read both files sequentially to avoid SHA race conditions
     const remCol = await GH.readFile('collection.json');
@@ -1385,10 +1409,20 @@ function himnoCard(plays, label){
   const top = topN(ac,1)[0];
   if(!top) return '';
   const [albumName, cnt] = top;
-  return `<div class="himno-card">
-    <div class="himno-icon">${icons[bestFranja]}</div>
+  const coverV = DB.vinyls.find(x=>x.album===albumName);
+  const coverUrl = coverV?.cover||'';
+  const cssClass = {mañanas:'manana',tardes:'tarde',noches:'noche'}[bestFranja];
+  const artHtml = coverUrl
+    ? `<img src="${h(coverUrl)}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+    : '';
+  const fallbackIcons = {mañanas:'🌤',tardes:'🌆',noches:'🌙'};
+  return `<div class="himno-card ${cssClass}">
+    <div class="himno-art">
+      ${artHtml}
+      <div class="himno-art-placeholder" style="${coverUrl?'display:none':'display:flex'}">${fallbackIcons[bestFranja]}</div>
+    </div>
     <div class="himno-info">
-      <div class="himno-lbl">Tu himno de las ${labels[bestFranja]} ${label}</div>
+      <div class="himno-lbl">Las ${labels[bestFranja]} ${label}</div>
       <div class="himno-val">${h(albumName)}</div>
       <div class="himno-sub">${cnt} escucha${cnt!==1?'s':''} en esa franja</div>
     </div>
@@ -1406,26 +1440,74 @@ function edadCard(plays,label){
 }
 
 // ════════════════════════════════════════════════════════════
+//  SHARED CARD TEMPLATES
+// ════════════════════════════════════════════════════════════
+function cardArtist(name,label){
+  return `<div class="scard scard-center scard-gold">
+    <div class="scard-lbl">${label}</div>
+    <div class="scard-val">${h(name)}</div>
+  </div>`;}
+
+function cardAlbum(name,label){
+  return `<div class="scard scard-center">
+    <div class="scard-lbl">${label}</div>
+    <div class="scard-val">${h(name)}</div>
+  </div>`;}
+
+function cardTopDay(bd){
+  if(!bd) return '';
+  return `<div class="scard scard-center" style="margin-bottom:0;justify-content:center;">
+    <div class="scard-lbl">Día con más escuchas</div>
+    <div class="sday-n">${bd.count}</div>
+    <div class="sday-u">escuchas</div>
+    <div class="sday-date">${bd.label}</div>
+  </div>`;}
+
+function cardMesActivo(tm){
+  if(!tm) return '';
+  return `<div class="scard scard-center">
+    <div class="scard-lbl">Mes más activo</div>
+    <div class="scard-val">${h(tm[0])}</div>
+    <div class="scard-sub">${tm[1]} escuchas</div>
+  </div>`;}
+
+// ════════════════════════════════════════════════════════════
 //  MONTH STATS
 // ════════════════════════════════════════════════════════════
-function renderMonth(){
-  const now=new Date(),d=now.getDate(),m=now.getMonth(),y=now.getFullYear();
+function getAvailableMonths(){
+  // Returns [{y,m}] sorted newest first, only months with plays
+  const seen=new Set();
+  DB.plays.forEach(x=>{const d=new Date(x.ts);seen.add(`${d.getFullYear()}-${d.getMonth()}`);});
+  return [...seen].map(s=>{const[y,m]=s.split('-');return{y:+y,m:+m};})
+    .sort((a,b)=>b.y-a.y||b.m-a.m);
+}
+
+function renderMonth(forceKey){
   const MF=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   const c=document.getElementById('monthContent');
-  const p=enrichPlays(DB.plays.filter(x=>{const t=new Date(x.ts);return t.getMonth()===m&&t.getFullYear()===y;}));
-  // Month always unlocked (testing mode)
-  if(!p.length){c.innerHTML=`<div class="nodata">Sin escuchas este mes.</div>`;return;}
+  const months=getAvailableMonths();
+  if(!months.length){c.innerHTML=`<div class="nodata">Sin escuchas registradas.</div>`;return;}
+  if(forceKey!==undefined) selectedMonth=forceKey;
+  if(!selectedMonth||!months.find(x=>`${x.y}-${x.m}`===selectedMonth))
+    selectedMonth=`${months[0].y}-${months[0].m}`;
+  const [MY,MM]=selectedMonth.split('-').map(Number);
+  const p=enrichPlays(DB.plays.filter(x=>{const t=new Date(x.ts);return t.getMonth()===MM&&t.getFullYear()===MY;}));
+  if(!p.length){c.innerHTML=`<div class="nodata">Sin escuchas en ${MF[MM]} ${MY}.</div>`;return;}
   const ta=enrichAlbums(p),tar=enrichArtists(p),bd=topDay(p);
+  const monthOpts=months.map(({y,m})=>{const k=`${y}-${m}`;return`<option value="${k}"${k===selectedMonth?' selected':''}>${MF[m]} ${y}</option>`;}).join('');
   c.innerHTML=`
     <div class="ssect">
-      <div class="slabel">Wrapped — ${MF[m]} ${y}</div>
-      <div class="two">
-        <div class="scard"><div class="scard-lbl">Álbum del mes</div><div class="scard-val">${h(ta[0]?.[0]||'—')}</div></div>
-        <div class="scard"><div class="scard-lbl">Artista del mes</div><div class="scard-val">${h(tar[0]?.[0]||'—')}</div></div>
+      <div class="year-header">
+        <div class="slabel" style="margin-bottom:0;border:none;padding:0">Wrapped Mensual</div>
+        <select class="year-select" onchange="renderMonth(this.value)">${monthOpts}</select>
       </div>
-      ${himnoCard(p,'del mes')}
+      ${cardArtist(tar[0]?.[0]||'—','Artista del mes')}
+      ${cardAlbum(ta[0]?.[0]||'—','Álbum del mes')}
+      <div class="two-6535" style="margin-top:9px">
+        ${himnoCard(p,'del mes')}
+        ${cardTopDay(bd)}
+      </div>
       ${edadCard(p,'del mes')}
-      ${bd?`<div class="scard"><div class="scard-lbl">Día con más escuchas</div><div class="sday"><div class="sday-n">${bd.count}</div><div class="sday-u">escuchas · ${bd.label}</div></div></div>`:''}
     </div>
     <div class="ssect"><div class="slabel">Ranking álbumes del mes</div><div class="scard">${rankBars(ta,true)}</div></div>
     <div class="ssect"><div class="slabel">Ranking artistas del mes</div><div class="scard">${rankBars(tar)}</div></div>`;
@@ -1436,6 +1518,7 @@ function renderMonth(){
 // ════════════════════════════════════════════════════════════
 let chartAnimId=null;
 let selectedYear=null; // null = auto (latest year with data)
+let selectedMonth=null; // null = auto (current month)
 
 function getAvailableYears(){
   const ys=[...new Set(DB.plays.map(p=>new Date(p.ts).getFullYear()))].sort((a,b)=>b-a);
@@ -1465,15 +1548,34 @@ function renderYear(forceYear){
   const topAlbumCover=topAlbumV?.cover||'';
   const topAlbumEd=topAlbumV?.edition||'';
 
-  // Cumulative data per artist per month — only include if they have plays
+  // Cumulative data per artist per DAY — stop at today if current year
+  const now=new Date();
+  const daysInYear=((YEAR%4===0&&YEAR%100!==0)||YEAR%400===0)?366:365;
+  const yearStart=new Date(YEAR,0,1);
+  const isCurrentYear=(YEAR===now.getFullYear());
+  const todayIdx=isCurrentYear?Math.floor((new Date(now.getFullYear(),now.getMonth(),now.getDate())-yearStart)/86400000):daysInYear-1;
+  // chartDays = full year (axis always shows Jan–Dec)
+  // but data only populated up to todayIdx, rest stays flat at last value
+  const chartDays=daysInYear;
   const artists=tar.slice(0,6).map(([a],i)=>{
-    let cum=0;
-    const data=Array.from({length:12},(_,m)=>{
-      cum+=p.filter(x=>x.artist===a&&new Date(x.ts).getMonth()===m).length;
-      return cum;
+    const daily=new Array(daysInYear).fill(0);
+    p.filter(x=>x.artist===a).forEach(x=>{
+      const d=new Date(x.ts);
+      const dayIdx=Math.floor((d-yearStart)/86400000);
+      if(dayIdx>=0&&dayIdx<daysInYear) daily[dayIdx]++;
     });
-    return{name:a,color:COLS[i],data};
-  }).filter(a=>a.data[11]>0);  // drop artists with 0 cumulative plays
+    let cum=0;
+    const data=daily.map(v=>{cum+=v;return cum;});
+    // Freeze values after today: keep last real value flat to end of year
+    const lastVal=data[todayIdx];
+    for(let i=todayIdx+1;i<daysInYear;i++) data[i]=lastVal;
+    return{name:a,color:COLS[i],data,todayIdx};
+  }).filter(a=>a.data[a.data.length-1]>0);
+  // All 12 month ticks (full year on axis)
+  const monthTicks=Array.from({length:12},(_,m)=>{
+    const d=new Date(YEAR,m,1);
+    return Math.floor((d-yearStart)/86400000);
+  });
 
   const yearOpts=years.map(y=>`<option value="${y}"${y===YEAR?' selected':''}>${y}</option>`).join('');
 
@@ -1503,8 +1605,8 @@ function renderYear(forceYear){
           </div>
         </div>
         <div class="two" style="margin-top:9px">
-          ${bd?`<div class="scard"><div class="scard-lbl">Día con más escuchas</div><div class="sday"><div class="sday-n">${bd.count}</div><div class="sday-u">escuchas · ${bd.label}</div></div></div>`:''}
-          ${tm?`<div class="scard"><div class="scard-lbl">Mes más activo</div><div class="scard-val">${h(tm[0])}</div><div class="scard-sub">${tm[1]} escuchas</div></div>`:''}
+          ${cardTopDay(bd)}
+          ${cardMesActivo(tm)}
         </div>
         ${himnoCard(p,'del año')}
         ${edadCard(p,'del año')}
@@ -1517,88 +1619,155 @@ function renderYear(forceYear){
   // Size canvas after render
   const cv=document.getElementById('yearChart');
   cv.style.width='100%'; cv.style.display='block';
-  setTimeout(()=>animChart(artists,MS),50);
+  setTimeout(()=>animChart(artists,MS,monthTicks,chartDays,todayIdx),50);
 }
 
-function animChart(artists,months){
+function animChart(artists,months,monthTicks,totalDays,todayIdx){
   const cv=document.getElementById('yearChart'); if(!cv) return;
   const ctx=cv.getContext('2d');
-  // Size canvas to its CSS width, tall enough to be readable
+  const dpr=window.devicePixelRatio||1;
   const W=cv.offsetWidth||cv.parentElement?.offsetWidth||340;
-  const H=Math.round(W*0.52); // ~52% aspect ratio — bigger than before
-  cv.width=W; cv.height=H;
+  const H=Math.round(W*0.52);
+  cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr);
+  cv.style.width=W+'px'; cv.style.height=H+'px';
+  ctx.scale(dpr,dpr);
   const P={t:14,r:18,b:24,l:32},cW=W-P.l-P.r,cH=H-P.t-P.b;
-  const mx=Math.max(...artists.map(a=>a.data[11]),1);
-  let start=null;
-  const DUR=3800;
+  const mx=Math.max(...artists.map(a=>a.data[a.data.length-1]),1);
   if(chartAnimId) cancelAnimationFrame(chartAnimId);
   const rev=document.getElementById('chartReveal'); if(rev) rev.style.opacity='0';
 
-  function draw(ts){
-    if(!start) start=ts;
-    // LINEAR progress — no easing, so speed is constant
-    const prog=Math.min((ts-start)/DUR,1);
-    // prog maps 0→1 linearly across all 12 months
-    // cm is a continuous position from 0 to 11
-    const cm=prog*11;
+  // ── Monotone cubic interpolation (Fritsch-Carlson) ───────────
+  function monotoneSpline(xs,ys){
+    const n=xs.length;
+    if(n<2) return ()=>ys[0]||0;
+    const d=[],m=[];
+    for(let i=0;i<n-1;i++) d.push((ys[i+1]-ys[i])/(xs[i+1]-xs[i]));
+    m.push(d[0]);
+    for(let i=1;i<n-1;i++) m.push(d[i-1]*d[i]<=0?0:(d[i-1]+d[i])/2);
+    m.push(d[n-2]);
+    for(let i=0;i<n-1;i++){
+      if(d[i]===0){m[i]=0;m[i+1]=0;}
+      else{const a=m[i]/d[i],b=m[i+1]/d[i],h=Math.hypot(a,b);if(h>3){m[i]=3*d[i]/h*a;m[i+1]=3*d[i]/h*b;}}
+    }
+    return function(x){
+      let lo=0,hi=n-1;
+      while(lo<hi-1){const mid=(lo+hi)>>1;xs[mid]<=x?lo=mid:hi=mid;}
+      const h=xs[hi]-xs[lo],t=(x-xs[lo])/h,t2=t*t,t3=t2*t;
+      return (2*t3-3*t2+1)*ys[lo]+(t3-2*t2+t)*h*m[lo]+(-2*t3+3*t2)*ys[hi]+(t3-t2)*h*m[hi];
+    };
+  }
 
+  // ── PRE-COMPUTE spline + arclength table per artist ──────────
+  const pixelStart=Math.ceil(P.l);
+  const pixelEnd=Math.floor(P.l+cW);
+  const numPx=pixelEnd-pixelStart+1;
+  const todayPxAbs=todayIdx!==undefined?Math.round(pixelStart+(todayIdx/(totalDays-1))*cW):pixelStart+numPx-1;
+  const todayI=todayPxAbs-pixelStart;
+
+  const curves=artists.map(a=>{
+    const STEP=Math.max(1,Math.floor(totalDays/120));
+    const ptDays=[],ptVals=[];
+    for(let d=0;d<totalDays;d+=STEP){ptDays.push(d);ptVals.push(a.data[d]);}
+    if(ptDays[ptDays.length-1]!==totalDays-1){ptDays.push(totalDays-1);ptVals.push(a.data[totalDays-1]);}
+    const pxs=ptDays.map(d=>P.l+(d/(totalDays-1))*cW);
+    const pys=ptVals.map(v=>P.t+cH-(v/mx)*cH);
+    const spline=monotoneSpline(pxs,pys);
+    const yPx=new Float32Array(numPx);
+    for(let i=0;i<numPx;i++) yPx[i]=spline(pixelStart+i);
+    // Arclength: arcCum[i] = total curve length from pixel 0 to pixel i
+    // sqrt(1 + dy²) per pixel step (dx=1 always)
+    const arcCum=new Float32Array(todayI+1);
+    arcCum[0]=0;
+    for(let i=1;i<=todayI;i++){
+      const dy=yPx[i]-yPx[i-1];
+      arcCum[i]=arcCum[i-1]+Math.sqrt(1+dy*dy);
+    }
+    return{color:a.color,yPx,arcCum,totalArc:arcCum[todayI]};
+  });
+
+  // Duration: calibrated so mean arclength of a full year ≈ 3800ms
+  // REF_ARC = numPx*1.3 is the expected arc for a year with typical variance
+  const meanArc=curves.reduce((s,c)=>s+c.totalArc,0)/curves.length;
+  const DUR=Math.round(3800*(meanArc/(numPx*1.3)));
+
+  // Binary search arcCum → fractional pixel index (sub-pixel precision)
+  function arcToPixelIndex(targetArc,arcCum){
+    let lo=0,hi=arcCum.length-1;
+    while(lo<hi-1){const mid=(lo+hi)>>1; arcCum[mid]<=targetArc?lo=mid:hi=mid;}
+    const span=arcCum[hi]-arcCum[lo];
+    return lo+(span>0?(targetArc-arcCum[lo])/span:0);
+  }
+
+  // Precompute month tick pixel positions
+  const tickPx=monthTicks.map(d=>P.l+(d/(totalDays-1))*cW);
+
+  // ── DRAW ─────────────────────────────────────────────────────
+  function drawBg(){
     ctx.clearRect(0,0,W,H);
-
-    // Grid lines
-    ctx.strokeStyle='#1e1e1e'; ctx.lineWidth=1;
+    ctx.strokeStyle='#1e1e1e';ctx.lineWidth=1;
     for(let i=0;i<=4;i++){
       const gy=P.t+(cH/4)*i;
       ctx.beginPath();ctx.moveTo(P.l,gy);ctx.lineTo(P.l+cW,gy);ctx.stroke();
     }
-
-    // Month labels (reveal when that month is reached)
-    ctx.fillStyle='#444'; ctx.font=`${Math.max(7,Math.round(W/52))}px DM Mono,monospace`; ctx.textAlign='center';
-    for(let m=0;m<=11;m++){
-      if(m<=cm) ctx.fillText(months[m],P.l+(m/11)*cW,H-5);
+    ctx.font=`${Math.max(7,Math.round(W/52))}px DM Mono,monospace`;
+    ctx.textAlign='center';
+    for(let m=0;m<tickPx.length;m++){
+      ctx.strokeStyle='#333';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(tickPx[m],P.t+cH);ctx.lineTo(tickPx[m],P.t+cH+4);ctx.stroke();
+      ctx.fillStyle='#555';ctx.fillText(months[m],tickPx[m],H-3);
     }
+  }
 
-    // Draw each artist line using continuous interpolation
-    artists.forEach(a=>{
+  let start=null;
+  function draw(ts){
+    if(!start) start=ts;
+    const elapsed=ts-start;
+    const prog=Math.min(elapsed/DUR,1);
+    const animDone=prog>=1;
+
+    drawBg();
+
+    curves.forEach(c=>{
+      // Arclength parameterization: constant speed over curve length, not x-axis
+      const targetArc=Math.min(elapsed/DUR*c.totalArc, c.totalArc);
+      const exactI=Math.min(arcToPixelIndex(targetArc,c.arcCum), todayI);
+      const endI=Math.floor(exactI);
+      // Sub-pixel dot position via linear interpolation
+      const frac=exactI-endI;
+      const i0=Math.min(endI,todayI), i1=Math.min(endI+1,todayI);
+      const dotX=pixelStart+exactI;
+      const dotY=c.yPx[i0]+(c.yPx[i1]-c.yPx[i0])*frac;
+
+      if(endI<0) return;
       ctx.beginPath();
-      ctx.strokeStyle=a.color;
-      ctx.lineWidth=2;
-      ctx.lineJoin='round';
-      ctx.lineCap='round';
-      ctx.shadowColor=a.color;
-      ctx.shadowBlur=4;
-
-      // Shared interpolation function — same formula used by both line and dot
-      // so they always agree on position
-      function interp(t){
-        if(t>=11) return a.data[11];
-        const m0=Math.floor(t);
-        const vStart=m0>0?a.data[m0-1]:0;
-        return vStart+(a.data[m0]-vStart)*(t-m0);
-      }
-      const steps=Math.ceil(cm*8)+1;
-      for(let s=0;s<=steps;s++){
-        const t=Math.min((s/steps)*cm, cm);
-        const val=interp(t);
-        const px=P.l+(t/11)*cW;
-        const py=P.t+cH-(val/mx)*cH;
-        s===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
-      }
+      ctx.strokeStyle=c.color;ctx.lineWidth=2;
+      ctx.lineJoin='round';ctx.lineCap='round';
+      ctx.shadowColor=c.color;ctx.shadowBlur=4;
+      ctx.moveTo(pixelStart,c.yPx[0]);
+      for(let i=1;i<=endI;i++) ctx.lineTo(pixelStart+i,c.yPx[i]);
+      ctx.lineTo(dotX,dotY); // partial last segment to exact dot position
       ctx.stroke();
       ctx.shadowBlur=0;
 
-      // Dot at current leading edge — uses exact same interp, guaranteed to match line end
-      const val=interp(cm);
-      const dotX=P.l+(cm/11)*cW;
-      const dotY=P.t+cH-(val/mx)*cH;
+      // Continuous breathing pulse once animation ends
+      if(animDone){
+        const breathT=(ts%1800)/1800;
+        const breathR=3.5+3.5*Math.sin(breathT*Math.PI*2)*0.5+3.5*0.5;
+        const breathA=0.35*Math.abs(Math.sin(breathT*Math.PI));
+        ctx.beginPath();ctx.arc(dotX,dotY,breathR,0,Math.PI*2);
+        ctx.strokeStyle=c.color;ctx.lineWidth=1.2;ctx.globalAlpha=breathA;ctx.stroke();
+        ctx.globalAlpha=1;
+      }
+
       ctx.beginPath();ctx.arc(dotX,dotY,3.5,0,Math.PI*2);
-      ctx.fillStyle=a.color;ctx.fill();
+      ctx.fillStyle=c.color;ctx.fill();
     });
 
-    if(prog<1){
+    if(!animDone){
       chartAnimId=requestAnimationFrame(draw);
     } else {
-      chartAnimId=null;
-      if(rev) setTimeout(()=>{
+      // Keep rAF alive for breathing pulse; trigger reveal on first done frame
+      if(rev&&rev.style.opacity==='0') setTimeout(()=>{
         rev.style.opacity='1';
         launchConfetti();
         const after=document.getElementById('afterAnim');
@@ -1609,6 +1778,7 @@ function animChart(artists,months){
           requestAnimationFrame(()=>{after.style.opacity='1';});
         },600);
       },200);
+      chartAnimId=requestAnimationFrame(draw);
     }
   }
   chartAnimId=requestAnimationFrame(draw);
@@ -1617,33 +1787,69 @@ function animChart(artists,months){
 // ════════════════════════════════════════════════════════════
 //  HISTORY
 // ════════════════════════════════════════════════════════════
+function goToMonthWrapped(y,m){
+  selectedMonth=`${y}-${m}`;
+  showMainTab('wrapped');
+  showSubTab('smonth');
+}
+function goToYearWrapped(y){
+  selectedYear=y;
+  showMainTab('wrapped');
+  showSubTab('syear');
+}
+
 function renderHist(){
   const c=document.getElementById('histContent'); const p=enrichPlays(DB.plays);
   if(!p.length){c.innerHTML=`<div class="nodata">Sin historial aún.</div>`;return;}
   const MF=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  // Group by month key YYYY-MM
   const g={};
   p.forEach(x=>{const d=new Date(x.ts),k=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;if(!g[k])g[k]=[];g[k].push(x);});
   const currentYear=new Date().getFullYear();
-  c.innerHTML=Object.keys(g).sort().reverse().map(k=>{
-    const[yr,mo]=k.split('-'),pp=g[k];
-    const ta=enrichAlbums(pp),tar=enrichArtists(pp);
-    const edad=calcEdadMusical(pp,currentYear);
-    return`<div class="hcard" onclick="this.classList.toggle('exp')">
+  // All month keys sorted newest first
+  const sortedKeys=Object.keys(g).sort().reverse();
+  // All years present, sorted newest first
+  const years=[...new Set(sortedKeys.map(k=>k.split('-')[0]))].sort().reverse();
+
+  // Build: newest months first. After the last month of each year, insert year summary.
+  // "Last month of year Y" = the oldest month key that belongs to Y (lowest month number).
+  // In sortedKeys (desc), the LAST occurrence of year Y is its earliest month.
+  let html='';
+  years.forEach(yr=>{
+    const yearKeys=sortedKeys.filter(k=>k.startsWith(yr+'-')); // desc order within year
+    const yearPlays=p.filter(x=>new Date(x.ts).getFullYear()===+yr);
+    const yta=enrichAlbums(yearPlays),ytar=enrichArtists(yearPlays);
+
+    // Month cards (desc = newest month first)
+    yearKeys.forEach(k=>{
+      const[,mo]=k.split('-'),pp=g[k];
+      const ta=enrichAlbums(pp),tar=enrichArtists(pp);
+      const mIdx=parseInt(mo)-1;
+      html+=`<div class="hcard" onclick="this.classList.toggle('exp')">
+        <div class="hcard-hdr">
+          <div><div class="hcard-ttl">${MF[mIdx]} ${yr}</div><div class="hcard-meta">${pp.length} escuchas · ${[...new Set(pp.map(x=>x.artist))].length} artistas · ${ta.length} álbumes</div></div>
+          <div style="color:var(--dim);font-size:17px">⌄</div>
+        </div>
+        <div class="hcard-body">
+          <div class="hcard-rank">${rankBars(ta,true)}</div>
+          <button class="hcard-wrapped-btn" onclick="event.stopPropagation();goToMonthWrapped(${yr},${mIdx})">Ver wrapped de este mes →</button>
+        </div>
+      </div>`;
+    });
+
+    // Year summary — after the last (oldest) month of this year
+    html+=`<div class="hcard year" onclick="this.classList.toggle('exp')">
       <div class="hcard-hdr">
-        <div><div class="hcard-ttl">${MF[parseInt(mo)-1]} ${yr}</div><div class="hcard-meta">${pp.length} escuchas</div></div>
+        <div><div class="hcard-ttl">Resumen ${yr}</div><div class="hcard-meta">${yearPlays.length} escuchas · ${ytar.length} artistas · ${yta.length} álbumes</div></div>
         <div style="color:var(--dim);font-size:17px">⌄</div>
       </div>
       <div class="hcard-body">
-        <div class="hdet">
-          Álbum top: <span>${h(ta[0]?.[0]||'—')}</span><br>
-          Artista top: <span>${h(tar[0]?.[0]||'—')}</span><br>
-          ${edad!==null?`Edad musical: <span>${edad} años</span><br>`:''}
-          Total: <span>${pp.length}</span>
-        </div>
-        <div style="margin-top:9px">${rankBars(ta.slice(0,5),true)}</div>
+        <div class="hcard-rank">${rankBars(yta,true)}</div>
+        <button class="hcard-wrapped-btn" onclick="event.stopPropagation();goToYearWrapped(${yr})">Ver wrapped de este año →</button>
       </div>
     </div>`;
-  }).join('');
+  });
+  c.innerHTML=html;
 }
 
 // ════════════════════════════════════════════════════════════
@@ -1713,25 +1919,6 @@ if('serviceWorker'in navigator){
   navigator.serviceWorker.register('./sw.js?v=2').catch(()=>{});
 }
 
-function checkForAppUpdate(){
-  if(!('serviceWorker'in navigator)) return;
-  navigator.serviceWorker.getRegistration().then(reg=>{
-    if(!reg) return;
-    // If a new SW is already waiting, activate it now
-    if(reg.waiting){
-      reg.waiting.postMessage('skipWaiting');
-      return;
-    }
-    // Otherwise check for a new version — if found, it will install then activate
-    reg.addEventListener('updatefound',()=>{
-      const newSW=reg.installing;
-      newSW.addEventListener('statechange',()=>{
-        if(newSW.state==='installed') newSW.postMessage('skipWaiting');
-      });
-    });
-    reg.update();
-  });
-}
 
 // ════════════════════════════════════════════════════════════
 //  LOGIN
