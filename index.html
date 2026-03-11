@@ -83,13 +83,8 @@ header{padding:16px 18px 10px;flex-shrink:0;border-bottom:1px solid var(--border
 .vcard-disc-wrap{
   position:relative;
   width:100%;
-  padding-bottom:100%;
-  height:0;
+  aspect-ratio:1;
   isolation:isolate;
-}
-.vcard-disc-wrap > *{
-  position:absolute;
-  inset:0;
 }
 
 /* The vinyl itself — a full circle */
@@ -221,10 +216,11 @@ select.finput option{background:var(--s2);}
 .scard-val{font-family:'DM Serif Display',serif;font-size:21px;color:var(--accent);line-height:1.1;}
 .scard-sub{font-size:11px;color:var(--muted);margin-top:3px;}
 .sday{display:flex;align-items:baseline;gap:7px;}
-.sday-n{font-family:'DM Serif Display',serif;font-size:30px;color:var(--text);line-height:1;}
+.sday-n{font-family:'DM Serif Display',serif;font-size:30px;color:var(--accent2);line-height:1;}
 .sday-u{font-size:11px;color:var(--muted);margin-top:2px;}
 .sday-date{font-size:11px;color:var(--muted);margin-top:5px;font-style:italic;}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:9px;align-items:stretch;}
+.two>.scard{margin-bottom:0;height:100%;box-sizing:border-box;justify-content:center;min-height:90px;}
 .two-6535{display:grid;grid-template-columns:65fr 35fr;gap:9px;align-items:stretch;}
 .two-6535>*{min-width:0;height:100%;box-sizing:border-box;}
 .three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;}
@@ -710,40 +706,26 @@ const DB = {
 
   // ── vinyl event log ─────────────────────────────────────────
   // Each event: {op:'add'|'edit'|'delete', id, data?, ts}
-  // The current vinyl list is always derived by replaying the log.
+  // Current vinyl list derived by replaying the log in ts order.
   get vinylLog(){ return JSON.parse(localStorage.getItem('vinylLog')||'null')||[]; },
   set vinylLog(v){ localStorage.setItem('vinylLog',JSON.stringify(v)); },
 
-  // Derived vinyl state from log
   get vinyls(){
-    const log=this.vinylLog;
     const map=new Map();
-    log.forEach(e=>{
-      if(e.op==='add')    map.set(e.id,{...e.data,id:e.id});
-      if(e.op==='edit')   map.set(e.id,{...e.data,id:e.id});
+    this.vinylLog.forEach(e=>{
+      if(e.op==='add'||e.op==='edit') map.set(e.id,{...e.data,id:e.id});
       if(e.op==='delete') map.delete(e.id);
     });
     return [...map.values()];
   },
-  // Allow direct set (used when loading seed/remote data — rebuilds log)
-  set vinyls(arr){
-    const now=new Date().toISOString();
-    // Replace log with a single 'add' event per vinyl at timestamp 0
-    // (so any future local events are always newer)
-    this.vinylLog=arr.map(v=>({op:'add',id:v.id,data:v,ts:v._ts||'1970-01-01T00:00:00.000Z'}));
-  },
 
-  // Append a vinyl event
   logEvent(ev){
-    const log=this.vinylLog;
-    log.push(ev);
-    this.vinylLog=log;
+    const log=this.vinylLog; log.push(ev); this.vinylLog=log;
   },
 
   addVinyl(obj){
     const id=Math.max(0,...this.vinyls.map(v=>v.id||0))+1;
-    const ts=new Date().toISOString();
-    this.logEvent({op:'add',id,data:{...obj},ts});
+    this.logEvent({op:'add',id,data:{...obj},ts:new Date().toISOString()});
   },
   get deletedPlayIds(){ return JSON.parse(localStorage.getItem('deletedPlayIds')||'null')||[]; },
   set deletedPlayIds(v){ localStorage.setItem('deletedPlayIds',JSON.stringify(v)); },
@@ -755,27 +737,31 @@ const DB = {
     if(!del.includes(playId)){ del.push(playId); this.deletedPlayIds=del; }
   },
   editVinyl(id,obj){
-    const ts=new Date().toISOString();
-    this.logEvent({op:'edit',id,data:{...obj},ts});
+    this.logEvent({op:'edit',id,data:{...obj},ts:new Date().toISOString()});
   },
   deleteVinyl(id){
-    const ts=new Date().toISOString();
-    this.logEvent({op:'delete',id,ts});
+    this.logEvent({op:'delete',id,ts:new Date().toISOString()});
   }
 };
 
-// ════════════════════════════════════════════════════════════
-//  EVENT LOG MERGE
-//  Merges two event logs by timestamp — union of all events,
-//  deduped by (op+id+ts). Order determines final state.
-// ════════════════════════════════════════════════════════════
-function mergeVinylLogs(a, b){
+// mergeVinylLogs: GitHub (remote) is the base. Local events newer than
+// the latest remote event are appended. This ensures direct GitHub edits
+// are never overwritten by stale local history.
+function mergeVinylLogs(remLog, localLog){
+  const base = Array.isArray(remLog) ? remLog : [];
+  const local = Array.isArray(localLog) ? localLog : [];
+  if(!base.length && !local.length) return [];
+  // Find the latest timestamp in the remote log
+  const remMaxTs = base.reduce((m,e)=>e.ts>m?e.ts:m,'');
+  // Only include local events strictly newer than the remote head
+  const localNew = local.filter(e=>e.ts>remMaxTs);
+  // Merge: base + new local events, dedup by key
   const map=new Map();
-  [...a,...b].forEach(e=>{
+  [...base,...localNew].forEach(e=>{
     const k=e.op+'|'+e.id+'|'+e.ts;
     if(!map.has(k)) map.set(k,e);
   });
-  return [...map.values()].sort((x,y)=>x.ts.localeCompare(y.ts));
+  return [...map.values()].sort((a,b)=>a.ts.localeCompare(b.ts));
 }
 
 function mergePlays(a, b, delA=[], delB=[]){
@@ -810,60 +796,49 @@ function setSS(st,lbl){
 }
 
 // ════════════════════════════════════════════════════════════
-//  SYNC  (event-sourced, two-file)
+//  SYNC — event-sourced vinyls, GitHub is base of truth
 //
-//  Private repo (vinilos-datos):
-//    collection.json → { vinylLog, users }
-//    plays.json      → { plays }
+//  collection.json → { vinylLog: [...], users: [...] }
+//  plays.json      → { plays: [...], deletedPlayIds: [...] }
 //
-//  On every sync:
-//    1. Read both files from GitHub
-//    2. Merge local + remote (union by ts, deduped)
-//    3. Write merged result back to both files
-//    4. Update localStorage
+//  Vinyl merge: remote log is the base; only local events
+//  newer than the remote head are appended. Direct GitHub
+//  edits therefore always win over stale local history.
 //
-//  Guarantees: no data lost offline, deletes respected,
-//  edits resolved by timestamp, plays always appended.
+//  Plays merge: union (local + remote), deletions respected.
 // ════════════════════════════════════════════════════════════
 async function syncNow(){
   if(!GH.ok){ openModal('configModal'); return; }
   setSS('syncing','Sincronizando');
   try{
-    // Read both files sequentially to avoid SHA race conditions
     const remCol = await GH.readFile('collection.json');
     const remPls = await GH.readFile('plays.json');
 
-    // Merge vinyl log (event-sourced, fully commutative)
-    const remLog    = remCol?.vinylLog || [];
-    const mergedLog = mergeVinylLogs(DB.vinylLog, remLog);
+    // CLEAN SLATE MODE: remote always overwrites local entirely.
+    // No local data is merged into remote. Remote is the only source of truth.
+    const remLog = remCol?.vinylLog || [];
+    DB.vinylLog  = remLog;
 
-    // Merge plays respecting deleted ids from both sides
     const remPlays      = remPls?.plays || [];
     const remDeletedIds = remPls?.deletedPlayIds || [];
-    const merged = mergePlays(DB.plays, remPlays, DB.deletedPlayIds, remDeletedIds);
+    DB.plays          = remPlays;
+    DB.deletedPlayIds = remDeletedIds;
 
-    // Users table comes from collection
     const users = remCol?.users || DB.users || [];
-
-    // Persist merged state locally
-    DB.vinylLog       = mergedLog;
-    DB.plays          = merged.plays;
-    DB.deletedPlayIds = merged.deletedIds;
-    DB.users          = users;
+    DB.users = users;
     USER.resolve(users);
 
-    // Write sequentially — each write needs the current SHA
-    await GH.writeFile('collection.json', {vinylLog:mergedLog, users, _sha:remCol?._sha});
-    await GH.writeFile('plays.json', {plays:merged.plays, deletedPlayIds:merged.deletedIds, _sha:remPls?._sha});
+    // Write remote data back as-is (no local contributions)
+    await GH.writeFile('collection.json', {vinylLog:remLog, users, _sha:remCol?._sha});
+    await GH.writeFile('plays.json', {plays:remPlays, deletedPlayIds:remDeletedIds, _sha:remPls?._sha});
 
     setSS('ok','Sincronizado');
     renderAll();
-    resolveNfcPlay(); // show NFC modal if a tag scan triggered this boot
+    resolveNfcPlay();
     showToast('Sincronizado ✓');
   } catch(e){
     setSS('err','Error de sync');
     const msg = e.message||'';
-    // Show meaningful Spanish error
     if(msg.includes('401')||msg.includes('Bad credentials')) showToast('Token inválido o sin permisos');
     else if(msg.includes('404')) showToast('Repositorio no encontrado');
     else if(msg.includes('409')||msg.includes('conflict')) showToast('Conflicto de sincronización — reintenta');
@@ -1346,7 +1321,9 @@ function topDay(plays){
   const d=countBy(plays.map(p=>({day:p.ts.slice(0,10)})),'day');
   const s=topN(d,1); if(!s.length) return null;
   const[ds,cnt]=s[0]; const dt=new Date(ds+'T00:00:00');
-  return{label:dt.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'}),count:cnt};
+  const raw=dt.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
+  const label=raw.charAt(0).toUpperCase()+raw.slice(1);
+  return{label,count:cnt};
 }
 
 function rankBars(arr,showSub){
@@ -1422,7 +1399,7 @@ function himnoCard(plays, label){
       <div class="himno-art-placeholder" style="${coverUrl?'display:none':'display:flex'}">${fallbackIcons[bestFranja]}</div>
     </div>
     <div class="himno-info">
-      <div class="himno-lbl">Las ${labels[bestFranja]} ${label}</div>
+      <div class="himno-lbl">Tu himno de las ${labels[bestFranja]} ${label}</div>
       <div class="himno-val">${h(albumName)}</div>
       <div class="himno-sub">${cnt} escucha${cnt!==1?'s':''} en esa franja</div>
     </div>
@@ -1459,7 +1436,6 @@ function cardTopDay(bd){
   return `<div class="scard scard-center" style="margin-bottom:0;justify-content:center;">
     <div class="scard-lbl">Día con más escuchas</div>
     <div class="sday-n">${bd.count}</div>
-    <div class="sday-u">escuchas</div>
     <div class="sday-date">${bd.label}</div>
   </div>`;}
 
@@ -1503,11 +1479,11 @@ function renderMonth(forceKey){
       </div>
       ${cardArtist(tar[0]?.[0]||'—','Artista del mes')}
       ${cardAlbum(ta[0]?.[0]||'—','Álbum del mes')}
+      ${edadCard(p,'del mes')}
       <div class="two-6535" style="margin-top:9px">
         ${himnoCard(p,'del mes')}
         ${cardTopDay(bd)}
       </div>
-      ${edadCard(p,'del mes')}
     </div>
     <div class="ssect"><div class="slabel">Ranking álbumes del mes</div><div class="scard">${rankBars(ta,true)}</div></div>
     <div class="ssect"><div class="slabel">Ranking artistas del mes</div><div class="scard">${rankBars(tar)}</div></div>`;
@@ -1802,28 +1778,50 @@ function renderHist(){
   const c=document.getElementById('histContent'); const p=enrichPlays(DB.plays);
   if(!p.length){c.innerHTML=`<div class="nodata">Sin historial aún.</div>`;return;}
   const MF=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-  // Group by month key YYYY-MM
   const g={};
   p.forEach(x=>{const d=new Date(x.ts),k=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;if(!g[k])g[k]=[];g[k].push(x);});
-  const currentYear=new Date().getFullYear();
-  // All month keys sorted newest first
-  const sortedKeys=Object.keys(g).sort().reverse();
-  // All years present, sorted newest first
-  const years=[...new Set(sortedKeys.map(k=>k.split('-')[0]))].sort().reverse();
+  // Years sorted descending
+  const years=[...new Set(Object.keys(g).map(k=>k.split('-')[0]))].sort().reverse();
 
-  // Build: newest months first. After the last month of each year, insert year summary.
-  // "Last month of year Y" = the oldest month key that belongs to Y (lowest month number).
-  // In sortedKeys (desc), the LAST occurrence of year Y is its earliest month.
+  // Helper: build year summary card html for a given year
+  function yearSummaryCard(yr){
+    const yp=p.filter(x=>new Date(x.ts).getFullYear()===+yr);
+    if(!yp.length) return '';
+    const yta=enrichAlbums(yp),ytar=enrichArtists(yp);
+    return `<div class="hcard year" onclick="this.classList.toggle('exp')">
+      <div class="hcard-hdr">
+        <div><div class="hcard-ttl">Resumen ${yr}</div><div class="hcard-meta">${yp.length} escuchas · ${ytar.length} artistas · ${yta.length} álbumes</div></div>
+        <div style="color:var(--dim);font-size:17px">⌄</div>
+      </div>
+      <div class="hcard-body">
+        <div class="hcard-rank">${rankBars(yta,true)}</div>
+        <button class="hcard-wrapped-btn" onclick="event.stopPropagation();goToYearWrapped(${yr})">Ver wrapped de este año →</button>
+      </div>
+    </div>`;
+  }
+
   let html='';
-  years.forEach(yr=>{
-    const yearKeys=sortedKeys.filter(k=>k.startsWith(yr+'-')); // desc order within year
-    const yearPlays=p.filter(x=>new Date(x.ts).getFullYear()===+yr);
-    const yta=enrichAlbums(yearPlays),ytar=enrichArtists(yearPlays);
+  // years is sorted desc: [2026, 2025, 2024, ...]
+  // Desired output: months(2026) | Resumen(2025) | months(2025) | Resumen(2024) | months(2024) | ...
+  // i.e. Resumen(Y) appears after months of Y+1, before months of Y.
+  // So: emit months for years[i], then emit Resumen for years[i+1] (the next older year).
+  // After the last year's months, emit that year's own summary.
+  // years = [2026, 2025, 2024, ...] (desc)
+  // Desired sequence:
+  //   months(2026)  ← newest year, no resumen above it
+  //   Resumen 2025
+  //   months(2025)
+  //   Resumen 2024
+  //   months(2024)
+  //   Resumen 2024  ← oldest year always ends with its own resumen
+  years.forEach((yr, yi)=>{
+    // Every year except the newest gets its Resumen BEFORE its months.
+    if(yi > 0) html += yearSummaryCard(yr);
 
-    // Month cards (desc = newest month first)
+    const yearKeys=Object.keys(g).filter(k=>k.startsWith(yr+'-')).sort().reverse();
     yearKeys.forEach(k=>{
       const[,mo]=k.split('-'),pp=g[k];
-      const ta=enrichAlbums(pp),tar=enrichArtists(pp);
+      const ta=enrichAlbums(pp);
       const mIdx=parseInt(mo)-1;
       html+=`<div class="hcard" onclick="this.classList.toggle('exp')">
         <div class="hcard-hdr">
@@ -1837,18 +1835,10 @@ function renderHist(){
       </div>`;
     });
 
-    // Year summary — after the last (oldest) month of this year
-    html+=`<div class="hcard year" onclick="this.classList.toggle('exp')">
-      <div class="hcard-hdr">
-        <div><div class="hcard-ttl">Resumen ${yr}</div><div class="hcard-meta">${yearPlays.length} escuchas · ${ytar.length} artistas · ${yta.length} álbumes</div></div>
-        <div style="color:var(--dim);font-size:17px">⌄</div>
-      </div>
-      <div class="hcard-body">
-        <div class="hcard-rank">${rankBars(yta,true)}</div>
-        <button class="hcard-wrapped-btn" onclick="event.stopPropagation();goToYearWrapped(${yr})">Ver wrapped de este año →</button>
-      </div>
-    </div>`;
+    // Single-year edge case: if there is only one year, add its resumen at the end
+    if(years.length === 1) html += yearSummaryCard(yr);
   });
+
   c.innerHTML=html;
 }
 
