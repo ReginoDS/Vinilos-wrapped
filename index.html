@@ -808,25 +808,26 @@ function setSS(st,lbl){
 //  Plays merge: union (local + remote), deletions respected.
 // ════════════════════════════════════════════════════════════
 function fixDuplicatePlays(){
-  // Deduplicate plays from 2025: two plays are duplicates if they share
-  // the same date+hour+minute and the same vinylId (album).
-  // When duplicates found, keep the one whose id looks like a "good" id
-  // (shorter = old numeric-ish timestamp, or just keep the first encountered).
   const all = DB.plays;
   const non2025 = all.filter(p => !p.ts.startsWith('2025'));
   const plays2025 = all.filter(p => p.ts.startsWith('2025'));
+  const enriched2025 = enrichPlays(plays2025);
 
-  // Build dedup key: vinylId + minute-precision timestamp
-  const seen = new Map(); // key → play
-  plays2025.forEach(p => {
-    const minuteTs = p.ts.slice(0, 16); // "2025-MM-DDTHH:MM"
-    const key = p.vinylId + '|' + minuteTs;
+  // Key: album title + day + hour + minute (parsed as numbers to avoid timezone/format differences)
+  function dayMinKey(ts, album){
+    const d = new Date(ts);
+    return `${album}|${d.getFullYear()}-${d.getMonth()}-${d.getDate()}|${d.getHours()}:${d.getMinutes()}`;
+  }
+
+  const seen = new Map();
+  enriched2025.forEach((ep, i) => {
+    const key = dayMinKey(ep.ts, ep.album || ep.vinylId);
     if (!seen.has(key)) {
-      seen.set(key, p);
+      seen.set(key, plays2025[i]);
     } else {
-      // Keep the one with the shorter/simpler id (original over duplicate)
+      // Keep shorter id (original tends to be shorter than the merged duplicate)
       const existing = seen.get(key);
-      if (p.id.length < existing.id.length) seen.set(key, p);
+      if (String(plays2025[i].id).length < String(existing.id).length) seen.set(key, plays2025[i]);
     }
   });
 
