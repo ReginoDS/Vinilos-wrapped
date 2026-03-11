@@ -814,23 +814,24 @@ async function syncNow(){
     const remCol = await GH.readFile('collection.json');
     const remPls = await GH.readFile('plays.json');
 
-    // CLEAN SLATE MODE: remote always overwrites local entirely.
-    // No local data is merged into remote. Remote is the only source of truth.
-    const remLog = remCol?.vinylLog || [];
-    DB.vinylLog  = remLog;
+    // Vinyl log: remote is base, only local events newer than remote head are appended
+    const remLog    = remCol?.vinylLog || [];
+    const mergedLog = mergeVinylLogs(remLog, DB.vinylLog);
+    DB.vinylLog     = mergedLog;
 
+    // Plays: union merge, respecting deletions from both sides
     const remPlays      = remPls?.plays || [];
     const remDeletedIds = remPls?.deletedPlayIds || [];
-    DB.plays          = remPlays;
-    DB.deletedPlayIds = remDeletedIds;
+    const mergedPls     = mergePlays(DB.plays, remPlays, DB.deletedPlayIds, remDeletedIds);
+    DB.plays          = mergedPls.plays;
+    DB.deletedPlayIds = mergedPls.deletedIds;
 
     const users = remCol?.users || DB.users || [];
     DB.users = users;
     USER.resolve(users);
 
-    // Write remote data back as-is (no local contributions)
-    await GH.writeFile('collection.json', {vinylLog:remLog, users, _sha:remCol?._sha});
-    await GH.writeFile('plays.json', {plays:remPlays, deletedPlayIds:remDeletedIds, _sha:remPls?._sha});
+    await GH.writeFile('collection.json', {vinylLog:mergedLog, users, _sha:remCol?._sha});
+    await GH.writeFile('plays.json', {plays:mergedPls.plays, deletedPlayIds:mergedPls.deletedIds, _sha:remPls?._sha});
 
     setSS('ok','Sincronizado');
     renderAll();
