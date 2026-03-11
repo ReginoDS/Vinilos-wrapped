@@ -530,7 +530,7 @@ select.finput option{background:var(--s2);}
       <div class="stat-pill"><div class="sp-label">Este año</div><div class="sp-val" id="cntYear">0</div></div>
       <div class="stat-pill"><div class="sp-label">Total</div><div class="sp-val" id="cntTotal">0</div></div>
     </div>
-    <div class="sync"><button id="syncBtn" onclick="syncNow()" style="display:none;background:none;border:none;color:var(--accent2);font-size:13px;cursor:pointer;padding:0;margin-right:6px;line-height:1;">↻</button><div class="sdot" id="sdot"></div><span id="slabel">Local</span></div>
+    <div class="sync"><button id="syncBtn" onclick="syncNow()" style="display:none;background:none;border:none;color:var(--accent2);font-size:13px;cursor:pointer;padding:0;margin-right:6px;line-height:1;">↻</button><div class="sdot" id="sdot"></div><span id="slabel">Local</span><button onclick="fixDuplicatePlays()" style="margin-left:10px;background:none;border:1px solid var(--border);color:var(--muted);font-family:'DM Mono',monospace;font-size:8px;text-transform:uppercase;letter-spacing:1px;padding:3px 7px;border-radius:var(--radius);cursor:pointer;" title="Elimina plays duplicados de 2025">✂ Arreglar historial</button></div>
   </header>
 
   <div class="tabs tabs-main">
@@ -807,6 +807,43 @@ function setSS(st,lbl){
 //
 //  Plays merge: union (local + remote), deletions respected.
 // ════════════════════════════════════════════════════════════
+function fixDuplicatePlays(){
+  // Deduplicate plays from 2025: two plays are duplicates if they share
+  // the same date+hour+minute and the same vinylId (album).
+  // When duplicates found, keep the one whose id looks like a "good" id
+  // (shorter = old numeric-ish timestamp, or just keep the first encountered).
+  const all = DB.plays;
+  const non2025 = all.filter(p => !p.ts.startsWith('2025'));
+  const plays2025 = all.filter(p => p.ts.startsWith('2025'));
+
+  // Build dedup key: vinylId + minute-precision timestamp
+  const seen = new Map(); // key → play
+  plays2025.forEach(p => {
+    const minuteTs = p.ts.slice(0, 16); // "2025-MM-DDTHH:MM"
+    const key = p.vinylId + '|' + minuteTs;
+    if (!seen.has(key)) {
+      seen.set(key, p);
+    } else {
+      // Keep the one with the shorter/simpler id (original over duplicate)
+      const existing = seen.get(key);
+      if (p.id.length < existing.id.length) seen.set(key, p);
+    }
+  });
+
+  const deduped2025 = [...seen.values()];
+  const removed = plays2025.length - deduped2025.length;
+
+  if (removed === 0) {
+    showToast('Sin duplicados encontrados');
+    return;
+  }
+
+  DB.plays = [...non2025, ...deduped2025].sort((a,b) => a.ts.localeCompare(b.ts));
+  renderAll();
+  showToast(`Eliminados ${removed} duplicado${removed !== 1 ? 's' : ''} ✓`);
+  if (GH.ok) syncNow();
+}
+
 async function syncNow(){
   if(!GH.ok){ openModal('configModal'); return; }
   setSS('syncing','Sincronizando');
