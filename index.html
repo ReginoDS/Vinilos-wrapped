@@ -212,7 +212,7 @@ select.finput option{background:var(--s2);}
 .scard-center{text-align:center;display:flex;flex-direction:column;align-items:center;}
 .scard-gold{border-color:var(--accent2);}
 .two-6535>.scard{margin-bottom:0;}
-.two-6535>.himno-card{margin-top:0;}
+.two-6535>.himno-card{margin-top:0;margin-bottom:0;}
 .scard-lbl{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:6px;}
 .scard-val{font-family:'DM Serif Display',serif;font-size:21px;color:var(--accent);line-height:1.1;}
 .scard-gold .scard-val{color:var(--accent2);}
@@ -223,6 +223,7 @@ select.finput option{background:var(--s2);}
 .sday-date{font-size:11px;color:var(--muted);margin-top:5px;font-style:italic;}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:9px;align-items:stretch;}
 .two>.scard{margin-bottom:0;height:100%;box-sizing:border-box;justify-content:center;min-height:90px;}
+.two>.himno-card{margin-top:0;margin-bottom:0;}
 .two-6535{display:grid;grid-template-columns:65fr 35fr;gap:9px;align-items:stretch;margin-top:10px;}
 .two-6535>*{min-width:0;height:100%;box-sizing:border-box;}
 .three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;}
@@ -346,7 +347,7 @@ select.finput option{background:var(--s2);}
 
 /* ── HIMNO CARD ── */
 @keyframes himno-pulse{0%,100%{opacity:.7;}50%{opacity:1;}}
-.himno-card{display:flex;align-items:center;gap:12px;border-radius:var(--radius);padding:12px;box-sizing:border-box;border:1px solid var(--border);position:relative;overflow:hidden;margin-top:10px;height:100%;}
+.himno-card{display:flex;align-items:center;gap:12px;border-radius:var(--radius);padding:12px;box-sizing:border-box;border:1px solid var(--border);position:relative;overflow:hidden;margin-top:10px;margin-bottom:10px;height:100%;}
 .himno-card.manana{background:var(--bg);border-color:#3d3010;}
 .himno-card.manana::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 90% 90% at 50% 115%,#c9a96e60 0%,#c9a96e28 45%,transparent 70%);pointer-events:none;animation:himno-pulse 3s ease-in-out infinite;}
 .himno-card.tarde{background:var(--bg);border-color:#3d2010;}
