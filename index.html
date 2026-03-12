@@ -530,7 +530,7 @@ select.finput option{background:var(--s2);}
       <div class="stat-pill"><div class="sp-label">Este año</div><div class="sp-val" id="cntYear">0</div></div>
       <div class="stat-pill"><div class="sp-label">Total</div><div class="sp-val" id="cntTotal">0</div></div>
     </div>
-    <div class="sync"><button id="syncBtn" onclick="syncNow()" style="display:none;background:none;border:none;color:var(--accent2);font-size:13px;cursor:pointer;padding:0;margin-right:6px;line-height:1;">↻</button><div class="sdot" id="sdot"></div><span id="slabel">Local</span><button onclick="fixDuplicatePlays()" style="margin-left:10px;background:none;border:1px solid var(--border);color:var(--muted);font-family:'DM Mono',monospace;font-size:8px;text-transform:uppercase;letter-spacing:1px;padding:3px 7px;border-radius:var(--radius);cursor:pointer;" title="Elimina plays duplicados de 2025">✂ Arreglar historial</button></div>
+    <div class="sync"><button id="syncBtn" onclick="syncNow()" style="display:none;background:none;border:none;color:var(--accent2);font-size:13px;cursor:pointer;padding:0;margin-right:6px;line-height:1;">↻</button><div class="sdot" id="sdot"></div><span id="slabel">Local</span></div>
   </header>
 
   <div class="tabs tabs-main">
@@ -807,62 +807,6 @@ function setSS(st,lbl){
 //
 //  Plays merge: union (local + remote), deletions respected.
 // ════════════════════════════════════════════════════════════
-async function fixDuplicatePlays(){
-  const all = DB.plays;
-  const non2025 = all.filter(p => !p.ts.startsWith('2025'));
-  const plays2025 = all.filter(p => p.ts.startsWith('2025'));
-  const enriched2025 = enrichPlays(plays2025);
-
-  // Key: album title + day + hour + minute (parsed as numbers to avoid tz/format differences)
-  function dayMinKey(ts, album){
-    const d = new Date(ts);
-    return `${album}|${d.getFullYear()}-${d.getMonth()}-${d.getDate()}|${d.getHours()}:${d.getMinutes()}`;
-  }
-
-  const seen = new Map();
-  enriched2025.forEach((ep, i) => {
-    const key = dayMinKey(ep.ts, ep.album || ep.vinylId);
-    if (!seen.has(key)) {
-      seen.set(key, plays2025[i]);
-    } else {
-      const existing = seen.get(key);
-      if (String(plays2025[i].id).length < String(existing.id).length) seen.set(key, plays2025[i]);
-    }
-  });
-
-  const deduped2025 = [...seen.values()];
-  const removed = plays2025.length - deduped2025.length;
-
-  if (removed === 0) {
-    showToast('Sin duplicados encontrados');
-    return;
-  }
-
-  const cleanPlays = [...non2025, ...deduped2025].sort((a,b) => a.ts.localeCompare(b.ts));
-  DB.plays = cleanPlays;
-  renderAll();
-
-  if (GH.ok) {
-    try {
-      setSS('syncing', 'Guardando...');
-      // Read current SHA of plays.json without merging — we need to overwrite it clean
-      const rem = await GH.readFile('plays.json');
-      // Push the clean plays directly, overwriting GitHub — no merge
-      await GH.writeFile('plays.json', {
-        plays: cleanPlays,
-        deletedPlayIds: DB.deletedPlayIds,
-        _sha: rem?._sha
-      });
-      setSS('ok', 'Sincronizado');
-      showToast(`Eliminados ${removed} duplicado${removed !== 1 ? 's' : ''} y guardado ✓`);
-    } catch(e) {
-      setSS('err', 'Error al guardar');
-      showToast('Duplicados eliminados localmente, error al guardar en GitHub');
-    }
-  } else {
-    showToast(`Eliminados ${removed} duplicado${removed !== 1 ? 's' : ''} ✓`);
-  }
-}
 
 async function syncNow(){
   if(!GH.ok){ openModal('configModal'); return; }
@@ -876,19 +820,18 @@ async function syncNow(){
     const mergedLog = mergeVinylLogs(remLog, DB.vinylLog);
     DB.vinylLog     = mergedLog;
 
-    // Plays: union merge, respecting deletions from both sides
+    // CLEAN SLATE: remote overwrites local plays entirely (temporary)
     const remPlays      = remPls?.plays || [];
     const remDeletedIds = remPls?.deletedPlayIds || [];
-    const mergedPls     = mergePlays(DB.plays, remPlays, DB.deletedPlayIds, remDeletedIds);
-    DB.plays          = mergedPls.plays;
-    DB.deletedPlayIds = mergedPls.deletedIds;
+    DB.plays          = remPlays;
+    DB.deletedPlayIds = remDeletedIds;
 
     const users = remCol?.users || DB.users || [];
     DB.users = users;
     USER.resolve(users);
 
     await GH.writeFile('collection.json', {vinylLog:mergedLog, users, _sha:remCol?._sha});
-    await GH.writeFile('plays.json', {plays:mergedPls.plays, deletedPlayIds:mergedPls.deletedIds, _sha:remPls?._sha});
+    await GH.writeFile('plays.json', {plays:remPlays, deletedPlayIds:remDeletedIds, _sha:remPls?._sha});
 
     setSS('ok','Sincronizado');
     renderAll();
