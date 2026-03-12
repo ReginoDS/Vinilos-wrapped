@@ -1379,8 +1379,9 @@ function calcEdadMusical(plays, currentYear){
 
 // ── NOCHE STARS ANIMATION ────────────────────────────────────
 let _nocheStarsRaf=null;
-function initNocheStars(){
-  const cv=document.querySelector('.himno-stars'); if(!cv) return;
+function initNocheStars(canvasId){
+  const cv=canvasId?document.getElementById(canvasId):document.querySelector('.himno-stars');
+  if(!cv) return;
   const parent=cv.parentElement;
   const dpr=window.devicePixelRatio||1;
   const W=parent.offsetWidth, H=parent.offsetHeight;
@@ -1493,9 +1494,8 @@ function himnoCard(plays, label){
     ? `<img src="${h(coverUrl)}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
     : '';
   const fallbackIcons = {mañanas:'🌤',tardes:'🌆',noches:'🌙'};
-  const nocheCanvas = cssClass==='noche'
-    ? `<canvas class="himno-stars" id="himnoStars${Date.now()}"></canvas>`
-    : '';
+  const nocheId = cssClass==='noche' ? `himnoStars${Date.now()}` : '';
+  const nocheCanvas = nocheId ? `<canvas class="himno-stars" id="${nocheId}"></canvas>` : '';
   const html = `<div class="himno-card ${cssClass}">
     ${nocheCanvas}
     <div class="himno-art">
@@ -1508,7 +1508,7 @@ function himnoCard(plays, label){
       <div class="himno-sub">${cnt} escucha${cnt!==1?'s':''} en esa franja</div>
     </div>
   </div>`;
-  if(cssClass==='noche') setTimeout(()=>initNocheStars(),80);
+  if(nocheId) setTimeout(()=>initNocheStars(nocheId),80);
   return html;
 }
 
@@ -1917,7 +1917,8 @@ function animChart(artists,months,monthTicks,totalDays,todayIdx,noConfetti,confe
       chartAnimId=requestAnimationFrame(draw);
     } else {
       // Keep rAF alive for breathing pulse; trigger reveal on first done frame
-      if(!noConfetti&&rev&&rev.style.opacity==='0') setTimeout(()=>{
+      if(!noConfetti&&rev&&!rev._revealed) setTimeout(()=>{
+        rev._revealed=true;
         rev.style.opacity='1';
         if(confettiYear&&!_confettiFiredYears.has(confettiYear)){launchConfetti();_confettiFiredYears.add(confettiYear);}
         const after=document.getElementById('afterAnim');
@@ -1926,6 +1927,11 @@ function animChart(artists,months,monthTicks,totalDays,todayIdx,noConfetti,confe
           after.style.opacity='0';
           after.style.transition='opacity 1s';
           requestAnimationFrame(()=>{after.style.opacity='1';});
+          // Init noche stars AFTER afterAnim is visible so canvas has real dimensions
+          setTimeout(()=>{
+            const nc=after.querySelector('.himno-stars');
+            if(nc) initNocheStars(nc.id);
+          },50);
         },600);
       },200);
       chartAnimId=requestAnimationFrame(draw);
