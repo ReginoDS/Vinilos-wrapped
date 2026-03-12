@@ -820,18 +820,19 @@ async function syncNow(){
     const mergedLog = mergeVinylLogs(remLog, DB.vinylLog);
     DB.vinylLog     = mergedLog;
 
-    // CLEAN SLATE: remote overwrites local plays entirely (temporary)
+    // Plays: union merge, respecting deletions from both sides
     const remPlays      = remPls?.plays || [];
     const remDeletedIds = remPls?.deletedPlayIds || [];
-    DB.plays          = remPlays;
-    DB.deletedPlayIds = remDeletedIds;
+    const mergedPls     = mergePlays(DB.plays, remPlays, DB.deletedPlayIds, remDeletedIds);
+    DB.plays          = mergedPls.plays;
+    DB.deletedPlayIds = mergedPls.deletedIds;
 
     const users = remCol?.users || DB.users || [];
     DB.users = users;
     USER.resolve(users);
 
     await GH.writeFile('collection.json', {vinylLog:mergedLog, users, _sha:remCol?._sha});
-    await GH.writeFile('plays.json', {plays:remPlays, deletedPlayIds:remDeletedIds, _sha:remPls?._sha});
+    await GH.writeFile('plays.json', {plays:mergedPls.plays, deletedPlayIds:mergedPls.deletedIds, _sha:remPls?._sha});
 
     setSS('ok','Sincronizado');
     renderAll();
