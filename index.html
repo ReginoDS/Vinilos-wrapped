@@ -18,7 +18,7 @@
 :root{--bg:#0a0a0a;--surface:#111;--s2:#1a1a1a;--border:#222;--accent:#e8d5b0;--accent2:#c9a96e;--text:#f0ebe3;--muted:#666;--dim:#333;--radius:4px;}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;overflow:hidden;width:100%;}
-#app{display:flex;flex-direction:column;height:100svh;height:100dvh;max-width:480px;margin:0 auto;overflow:hidden;}
+#app{display:flex;flex-direction:column;height:100svh;height:100dvh;height:var(--app-h,100dvh);max-width:480px;margin:0 auto;overflow:hidden;}
 
 /* ── LOGIN ── */
 #loginScreen{position:fixed;inset:0;background:var(--bg);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 32px;}
@@ -218,7 +218,11 @@ select.finput option{background:var(--s2);}
 .scard-gold .scard-val{color:var(--accent2);}
 .scard-sub{font-size:11px;color:var(--muted);margin-top:3px;}
 .sday{display:flex;align-items:baseline;gap:7px;}
-.sday-n{font-family:'DM Serif Display',serif;font-size:30px;color:var(--accent2);line-height:1;}
+.stats-pair-card{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;text-align:center;}
+.spc-lbl{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);height:28px;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.3;}
+.spc-val{font-family:'DM Serif Display',serif;font-size:24px;color:var(--accent);line-height:1;height:34px;display:flex;align-items:center;justify-content:center;}
+.spc-sub{font-size:11px;color:var(--muted);height:20px;display:flex;align-items:center;justify-content:center;}
+.sday-n{font-family:'DM Serif Display',serif;font-size:30px;color:var(--accent);line-height:1;}
 .sday-u{font-size:11px;color:var(--muted);margin-top:2px;}
 .sday-date{font-size:11px;color:var(--muted);margin-top:5px;font-style:italic;}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:9px;align-items:stretch;}
@@ -619,6 +623,17 @@ select.finput option{background:var(--s2);}
 
 <script>
 'use strict';
+
+// ── VIEWPORT HEIGHT FIX ──────────────────────────────────────
+// dvh/svh can be wrong on first render in PWA standalone mode.
+// We set --app-h from window.innerHeight which is always correct.
+function fixAppHeight(){
+  document.documentElement.style.setProperty('--app-h', window.innerHeight+'px');
+}
+fixAppHeight();
+window.addEventListener('resize', fixAppHeight);
+window.addEventListener('orientationchange', ()=>setTimeout(fixAppHeight,100));
+// ─────────────────────────────────────────────────────────────
 
 // ════════════════════════════════════════════════════════════
 //  USER MANAGEMENT
@@ -1546,18 +1561,18 @@ function cardAlbum(name,label){
 
 function cardTopDay(bd){
   if(!bd) return '';
-  return `<div class="scard scard-center" style="margin-bottom:0;justify-content:center;">
-    <div class="scard-lbl">Día con más escuchas</div>
-    <div class="sday-n">${bd.count}</div>
-    <div class="sday-date">${bd.label}</div>
+  return `<div class="scard scard-center stats-pair-card">
+    <div class="spc-lbl">Día con más escuchas</div>
+    <div class="spc-val sday-n">${bd.count}</div>
+    <div class="spc-sub">${bd.label}</div>
   </div>`;}
 
 function cardMesActivo(tm){
   if(!tm) return '';
-  return `<div class="scard scard-center">
-    <div class="scard-lbl">Mes más activo</div>
-    <div class="scard-val">${h(tm[0])}</div>
-    <div class="scard-sub">${tm[1]} escuchas</div>
+  return `<div class="scard scard-center stats-pair-card">
+    <div class="spc-lbl">Mes más activo</div>
+    <div class="spc-val">${h(tm[0])}</div>
+    <div class="spc-sub">${tm[1]} escuchas</div>
   </div>`;}
 
 // ════════════════════════════════════════════════════════════
