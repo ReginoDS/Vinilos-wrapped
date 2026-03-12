@@ -18,7 +18,7 @@
 :root{--bg:#0a0a0a;--surface:#111;--s2:#1a1a1a;--border:#222;--accent:#e8d5b0;--accent2:#c9a96e;--text:#f0ebe3;--muted:#666;--dim:#333;--radius:4px;}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;overflow:hidden;width:100%;}
-#app{display:flex;flex-direction:column;height:100dvh;max-width:480px;margin:0 auto;overflow:hidden;}
+#app{display:flex;flex-direction:column;height:100svh;height:100dvh;max-width:480px;margin:0 auto;overflow:hidden;}
 
 /* ── LOGIN ── */
 #loginScreen{position:fixed;inset:0;background:var(--bg);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 32px;}
@@ -155,7 +155,7 @@ header{padding:16px 18px 10px;flex-shrink:0;border-bottom:1px solid var(--border
 .empty p{font-size:12px;line-height:1.8;}
 
 /* ── BOTTOM BAR ── */
-.bbar{padding:12px 18px 26px;border-top:1px solid var(--border);display:flex;gap:10px;flex-shrink:0;background:var(--bg);}
+.bbar{padding:12px 18px calc(16px + env(safe-area-inset-bottom,10px));border-top:1px solid var(--border);display:flex;gap:10px;flex-shrink:0;background:var(--bg);}
 .btn{flex:1;padding:13px 10px;border-radius:var(--radius);font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border:none;display:flex;align-items:center;justify-content:center;gap:7px;transition:all .15s;}
 .btn:active{transform:scale(.96);}
 .btn-p{background:var(--accent);color:var(--bg);font-weight:500;}
@@ -1409,8 +1409,8 @@ function initNocheStars(){
     ctx.globalAlpha = alpha;
 
     // Draw + (vertical longer)
-    const vLen = (4 + 5*plusScale);
-    const hLen = (2.5 + 2.5*plusScale);
+    const vLen = (1.6 + 2*plusScale);
+    const hLen = (1.0 + 1.0*plusScale);
     const grad = (len, isV) => {
       const x1=isV?0:-len, y1=isV?-len:0, x2=isV?0:len, y2=isV?len:0;
       const g=ctx.createLinearGradient(x1,y1,x2,y2);
@@ -1424,24 +1424,24 @@ function initNocheStars(){
     // vertical arm
     ctx.beginPath();
     ctx.strokeStyle=grad(vLen,true);
-    ctx.lineWidth=1.5+plusScale;
+    ctx.lineWidth=0.6+0.4*plusScale;
     ctx.lineCap='round';
     ctx.moveTo(0,-vLen); ctx.lineTo(0,vLen);
     ctx.stroke();
     // horizontal arm
     ctx.beginPath();
     ctx.strokeStyle=grad(hLen,false);
-    ctx.lineWidth=0.8+0.5*plusScale;
+    ctx.lineWidth=0.4+0.2*plusScale;
     ctx.moveTo(-hLen,0); ctx.lineTo(hLen,0);
     ctx.stroke();
 
     // Draw × (45° rotated, thinner, less opaque)
     ctx.globalAlpha = alpha*0.45;
     ctx.rotate(Math.PI/4);
-    const dLen = (2.5 + 3*crossScale);
+    const dLen = (1.0 + 1.2*crossScale);
     ctx.beginPath();
     ctx.strokeStyle=grad(dLen,true);
-    ctx.lineWidth=0.7+0.3*crossScale;
+    ctx.lineWidth=0.3+0.1*crossScale;
     ctx.moveTo(0,-dLen); ctx.lineTo(0,dLen);
     ctx.stroke();
     ctx.beginPath();
