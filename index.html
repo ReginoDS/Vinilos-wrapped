@@ -807,13 +807,13 @@ function setSS(st,lbl){
 //
 //  Plays merge: union (local + remote), deletions respected.
 // ════════════════════════════════════════════════════════════
-function fixDuplicatePlays(){
+async function fixDuplicatePlays(){
   const all = DB.plays;
   const non2025 = all.filter(p => !p.ts.startsWith('2025'));
   const plays2025 = all.filter(p => p.ts.startsWith('2025'));
   const enriched2025 = enrichPlays(plays2025);
 
-  // Key: album title + day + hour + minute (parsed as numbers to avoid timezone/format differences)
+  // Key: album title + day + hour + minute (parsed as numbers to avoid tz/format differences)
   function dayMinKey(ts, album){
     const d = new Date(ts);
     return `${album}|${d.getFullYear()}-${d.getMonth()}-${d.getDate()}|${d.getHours()}:${d.getMinutes()}`;
@@ -825,7 +825,6 @@ function fixDuplicatePlays(){
     if (!seen.has(key)) {
       seen.set(key, plays2025[i]);
     } else {
-      // Keep shorter id (original tends to be shorter than the merged duplicate)
       const existing = seen.get(key);
       if (String(plays2025[i].id).length < String(existing.id).length) seen.set(key, plays2025[i]);
     }
@@ -839,10 +838,30 @@ function fixDuplicatePlays(){
     return;
   }
 
-  DB.plays = [...non2025, ...deduped2025].sort((a,b) => a.ts.localeCompare(b.ts));
+  const cleanPlays = [...non2025, ...deduped2025].sort((a,b) => a.ts.localeCompare(b.ts));
+  DB.plays = cleanPlays;
   renderAll();
-  showToast(`Eliminados ${removed} duplicado${removed !== 1 ? 's' : ''} ✓`);
-  if (GH.ok) syncNow();
+
+  if (GH.ok) {
+    try {
+      setSS('syncing', 'Guardando...');
+      // Read current SHA of plays.json without merging — we need to overwrite it clean
+      const rem = await GH.readFile('plays.json');
+      // Push the clean plays directly, overwriting GitHub — no merge
+      await GH.writeFile('plays.json', {
+        plays: cleanPlays,
+        deletedPlayIds: DB.deletedPlayIds,
+        _sha: rem?._sha
+      });
+      setSS('ok', 'Sincronizado');
+      showToast(`Eliminados ${removed} duplicado${removed !== 1 ? 's' : ''} y guardado ✓`);
+    } catch(e) {
+      setSS('err', 'Error al guardar');
+      showToast('Duplicados eliminados localmente, error al guardar en GitHub');
+    }
+  } else {
+    showToast(`Eliminados ${removed} duplicado${removed !== 1 ? 's' : ''} ✓`);
+  }
 }
 
 async function syncNow(){
