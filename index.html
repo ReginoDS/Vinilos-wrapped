@@ -206,14 +206,16 @@ select.finput option{background:var(--s2);}
 
 /* ── STATS ── */
 .sscroll{flex:1;overflow-y:auto;padding:16px 18px 38px;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
-.ssect{margin-bottom:26px;}
+.ssect{margin-top:12px;}
 .slabel{font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:13px;padding-bottom:7px;border-bottom:1px solid var(--border);}
-.scard{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:13px;margin-bottom:9px;box-sizing:border-box;}
+.scard{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:13px;margin-bottom:10px;box-sizing:border-box;}
 .scard-center{text-align:center;display:flex;flex-direction:column;align-items:center;}
 .scard-gold{border-color:var(--accent2);}
 .two-6535>.scard{margin-bottom:0;}
+.two-6535>.himno-card{margin-top:0;}
 .scard-lbl{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:6px;}
 .scard-val{font-family:'DM Serif Display',serif;font-size:21px;color:var(--accent);line-height:1.1;}
+.scard-gold .scard-val{color:var(--accent2);}
 .scard-sub{font-size:11px;color:var(--muted);margin-top:3px;}
 .sday{display:flex;align-items:baseline;gap:7px;}
 .sday-n{font-family:'DM Serif Display',serif;font-size:30px;color:var(--accent2);line-height:1;}
@@ -221,9 +223,10 @@ select.finput option{background:var(--s2);}
 .sday-date{font-size:11px;color:var(--muted);margin-top:5px;font-style:italic;}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:9px;align-items:stretch;}
 .two>.scard{margin-bottom:0;height:100%;box-sizing:border-box;justify-content:center;min-height:90px;}
-.two-6535{display:grid;grid-template-columns:65fr 35fr;gap:9px;align-items:stretch;}
+.two-6535{display:grid;grid-template-columns:65fr 35fr;gap:9px;align-items:stretch;margin-top:10px;}
 .two-6535>*{min-width:0;height:100%;box-sizing:border-box;}
 .three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;}
+.rank-scroll{padding-right:6px;}
 .ri{display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid var(--border);}
 .ri:last-child{border-bottom:none;}
 .rn{font-family:'DM Serif Display',serif;font-size:17px;color:var(--dim);width:20px;flex-shrink:0;}
@@ -237,7 +240,7 @@ select.finput option{background:var(--s2);}
 .locked-t{font-size:12px;line-height:1.7;}
 
 /* EDAD MUSICAL */
-.edad-card{background:var(--surface);border:1px solid var(--accent2);border-radius:var(--radius);padding:13px;margin-bottom:9px;display:flex;align-items:center;gap:14px;}
+.edad-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:13px;margin-bottom:9px;display:flex;align-items:center;gap:14px;}
 .edad-num{font-family:'DM Serif Display',serif;font-size:40px;color:var(--accent);line-height:1;flex-shrink:0;}
 .edad-info{}
 .edad-lbl{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:3px;}
@@ -316,7 +319,7 @@ select.finput option{background:var(--s2);}
 .year-select{background:var(--s2);border:1px solid var(--border);color:var(--accent);font-family:'DM Mono',monospace;font-size:13px;padding:5px 10px;border-radius:var(--radius);outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;padding-right:26px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23c9a96e' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;}
 
 /* ── ALBUM TOP CARD (year) ── */
-.album-top-card{display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:13px;}
+.album-top-card{display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:13px;margin-bottom:10px;}
 .album-top-cover{width:56px;height:56px;border-radius:6px;object-fit:cover;flex-shrink:0;}
 .album-top-info{flex:1;min-width:0;}
 .album-top-ed{font-style:italic;font-size:10px;color:var(--muted);margin-top:3px;font-family:'DM Serif Display',serif;}
@@ -342,12 +345,15 @@ select.finput option{background:var(--s2);}
 .log-item.swiped{transform:translateX(-64px);}
 
 /* ── HIMNO CARD ── */
-.himno-card{display:flex;align-items:center;gap:12px;border-radius:var(--radius);padding:12px;box-sizing:border-box;border:1px solid var(--border);position:relative;overflow:hidden;}
-.himno-card.manana{background:linear-gradient(160deg,#1a1608 0%,#2a2010 60%,#1a1608 100%);border-color:#3d3010;}
-.himno-card.tarde{background:linear-gradient(200deg,#1a1008 0%,#221408 60%,#160e08 100%);border-color:#3d2010;}
+.himno-card{display:flex;align-items:center;gap:12px;border-radius:var(--radius);padding:12px;box-sizing:border-box;border:1px solid var(--border);position:relative;overflow:hidden;margin-top:10px;height:100%;}
+.himno-card.manana{background:var(--bg);border-color:#3d3010;}
+.himno-card.manana::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 120% 60% at 50% 110%,#c9a96e55 0%,#c9a96e22 40%,transparent 70%);pointer-events:none;}
+.himno-card.tarde{background:var(--bg);border-color:#3d2010;}
+.himno-card.tarde::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 120% 60% at 50% -10%,#c9a96e55 0%,#c9a96e22 40%,transparent 70%);pointer-events:none;}
 .himno-card.noche{background:#080812;border-color:#181828;}
 /* Star dots for noche */
-.himno-card.noche::before{content:'';position:absolute;inset:0;background-image:radial-gradient(1px 1px at 15% 20%,#fff6 0%,transparent 100%),radial-gradient(1px 1px at 35% 60%,#fff4 0%,transparent 100%),radial-gradient(1px 1px at 55% 30%,#fff5 0%,transparent 100%),radial-gradient(1px 1px at 70% 70%,#fff3 0%,transparent 100%),radial-gradient(1px 1px at 85% 45%,#fff6 0%,transparent 100%),radial-gradient(1.5px 1.5px at 25% 85%,#fff4 0%,transparent 100%),radial-gradient(1px 1px at 90% 15%,#fff5 0%,transparent 100%),radial-gradient(1.5px 1.5px at 60% 80%,#fff3 0%,transparent 100%);pointer-events:none;}
+
+.himno-stars{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;}
 .himno-art{width:44px;height:44px;flex-shrink:0;border-radius:50%;overflow:hidden;border:1px solid rgba(255,255,255,0.08);background:var(--s2);position:relative;z-index:1;}
 .himno-art img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
 .himno-art-placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:18px;}
@@ -1331,13 +1337,17 @@ function topDay(plays){
 function rankBars(arr,showSub){
   if(!arr.length) return '<div class="nodata">Sin datos</div>';
   const max=arr[0][1];
-  return arr.map(([name,count,sub],i)=>`
+  const rowH=showSub?42:34; // px per row measured (padding 8px top+bottom + content)
+  const visibleH=rowH*5;    // show exactly 5 rows
+  const rows=arr.map(([name,count,sub],i)=>`
     <div class="ri">
       <div class="rn">${i+1}</div>
       <div class="rinfo"><div class="rname">${h(name)}</div>${sub?`<div class="rsub">${h(sub)}</div>`:''}</div>
       <div class="rbar-w"><div class="rbar" style="width:${Math.round(count/max*44)}px"></div></div>
       <div class="rcnt">${count}</div>
     </div>`).join('');
+  const scrollable=arr.length>5?`style="max-height:${visibleH}px;overflow-y:auto;"`:'' ;
+  return `<div class="rank-scroll" ${scrollable}>${rows}</div>`;
 }
 
 // Enrich rank arrays with subtitle from vinyl metadata
@@ -1363,6 +1373,92 @@ function calcEdadMusical(plays, currentYear){
   if(!sumW) return null;
   const avgYear=sumYW/sumW;
   return Math.round(currentYear-avgYear) + 18;
+}
+
+// ── NOCHE STARS ANIMATION ────────────────────────────────────
+let _nocheStarsRaf=null;
+function initNocheStars(){
+  const cv=document.querySelector('.himno-stars'); if(!cv) return;
+  const parent=cv.parentElement;
+  const dpr=window.devicePixelRatio||1;
+  const W=parent.offsetWidth, H=parent.offsetHeight;
+  if(!W||!H) return;
+  cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr);
+  cv.style.width=W+'px'; cv.style.height=H+'px';
+  const ctx=cv.getContext('2d');
+  ctx.scale(dpr,dpr);
+
+  // Star positions (normalized 0-1), each has a phase offset for twinkling
+  const ACCENT='#c9a96e';
+  const stars=[
+    {x:.12,y:.22,phase:0.0},{x:.28,y:.55,phase:0.7},{x:.45,y:.15,phase:1.3},
+    {x:.62,y:.70,phase:0.4},{x:.78,y:.30,phase:1.8},{x:.88,y:.60,phase:0.9},
+    {x:.20,y:.80,phase:2.1},{x:.55,y:.40,phase:1.5},{x:.92,y:.20,phase:0.2},
+    {x:.35,y:.90,phase:2.5},{x:.70,y:.10,phase:1.1},{x:.05,y:.50,phase:3.0},
+  ];
+
+  function drawStar(ctx, cx, cy, t, phase){
+    const cycle = (t*0.001 + phase) % (Math.PI*2);
+    // + arm: vertical elongated, thicker center, sin drives length
+    const plusScale = 0.5 + 0.5*Math.sin(cycle);           // 0..1
+    const crossScale = 0.5 + 0.5*Math.sin(cycle+Math.PI);  // opposite phase
+    const alpha = 0.3 + 0.7*plusScale;
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.globalAlpha = alpha;
+
+    // Draw + (vertical longer)
+    const vLen = (4 + 5*plusScale);
+    const hLen = (2.5 + 2.5*plusScale);
+    const grad = (len, isV) => {
+      const x1=isV?0:-len, y1=isV?-len:0, x2=isV?0:len, y2=isV?len:0;
+      const g=ctx.createLinearGradient(x1,y1,x2,y2);
+      g.addColorStop(0,'transparent');
+      g.addColorStop(0.3,ACCENT);
+      g.addColorStop(0.5,ACCENT);
+      g.addColorStop(0.7,ACCENT);
+      g.addColorStop(1,'transparent');
+      return g;
+    };
+    // vertical arm
+    ctx.beginPath();
+    ctx.strokeStyle=grad(vLen,true);
+    ctx.lineWidth=1.5+plusScale;
+    ctx.lineCap='round';
+    ctx.moveTo(0,-vLen); ctx.lineTo(0,vLen);
+    ctx.stroke();
+    // horizontal arm
+    ctx.beginPath();
+    ctx.strokeStyle=grad(hLen,false);
+    ctx.lineWidth=0.8+0.5*plusScale;
+    ctx.moveTo(-hLen,0); ctx.lineTo(hLen,0);
+    ctx.stroke();
+
+    // Draw × (45° rotated, thinner, less opaque)
+    ctx.globalAlpha = alpha*0.45;
+    ctx.rotate(Math.PI/4);
+    const dLen = (2.5 + 3*crossScale);
+    ctx.beginPath();
+    ctx.strokeStyle=grad(dLen,true);
+    ctx.lineWidth=0.7+0.3*crossScale;
+    ctx.moveTo(0,-dLen); ctx.lineTo(0,dLen);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.strokeStyle=grad(dLen,false);
+    ctx.moveTo(-dLen,0); ctx.lineTo(dLen,0);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  if(_nocheStarsRaf) cancelAnimationFrame(_nocheStarsRaf);
+  function loop(t){
+    ctx.clearRect(0,0,W,H);
+    stars.forEach(s=>drawStar(ctx, s.x*W, s.y*H, t, s.phase));
+    _nocheStarsRaf=requestAnimationFrame(loop);
+  }
+  _nocheStarsRaf=requestAnimationFrame(loop);
 }
 
 // ── HIMNO (top álbum por franja horaria) ─────────────────────
@@ -1395,7 +1491,11 @@ function himnoCard(plays, label){
     ? `<img src="${h(coverUrl)}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
     : '';
   const fallbackIcons = {mañanas:'🌤',tardes:'🌆',noches:'🌙'};
-  return `<div class="himno-card ${cssClass}">
+  const nocheCanvas = cssClass==='noche'
+    ? `<canvas class="himno-stars" id="himnoStars${Date.now()}"></canvas>`
+    : '';
+  const html = `<div class="himno-card ${cssClass}">
+    ${nocheCanvas}
     <div class="himno-art">
       ${artHtml}
       <div class="himno-art-placeholder" style="${coverUrl?'display:none':'display:flex'}">${fallbackIcons[bestFranja]}</div>
@@ -1406,6 +1506,8 @@ function himnoCard(plays, label){
       <div class="himno-sub">${cnt} escucha${cnt!==1?'s':''} en esa franja</div>
     </div>
   </div>`;
+  if(cssClass==='noche') requestAnimationFrame(()=>initNocheStars());
+  return html;
 }
 
 function edadCard(plays,label){
@@ -1428,9 +1530,16 @@ function cardArtist(name,label){
   </div>`;}
 
 function cardAlbum(name,label){
-  return `<div class="scard scard-center">
-    <div class="scard-lbl">${label}</div>
-    <div class="scard-val">${h(name)}</div>
+  const v=DB.vinyls.find(x=>x.album===name);
+  const cover=v?.cover||'';
+  const ed=v?.edition||'';
+  return `<div class="album-top-card">
+    ${cover?`<img class="album-top-cover" src="${h(cover)}" alt="" onerror="this.style.display='none'">`:'' }
+    <div class="album-top-info">
+      <div class="scard-lbl">${label}</div>
+      <div class="scard-val">${h(name)}</div>
+      ${ed?`<div class="album-top-ed">${h(ed)}</div>`:''}
+    </div>
   </div>`;}
 
 function cardTopDay(bd){
@@ -1479,22 +1588,63 @@ function renderMonth(forceKey){
         <div class="slabel" style="margin-bottom:0;border:none;padding:0">Wrapped Mensual</div>
         <select class="year-select" onchange="renderMonth(this.value)">${monthOpts}</select>
       </div>
-      ${cardArtist(tar[0]?.[0]||'—','Artista del mes')}
+      <div class="chart-c">
+        <div class="chart-ttl">Escuchas acumuladas por artista</div>
+        <canvas id="monthChart"></canvas>
+        <div class="clegend" id="mclegend"></div>
+      </div>
+      <div class="rev-win" style="margin-bottom:10px;">
+        <div class="rev-lbl">Tu artista más escuchado del mes…</div>
+        <div class="rev-name">${h(tar[0]?.[0]||'—')}</div>
+      </div>
       ${cardAlbum(ta[0]?.[0]||'—','Álbum del mes')}
-      ${edadCard(p,'del mes')}
-      <div class="two-6535" style="margin-top:9px">
+      <div class="two-6535">
         ${himnoCard(p,'del mes')}
         ${cardTopDay(bd)}
       </div>
+      ${edadCard(p,'del mes')}
     </div>
     <div class="ssect"><div class="slabel">Ranking álbumes del mes</div><div class="scard">${rankBars(ta,true)}</div></div>
     <div class="ssect"><div class="slabel">Ranking artistas del mes</div><div class="scard">${rankBars(tar)}</div></div>`;
+
+  // Build month chart data: day 1 to last day of month
+  const COLS=['#e8d5b0','#c9a96e','#7faadc','#52c87a','#e0956a','#e05252','#b48eff'];
+  const monthStart=new Date(MY,MM,1);
+  const daysInMonth=new Date(MY,MM+1,0).getDate();
+  const now=new Date();
+  const isCurrentMonth=(MY===now.getFullYear()&&MM===now.getMonth());
+  const todayIdxM=isCurrentMonth?Math.min(now.getDate()-1,daysInMonth-1):daysInMonth-1;
+  const monthArtists=tar.slice(0,6).map(([a],i)=>{
+    const daily=new Array(daysInMonth).fill(0);
+    p.filter(x=>x.artist===a).forEach(x=>{
+      const d=new Date(x.ts);
+      const di=d.getDate()-1;
+      if(di>=0&&di<daysInMonth) daily[di]++;
+    });
+    let cum=0;
+    const data=daily.map(v=>{cum+=v;return cum;});
+    const lastVal=data[todayIdxM];
+    for(let i=todayIdxM+1;i<daysInMonth;i++) data[i]=lastVal;
+    return{name:a,color:COLS[i],data,todayIdx:todayIdxM};
+  }).filter(a=>a.data[a.data.length-1]>0);
+
+  // Day ticks: 1st of each week approx — show day numbers
+  const dayTicks=[];
+  const dayLabels=[];
+  for(let d=0;d<daysInMonth;d+=7){dayTicks.push(d);dayLabels.push(String(d+1));}
+  dayTicks.push(daysInMonth-1); dayLabels.push(String(daysInMonth));
+
+  document.getElementById('mclegend').innerHTML=monthArtists.map(a=>`<div class="cli"><div class="cldot" style="background:${a.color}"></div><span>${h(a.name)}</span></div>`).join('');
+  const mcv=document.getElementById('monthChart');
+  mcv.style.width='100%'; mcv.style.display='block';
+  setTimeout(()=>animChart(monthArtists,dayLabels,dayTicks,daysInMonth,todayIdxM,true),50);
 }
 
 // ════════════════════════════════════════════════════════════
 //  YEAR STATS
 // ════════════════════════════════════════════════════════════
 let chartAnimId=null;
+const _confettiFiredYears=new Set(); // tracks which years have shown confetti this session
 let selectedYear=null; // null = auto (latest year with data)
 let selectedMonth=null; // null = auto (current month)
 
@@ -1574,15 +1724,8 @@ function renderYear(forceYear){
     </div>
     <div id="afterAnim" style="display:none">
       <div class="ssect">
-        <div class="album-top-card">
-          ${topAlbumCover?`<img class="album-top-cover" src="${h(topAlbumCover)}" alt="" onerror="this.style.display='none'">`:'' }
-          <div class="album-top-info">
-            <div class="scard-lbl">Álbum del año</div>
-            <div class="scard-val">${h(topAlbumName)}</div>
-            ${topAlbumEd?`<div class="album-top-ed">${h(topAlbumEd)}</div>`:''}
-          </div>
-        </div>
-        <div class="two" style="margin-top:9px">
+        ${cardAlbum(topAlbumName,'Álbum del año')}
+        <div class="two">
           ${cardTopDay(bd)}
           ${cardMesActivo(tm)}
         </div>
@@ -1597,11 +1740,12 @@ function renderYear(forceYear){
   // Size canvas after render
   const cv=document.getElementById('yearChart');
   cv.style.width='100%'; cv.style.display='block';
-  setTimeout(()=>animChart(artists,MS,monthTicks,chartDays,todayIdx),50);
+  setTimeout(()=>animChart(artists,MS,monthTicks,chartDays,todayIdx,false,isCurrentYear?YEAR:0),50);
 }
 
-function animChart(artists,months,monthTicks,totalDays,todayIdx){
-  const cv=document.getElementById('yearChart'); if(!cv) return;
+function animChart(artists,months,monthTicks,totalDays,todayIdx,noConfetti,confettiYear){
+  const cvId=noConfetti?'monthChart':'yearChart';
+  const cv=document.getElementById(cvId); if(!cv) return;
   const ctx=cv.getContext('2d');
   const dpr=window.devicePixelRatio||1;
   const W=cv.offsetWidth||cv.parentElement?.offsetWidth||340;
@@ -1609,12 +1753,13 @@ function animChart(artists,months,monthTicks,totalDays,todayIdx){
   cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr);
   cv.style.width=W+'px'; cv.style.height=H+'px';
   ctx.scale(dpr,dpr);
-  const P={t:14,r:18,b:24,l:32},cW=W-P.l-P.r,cH=H-P.t-P.b;
+  const P={t:14,r:18,b:24,l:44},cW=W-P.l-P.r,cH=H-P.t-P.b;
   const mx=Math.max(...artists.map(a=>a.data[a.data.length-1]),1);
   if(chartAnimId) cancelAnimationFrame(chartAnimId);
   const rev=document.getElementById('chartReveal'); if(rev) rev.style.opacity='0';
 
   // ── Monotone cubic interpolation (Fritsch-Carlson) ───────────
+  // Guarantees no overshoot or undershoot between data points.
   function monotoneSpline(xs,ys){
     const n=xs.length;
     if(n<2) return ()=>ys[0]||0;
@@ -1643,30 +1788,47 @@ function animChart(artists,months,monthTicks,totalDays,todayIdx){
   const todayI=todayPxAbs-pixelStart;
 
   const curves=artists.map(a=>{
-    const STEP=Math.max(1,Math.floor(totalDays/120));
+    // One control point per day — most stable for monotone cubic.
     const ptDays=[],ptVals=[];
-    for(let d=0;d<totalDays;d+=STEP){ptDays.push(d);ptVals.push(a.data[d]);}
-    if(ptDays[ptDays.length-1]!==totalDays-1){ptDays.push(totalDays-1);ptVals.push(a.data[totalDays-1]);}
+    for(let d=0;d<totalDays;d++){ptDays.push(d);ptVals.push(a.data[d]);}
     const pxs=ptDays.map(d=>P.l+(d/(totalDays-1))*cW);
     const pys=ptVals.map(v=>P.t+cH-(v/mx)*cH);
     const spline=monotoneSpline(pxs,pys);
+    // yPx: rasterized for arclength. pts: control points for smooth canvas drawing.
+    const yPxRaw=new Float32Array(numPx);
+    for(let i=0;i<numPx;i++) yPxRaw[i]=spline(pixelStart+i);
+    // Gaussian smoothing over yPx — sigma in pixels, wider = smoother
+    const SIGMA=2, KR=Math.ceil(SIGMA*2.5);
+    const kernel=new Float32Array(2*KR+1);
+    let ksum=0;
+    for(let k=-KR;k<=KR;k++){kernel[k+KR]=Math.exp(-k*k/(2*SIGMA*SIGMA));ksum+=kernel[k+KR];}
+    for(let k=0;k<kernel.length;k++) kernel[k]/=ksum;
     const yPx=new Float32Array(numPx);
-    for(let i=0;i<numPx;i++) yPx[i]=spline(pixelStart+i);
-    // Arclength: arcCum[i] = total curve length from pixel 0 to pixel i
-    // sqrt(1 + dy²) per pixel step (dx=1 always)
+    for(let i=0;i<numPx;i++){
+      let v=0;
+      for(let k=-KR;k<=KR;k++) v+=yPxRaw[Math.max(0,Math.min(numPx-1,i+k))]*kernel[k+KR];
+      yPx[i]=v;
+    }
+    // Arclength table
     const arcCum=new Float32Array(todayI+1);
     arcCum[0]=0;
     for(let i=1;i<=todayI;i++){
       const dy=yPx[i]-yPx[i-1];
       arcCum[i]=arcCum[i-1]+Math.sqrt(1+dy*dy);
     }
-    return{color:a.color,yPx,arcCum,totalArc:arcCum[todayI]};
+    // Build smooth draw points: sample spline at ~4px intervals up to today
+    // These feed into bezierCurveTo for a truly smooth canvas curve.
+    const DRAW_STEP=4;
+    const drawPts=[];
+    for(let i=0;i<=todayI;i+=DRAW_STEP) drawPts.push({x:pixelStart+i,y:yPx[i]});
+    if(drawPts[drawPts.length-1].x<pixelStart+todayI) drawPts.push({x:pixelStart+todayI,y:yPx[todayI]});
+    return{color:a.color,yPx,arcCum,totalArc:arcCum[todayI],drawPts,spline};
   });
 
   // Duration: calibrated so mean arclength of a full year ≈ 3800ms
   // REF_ARC = numPx*1.3 is the expected arc for a year with typical variance
   const meanArc=curves.reduce((s,c)=>s+c.totalArc,0)/curves.length;
-  const DUR=Math.round(3800*(meanArc/(numPx*1.3)));
+  const DUR=Math.round(2200*(meanArc/(numPx*1.3)));
 
   // Binary search arcCum → fractional pixel index (sub-pixel precision)
   function arcToPixelIndex(targetArc,arcCum){
@@ -1682,12 +1844,17 @@ function animChart(artists,months,monthTicks,totalDays,todayIdx){
   // ── DRAW ─────────────────────────────────────────────────────
   function drawBg(){
     ctx.clearRect(0,0,W,H);
+    const fs=Math.max(7,Math.round(W/52));
+    ctx.font=`${fs}px DM Mono,monospace`;
     ctx.strokeStyle='#1e1e1e';ctx.lineWidth=1;
     for(let i=0;i<=4;i++){
       const gy=P.t+(cH/4)*i;
       ctx.beginPath();ctx.moveTo(P.l,gy);ctx.lineTo(P.l+cW,gy);ctx.stroke();
+      // Y axis label: value at this grid line (top=mx, bottom=0)
+      const val=Math.round(mx*(1-i/4));
+      ctx.fillStyle='#555';ctx.textAlign='right';
+      ctx.fillText(val, P.l-4, gy+fs*0.35);
     }
-    ctx.font=`${Math.max(7,Math.round(W/52))}px DM Mono,monospace`;
     ctx.textAlign='center';
     for(let m=0;m<tickPx.length;m++){
       ctx.strokeStyle='#333';ctx.lineWidth=1;
@@ -1717,13 +1884,16 @@ function animChart(artists,months,monthTicks,totalDays,todayIdx){
       const dotY=c.yPx[i0]+(c.yPx[i1]-c.yPx[i0])*frac;
 
       if(endI<0) return;
+      // Draw by evaluating the monotone spline every 3px — smooth without overshoot.
+      // The spline is monotone (Fritsch-Carlson) so it never dips below real values.
       ctx.beginPath();
       ctx.strokeStyle=c.color;ctx.lineWidth=2;
       ctx.lineJoin='round';ctx.lineCap='round';
       ctx.shadowColor=c.color;ctx.shadowBlur=4;
-      ctx.moveTo(pixelStart,c.yPx[0]);
-      for(let i=1;i<=endI;i++) ctx.lineTo(pixelStart+i,c.yPx[i]);
-      ctx.lineTo(dotX,dotY); // partial last segment to exact dot position
+      ctx.moveTo(pixelStart, c.yPx[0]);
+      const STEP=3;
+      for(let i=STEP;i<=endI;i+=STEP) ctx.lineTo(pixelStart+i, c.yPx[i]);
+      ctx.lineTo(dotX, dotY);
       ctx.stroke();
       ctx.shadowBlur=0;
 
@@ -1745,9 +1915,9 @@ function animChart(artists,months,monthTicks,totalDays,todayIdx){
       chartAnimId=requestAnimationFrame(draw);
     } else {
       // Keep rAF alive for breathing pulse; trigger reveal on first done frame
-      if(rev&&rev.style.opacity==='0') setTimeout(()=>{
+      if(!noConfetti&&rev&&rev.style.opacity==='0') setTimeout(()=>{
         rev.style.opacity='1';
-        launchConfetti();
+        if(confettiYear&&!_confettiFiredYears.has(confettiYear)){launchConfetti();_confettiFiredYears.add(confettiYear);}
         const after=document.getElementById('afterAnim');
         if(after) setTimeout(()=>{
           after.style.display='block';
