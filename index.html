@@ -102,8 +102,24 @@ header{padding:16px 18px 10px;flex-shrink:0;border-bottom:1px solid var(--border
   transition:border-color .2s;
 }
 .vcard.sel .vcard-disc{border-color:var(--accent2);animation:spin 3s linear infinite;will-change:transform;}
+.vcard.picker-lit .vcard-disc{border-color:var(--accent2);border-width:2.5px;animation:spin .45s linear infinite;box-shadow:0 0 12px 3px rgba(201,169,110,.35);}
+.vcard.picker-dim .vcard-disc{border-color:var(--dim);}
+.vcard.picker-dim .vcard-disc::before{content:'';position:absolute;inset:0;border-radius:50%;background:rgba(10,10,10,.65);z-index:1;pointer-events:none;}
+.vcard.picker-dim .vcard-info{opacity:.18;}
 @keyframes spin{to{transform:rotate(360deg)}}
 .bbar{contain:layout style;}
+.winner-banner{
+  position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateY(100%);
+  background:var(--surface);border:1px solid var(--accent2);border-bottom:none;
+  border-radius:12px 12px 0 0;padding:10px 24px 14px;
+  text-align:center;z-index:5;max-width:480px;width:100%;
+  transition:transform .4s cubic-bezier(.4,0,.2,1);
+  pointer-events:none;
+}
+.winner-banner.show{transform:translateX(-50%) translateY(calc(-1 * (var(--bbar-h,72px))));}
+.wb-label{font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:4px;}
+.wb-artist{font-family:'DM Serif Display',serif;font-size:20px;color:var(--accent);}
+.wb-album{font-size:10px;color:var(--accent2);margin-top:2px;text-transform:uppercase;letter-spacing:1px;}
 
 /* Cover art fills the entire disc and spins with it */
 .disc-cover{
@@ -158,7 +174,7 @@ header{padding:16px 18px 10px;flex-shrink:0;border-bottom:1px solid var(--border
 .empty p{font-size:12px;line-height:1.8;}
 
 /* ── BOTTOM BAR ── */
-.bbar{padding:12px 18px calc(16px + env(safe-area-inset-bottom,10px));border-top:1px solid var(--border);display:flex;gap:10px;flex-shrink:0;background:var(--bg);}
+.bbar{padding:12px 18px calc(16px + env(safe-area-inset-bottom,10px));border-top:1px solid var(--border);display:flex;gap:10px;flex-shrink:0;background:var(--bg);position:relative;z-index:10;}
 .btn{flex:1;padding:13px 10px;border-radius:var(--radius);font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border:none;display:flex;align-items:center;justify-content:center;gap:7px;transition:all .15s;}
 .btn:active{transform:scale(.96);}
 .btn-p{background:var(--accent);color:var(--bg);font-weight:500;}
@@ -312,6 +328,10 @@ select.finput option{background:var(--s2);}
 
 /* ── EDIT BUTTON ── */
 .btn-e{background:var(--s2);color:var(--accent2);border:1px solid var(--accent2);}
+.btn-rand{background:transparent;color:var(--accent2);border:1px solid var(--accent2);flex:0 0 44px;padding:0;display:flex;align-items:center;justify-content:center;}
+#editBtn{flex:45;}
+#playBtn{flex:45;}
+#rerollBtn{flex:15;min-width:0;}
 
 /* ── LOG VIEW ── */
 /* log-item border now on .log-wrap */
@@ -557,10 +577,27 @@ select.finput option{background:var(--s2);}
   <!-- COLECCIÓN -->
   <div class="view active" id="view-col">
     <div class="vgrid" id="vinylGrid"></div>
+    <div class="winner-banner" id="winnerBanner">
+      <div class="wb-label">Tu próxima escucha</div>
+      <div class="wb-artist" id="wbArtist"></div>
+      <div class="wb-album" id="wbAlbum"></div>
+    </div>
     <div class="bbar" id="bbar">
       <button class="btn btn-s" id="addBtn" onclick="openAddVinyl()">+ Añadir</button>
       <button class="btn btn-e" id="editBtn" style="display:none" onclick="openEditVinyl()">✎ Editar</button>
+      <button class="btn btn-rand" id="rerollBtn" style="display:none" onclick="rerollRandom()" title="Reroll"><svg width="17" height="14" viewBox="0 0 17 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M1 2h2l4 4.5L11 2h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M1 12h2l4-4.5 4 4.5h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M13 2l2 2-2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M13 12l2-2-2-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg></button>
       <button class="btn btn-p" id="playBtn" style="display:none" onclick="openPlayModal()">▶ Reproducir</button>
+      <button class="btn btn-rand" id="randBtn" onclick="startPickerApp()"><svg width="17" height="14" viewBox="0 0 17 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M1 2h2l4 4.5L11 2h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M1 12h2l4-4.5 4 4.5h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M13 2l2 2-2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M13 12l2-2-2-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg></button>
     </div>
   </div>
 
@@ -890,6 +927,8 @@ async function initData(){
 //  STATE
 // ════════════════════════════════════════════════════════════
 let selV=null;
+let _pickerRunning=false;
+let _pickerWinnerV=null; // set when a vinyl was chosen via random picker
 let currentTab='col';
 let addGenres=[];
 
@@ -975,6 +1014,225 @@ function renderCollection(){
   document.getElementById('playBtn').disabled=!selV;
 }
 
+/* ── RANDOM PICKER ──────────────────────────────────────────── */
+// Copy of the picker logic from picker-demo3, adapted for the app
+
+function startPickerApp(){
+  if(_pickerRunning||!DB.vinyls.length) return;
+  _pickerRunning=true;
+  _pickerWinnerV=null;
+  document.getElementById('randBtn').disabled=true;
+
+  const vinyls=DB.vinyls;
+  const n=vinyls.length;
+  const grid=document.getElementById('vinylGrid');
+  const cards=Array.from(grid.children);
+
+  // Clear selected
+  selV=null;
+  cards.forEach(c=>c.classList.remove('sel'));
+  updateBbar();
+
+  const winIdx=Math.floor(Math.random()*n);
+  _pickerWinnerV=vinyls[winIdx];
+
+  const {cols}=_getPickLayout(n,grid.clientWidth,grid.clientHeight);
+  const GAP=4,PAD=8;
+  const rows=Math.ceil(n/cols);
+  const availW=grid.clientWidth-PAD*2-GAP*(cols-1);
+  const availH=grid.clientHeight-PAD*2-GAP*(rows-1);
+  const cellPx=Math.floor(Math.min(availW/cols,availH/rows));
+
+  const needsShrink=grid.scrollHeight>grid.clientHeight;
+
+  cards.forEach(c=>c.classList.add('picker-dim'));
+
+  if(needsShrink){
+    // hide labels if needed
+    if(n>16) cards.forEach(card=>{
+      const info=card.querySelector('.vcard-info');
+      if(info){info.style.transition='none';info.style.maxHeight='0';info.style.opacity='0';info.style.padding='0';info.style.marginTop='0';}
+    });
+    grid.style.overflowY='hidden';
+    grid.style.transition='none';
+    _flipCards(cards,()=>_setPickGrid(grid,cols,GAP+'px',PAD+'px',cellPx),{
+      totalDur:1000,
+      onDone:()=>{
+        cards.forEach(c=>{c.style.transition='';c.style.transform='';c.style.transformOrigin='';});
+        grid.scrollTo({top:0,behavior:'instant'});
+        _runPickerTick(n,winIdx,grid,cards,vinyls);
+      }
+    });
+  } else {
+    _runPickerTick(n,winIdx,grid,cards,vinyls);
+  }
+}
+
+function rerollRandom(){
+  if(_pickerRunning) return;
+  selV=null;
+  _pickerWinnerV=null;
+  updateBbar();
+  renderCollection();
+  startPickerApp();
+}
+
+function _getPickLayout(n,gridW,gridH){
+  const GAP=4,PAD=8;
+  let bestCols=1,bestCell=0;
+  for(let c=1;c<=n;c++){
+    const rows=Math.ceil(n/c);
+    const cellW=(gridW-PAD*2-GAP*(c-1))/c;
+    const cellH=(gridH-PAD*2-GAP*(rows-1))/rows;
+    const cell=Math.min(cellW,cellH);
+    if(cell>bestCell){bestCell=cell;bestCols=c;}
+  }
+  return{cols:bestCols};
+}
+
+function _setPickGrid(grid,cols,gap,padding,cellPx){
+  const rows=Math.ceil(DB.vinyls.length/cols);
+  grid.style.gridTemplateColumns=`repeat(${cols},${cellPx}px)`;
+  grid.style.gridTemplateRows=`repeat(${rows},${cellPx}px)`;
+  Array.from(grid.children).forEach(c=>{c.style.width=cellPx+'px';c.style.height=cellPx+'px';c.style.overflow='hidden';});
+  grid.style.gap=gap;
+  grid.style.padding=padding;
+}
+
+function _restoreGrid(grid){
+  grid.style.gridTemplateColumns='';
+  grid.style.gridTemplateRows='';
+  grid.style.gap='';
+  grid.style.padding='';
+  Array.from(grid.children).forEach(c=>{c.style.width='';c.style.height='';c.style.overflow='';});
+}
+
+function _buildPickTimings(n,winnerIdx){
+  const TOTAL_MS=3000,RATIO=10.0,MIN_STEP_MS=85;
+  function rawSumFor(steps){let s=0;for(let i=0;i<steps;i++){const t=steps>1?i/(steps-1):0;const u=Math.max(0,(t-0.70)/0.30);s+=1.0+(RATIO-1.0)*u*u;}return s;}
+  let laps=1;
+  while(true){const steps=laps*n+winnerIdx+1;const minDelay=TOTAL_MS/rawSumFor(steps);if(minDelay<=MIN_STEP_MS)break;laps++;}
+  const totalSteps=laps*n+winnerIdx+1;
+  const rs=rawSumFor(totalSteps);
+  const delays=[];
+  for(let i=0;i<totalSteps;i++){const t=totalSteps>1?i/(totalSteps-1):0;const u=Math.max(0,(t-0.70)/0.30);delays.push((1.0+(RATIO-1.0)*u*u)*TOTAL_MS/rs);}
+  return{totalSteps,delays};
+}
+
+function _flipCards(cards,applyLayout,{totalDur=1000,onDone}={}){
+  const n=cards.length;
+  const staggerSpread=n>1?Math.floor(totalDur*0.4):0;
+  const stagger=n>1?Math.floor(staggerSpread/(n-1)):0;
+  const cardDur=totalDur-staggerSpread;
+  const first=cards.map(c=>c.getBoundingClientRect());
+  applyLayout();
+  void cards[0].offsetWidth;
+  const last=cards.map(c=>c.getBoundingClientRect());
+  cards.forEach((card,i)=>{
+    const dx=first[i].left-last[i].left,dy=first[i].top-last[i].top;
+    const sx=first[i].width/last[i].width,sy=first[i].height/last[i].height;
+    card.style.transition='none';
+    card.style.transform=`translate(${dx}px,${dy}px) scale(${sx},${sy})`;
+    card.style.transformOrigin='top left';
+  });
+  void cards[0].offsetWidth;
+  cards.forEach((card,i)=>{
+    card.style.transition=`transform ${cardDur}ms cubic-bezier(.4,0,.2,1) ${i*stagger}ms`;
+    card.style.transform='none';
+  });
+  if(onDone) setTimeout(onDone,totalDur+30);
+}
+
+function _runPickerTick(n,winIdx,grid,cards,vinyls){
+  cards.forEach(c=>c.classList.add('picker-dim'));
+  const{totalSteps,delays}=_buildPickTimings(n,winIdx);
+  let step=0,litIdx=-1;
+  function tick(){
+    if(litIdx>=0){cards[litIdx].classList.remove('picker-lit');cards[litIdx].classList.add('picker-dim');}
+    litIdx=step%n;
+    const isLast=step===totalSteps-1;
+    if(isLast){
+      cards[litIdx].classList.remove('picker-dim');
+      cards[litIdx].classList.add('picker-lit');
+      setTimeout(()=>{
+        cards[litIdx].classList.remove('picker-lit','picker-dim');
+        _pickerRestore(winIdx,grid,cards,vinyls);
+      },600);
+      return;
+    }
+    cards[litIdx].classList.add('picker-lit');
+    cards[litIdx].classList.remove('picker-dim');
+    step++;
+    setTimeout(tick,delays[step]);
+  }
+  tick();
+}
+
+function _pickerRestore(winIdx,grid,cards,vinyls){
+  const n=vinyls.length;
+  const needsShrink=grid.style.gridTemplateColumns!=='';
+  const savedWinner=winIdx;
+
+  function finish(){
+    cards.forEach(c=>{c.classList.remove('picker-lit','picker-dim');c.style.transition='';c.style.transform='';c.style.transformOrigin='';});
+    // Select winner via normal selectV
+    selV=vinyls[savedWinner];
+    _pickerWinnerV=selV;
+    renderCollection();
+    updateBbar();
+    // Show banner
+    const wb=document.getElementById('winnerBanner');
+    if(wb){
+      document.getElementById('wbArtist').textContent=vinyls[savedWinner].artist;
+      document.getElementById('wbAlbum').textContent=vinyls[savedWinner].album;
+      wb.classList.add('show');
+    }
+    const winCard=Array.from(grid.children)[savedWinner];
+    if(winCard){
+      winCard.scrollIntoView({behavior:'smooth',block:'center'});
+      const obs=new IntersectionObserver((entries,o)=>{
+        if(entries[0].isIntersecting&&entries[0].intersectionRatio>=0.9){
+          o.disconnect();
+          setTimeout(()=>{
+            wb&&wb.classList.remove('show');
+            _pickerRunning=false;
+            document.getElementById('randBtn').disabled=false;
+          },1000);
+        }
+      },{threshold:0.9});
+      obs.observe(winCard);
+    } else {
+      setTimeout(()=>{
+        wb&&wb.classList.remove('show');
+        _pickerRunning=false;
+        document.getElementById('randBtn').disabled=false;
+      },1000);
+    }
+  }
+
+  if(!needsShrink){
+    finish();
+    return;
+  }
+
+  // Restore labels
+  if(n>16) cards.forEach(card=>{
+    const info=card.querySelector('.vcard-info');
+    if(info){info.style.transition='none';info.style.maxHeight='';info.style.opacity='';info.style.padding='';info.style.marginTop='';}
+  });
+  grid.style.transition='none';
+
+  _flipCards(cards,()=>{
+    _restoreGrid(grid);
+    grid.style.overflowY='auto';
+  },{
+    totalDur:1000,
+    onDone:finish
+  });
+}
+
+/* ────────────────────────────────────────────────────────────── */
+
 function selectV(id){
   const v=DB.vinyls.find(x=>x.id===id);
   selV=selV?.id===id?null:v;
@@ -986,14 +1244,21 @@ function updateBbar(){
   const addBtn=document.getElementById('addBtn');
   const editBtn=document.getElementById('editBtn');
   const playBtn=document.getElementById('playBtn');
+  const rerollBtn=document.getElementById('rerollBtn');
+  const randBtn=document.getElementById('randBtn');
   if(selV){
     addBtn.style.display='none';
     editBtn.style.display='flex';
     playBtn.style.display='flex';
+    // Show reroll only if this vinyl was chosen by the picker
+    rerollBtn.style.display=(_pickerWinnerV&&_pickerWinnerV.id===selV.id)?'flex':'none';
+    randBtn.style.display='none';
   } else {
     addBtn.style.display='flex';
     editBtn.style.display='none';
     playBtn.style.display='none';
+    rerollBtn.style.display='none';
+    randBtn.style.display='flex';
   }
 }
 
@@ -1760,7 +2025,7 @@ function renderYear(forceYear){
   // Size canvas after render
   const cv=document.getElementById('yearChart');
   cv.style.width='100%'; cv.style.display='block';
-  setTimeout(()=>animChart(artists,MS,monthTicks,chartDays,todayIdx,false,isCurrentYear?YEAR:0),50);
+  setTimeout(()=>animChart(artists,MS,monthTicks,chartDays,todayIdx,false,YEAR),50);
 }
 
 function animChart(artists,months,monthTicks,totalDays,todayIdx,noConfetti,confettiYear){
