@@ -1039,9 +1039,17 @@ function startPickerApp(){
 
   // grid.clientHeight = scrollable content height (can be huge with align-content:start)
   // The visual height is constrained by the .view parent (overflow:hidden, flex:1)
-  // Use the grid's own offsetHeight — measured before any picker changes,
-  // this is the true visual height of the scrollable area
-  const gridVisH=grid.offsetHeight;
+  // .vgrid has align-content:start so offsetHeight = content height, not visual height
+  // Walk up to find first ancestor with a constrained height (overflow:hidden)
+  let gridVisH=0;
+  let el=grid.parentElement;
+  while(el && el!==document.body){
+    if(getComputedStyle(el).overflow==='hidden'||getComputedStyle(el).overflowY==='hidden'){
+      gridVisH=el.clientHeight; break;
+    }
+    el=el.parentElement;
+  }
+  if(!gridVisH) gridVisH=grid.clientHeight;
   const {cols,gap:GAP,pad:PAD}=_getPickLayout(n,grid.clientWidth,gridVisH);
   window._pickerDebug={gridW:grid.clientWidth,gridH:gridVisH,n,cols,GAP,PAD};
   cards.forEach(c=>c.classList.add('picker-dim'));
