@@ -1149,8 +1149,10 @@ function _restoreGrid(grid){
   grid.style.padding='';
   grid.style.justifyContent='';
   grid.style.alignContent='';
+  // NOTE: do NOT clear aspectRatio here — cards are mid-FLIP and clearing it causes deformation
+  // aspectRatio is cleared in finish() after the animation completes
   Array.from(grid.children).forEach(c=>{
-    c.style.width='';c.style.height='';c.style.overflow='';c.style.aspectRatio='';
+    c.style.width='';c.style.height='';c.style.overflow='';
     const wrap=c.querySelector('.vcard-disc-wrap');
     const info=c.querySelector('.vcard-info');
     const tick=c.querySelector('.sel-tick');
@@ -1227,7 +1229,7 @@ function _pickerRestore(winIdx,grid,cards,vinyls,myRun){
   const savedWinner=winIdx;
 
   function finish(){
-    cards.forEach(c=>{c.classList.remove('picker-lit','picker-dim');c.style.transition='';c.style.transform='';c.style.transformOrigin='';});
+    cards.forEach(c=>{c.classList.remove('picker-lit','picker-dim');c.style.transition='';c.style.transform='';c.style.transformOrigin='';c.style.aspectRatio='';});
     // Select winner via normal selectV
     selV=vinyls[savedWinner];
     _pickerWinnerV=selV;
