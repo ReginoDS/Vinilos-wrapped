@@ -1046,7 +1046,12 @@ function startPickerApp(){
     - (tabsEl ? tabsEl.offsetHeight : 0)
     - (bbarEl ? bbarEl.offsetHeight : 0);
   const {cols,gap:GAP,pad:PAD}=_getPickLayout(n,grid.clientWidth,gridVisH);
-  window._pickerDebug={gridW:grid.clientWidth,gridH:gridVisH,n,cols,GAP,PAD};
+  const tabsEl2=document.querySelector('.tabs');
+  const bbarEl2=document.getElementById('bbar');
+  window._pickerDebug={gridW:grid.clientWidth,gridH:gridVisH,n,cols,GAP,PAD,
+    innerH:window.innerHeight,
+    tabsH:tabsEl2?tabsEl2.offsetHeight:-1,
+    bbarH:bbarEl2?bbarEl2.offsetHeight:-1};
   cards.forEach(c=>c.classList.add('picker-dim'));
 
   // Always FLIP to compact disc-only grid
@@ -1207,7 +1212,7 @@ function _pickerRestore(winIdx,grid,cards,vinyls){
     if(window._pickerDebug){
       const d=window._pickerDebug;
       const rows=Math.ceil(d.n/d.cols);
-      const msg=`gridW:${d.gridW} gridH:${d.gridH} n:${d.n} → cols:${d.cols} rows:${rows} GAP:${d.GAP} PAD:${d.PAD}`;
+      const msg=`gridW:${d.gridW} gridH:${d.gridH} n:${d.n} → cols:${d.cols} rows:${rows} GAP:${d.GAP} PAD:${d.PAD} | innerH:${d.innerH} tabsH:${d.tabsH} bbarH:${d.bbarH}`;
       let dbg=document.getElementById('_pickerDbg');
       if(!dbg){
         dbg=document.createElement('div');
