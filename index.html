@@ -1037,7 +1037,11 @@ function startPickerApp(){
   const winIdx=Math.floor(Math.random()*n);
   _pickerWinnerV=vinyls[winIdx];
 
-  const {cols,gap:GAP,pad:PAD}=_getPickLayout(n,grid.clientWidth,grid.clientHeight);
+  // grid.clientHeight = scrollable content height (can be huge with align-content:start)
+  // The visual height is constrained by the .view parent (overflow:hidden, flex:1)
+  const viewEl=grid.closest('.view')||grid.parentElement;
+  const gridVisH=viewEl ? viewEl.clientHeight : grid.clientHeight;
+  const {cols,gap:GAP,pad:PAD}=_getPickLayout(n,grid.clientWidth,gridVisH);
   cards.forEach(c=>c.classList.add('picker-dim'));
 
   // Always FLIP to compact disc-only grid
