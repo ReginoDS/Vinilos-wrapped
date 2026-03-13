@@ -104,7 +104,7 @@ header{padding:16px 18px 10px;flex-shrink:0;border-bottom:1px solid var(--border
 .vcard.sel .vcard-disc{border-color:var(--accent2);animation:spin 3s linear infinite;will-change:transform;}
 .vcard.picker-lit .vcard-disc{border-color:var(--accent2);border-width:2.5px;animation:none;box-shadow:0 0 12px 3px rgba(201,169,110,.35);}
 .vcard.picker-dim .vcard-disc{border-color:var(--dim);}
-.vcard.picker-winner .vcard-disc{border-color:var(--accent2);border-width:2.5px;animation:spin .45s linear infinite;box-shadow:0 0 12px 3px rgba(201,169,110,.35);}
+.vcard.picker-winner .vcard-disc{border-color:var(--accent2);border-width:2.5px;animation:spin 3s linear infinite;box-shadow:0 0 12px 3px rgba(201,169,110,.35);}
 .vcard.picker-dim .vcard-disc::before{content:'';position:absolute;inset:0;border-radius:50%;background:rgba(10,10,10,.65);z-index:1;pointer-events:none;}
 .vcard.picker-dim .vcard-info{opacity:.18;}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -1158,7 +1158,7 @@ function _restoreGrid(grid){
 }
 
 function _buildPickTimings(n,winnerIdx){
-  const TOTAL_MS=3000,RATIO=4.0,MIN_STEP_MS=300;
+  const TOTAL_MS=3000,RATIO=4.0,MIN_STEP_MS=85;
   function rawSumFor(steps){let s=0;for(let i=0;i<steps;i++){const t=steps>1?i/(steps-1):0;const u=Math.max(0,(t-0.55)/0.45);s+=1.0+(RATIO-1.0)*u*u;}return s;}
   let laps=1;
   while(true){const steps=laps*n+winnerIdx+1;const minDelay=TOTAL_MS/rawSumFor(steps);if(minDelay<=MIN_STEP_MS)break;laps++;}
