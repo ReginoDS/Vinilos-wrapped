@@ -1039,8 +1039,12 @@ function startPickerApp(){
 
   // grid.clientHeight = scrollable content height (can be huge with align-content:start)
   // The visual height is constrained by the .view parent (overflow:hidden, flex:1)
-  const viewEl=grid.closest('.view')||grid.parentElement;
-  const gridVisH=viewEl ? viewEl.clientHeight : grid.clientHeight;
+  // Compute true visual height: window height minus tabs and bbar
+  const tabsEl=document.querySelector('.tabs');
+  const bbarEl=document.getElementById('bbar');
+  const gridVisH=window.innerHeight
+    - (tabsEl ? tabsEl.offsetHeight : 0)
+    - (bbarEl ? bbarEl.offsetHeight : 0);
   const {cols,gap:GAP,pad:PAD}=_getPickLayout(n,grid.clientWidth,gridVisH);
   window._pickerDebug={gridW:grid.clientWidth,gridH:gridVisH,n,cols,GAP,PAD};
   cards.forEach(c=>c.classList.add('picker-dim'));
