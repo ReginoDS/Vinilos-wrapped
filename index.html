@@ -1038,17 +1038,12 @@ function startPickerApp(){
   _pickerWinnerV=vinyls[winIdx];
 
   const {cols,gap:GAP,pad:PAD}=_getPickLayout(n,grid.clientWidth,grid.clientHeight);
-  const rows=Math.ceil(n/cols);
-  const availW=grid.clientWidth-PAD*2-GAP*(cols-1);
-  const availH=grid.clientHeight-PAD*2-GAP*(rows-1);
-  const cellPx=Math.floor(Math.min(availW/cols,availH/rows));
-
   cards.forEach(c=>c.classList.add('picker-dim'));
 
   // Always FLIP to compact disc-only grid
   grid.style.overflowY='hidden';
   grid.style.transition='none';
-  _flipCards(cards,()=>_setPickGrid(grid,cols,GAP+'px',PAD+'px',cellPx),{
+  _flipCards(cards,()=>_setPickGrid(grid,cols,GAP+'px',PAD+'px'),{
     totalDur:1000,
     onDone:()=>{
       cards.forEach(c=>{c.style.transition='';c.style.transform='';c.style.transformOrigin='';});
@@ -1080,16 +1075,17 @@ function _getPickLayout(n,gridW,gridH){
   return{cols:bestCols,gap:GAP,pad:PAD};
 }
 
-function _setPickGrid(grid,cols,gap,padding,cellPx){
-  const rows=Math.ceil(DB.vinyls.length/cols);
-  grid.style.gridTemplateColumns=`repeat(${cols},${cellPx}px)`;
-  grid.style.gridTemplateRows=`repeat(${rows},${cellPx}px)`;
+function _setPickGrid(grid,cols,gap,padding){
+  // Use 1fr so columns fill available width evenly — no leftover space
+  grid.style.gridTemplateColumns=`repeat(${cols},1fr)`;
+  grid.style.gridTemplateRows='';
   grid.style.gap=gap;
   grid.style.padding=padding;
   Array.from(grid.children).forEach(c=>{
-    c.style.width=cellPx+'px';
-    c.style.height=cellPx+'px';
+    c.style.width='';
+    c.style.height='';
     c.style.overflow='hidden';
+    c.style.aspectRatio='1'; // card itself is square
     const wrap=c.querySelector('.vcard-disc-wrap');
     const info=c.querySelector('.vcard-info');
     const tick=c.querySelector('.sel-tick');
@@ -1105,7 +1101,7 @@ function _restoreGrid(grid){
   grid.style.gap='';
   grid.style.padding='';
   Array.from(grid.children).forEach(c=>{
-    c.style.width='';c.style.height='';c.style.overflow='';
+    c.style.width='';c.style.height='';c.style.overflow='';c.style.aspectRatio='';
     const wrap=c.querySelector('.vcard-disc-wrap');
     const info=c.querySelector('.vcard-info');
     const tick=c.querySelector('.sel-tick');
@@ -1187,12 +1183,22 @@ function _pickerRestore(winIdx,grid,cards,vinyls){
     _pickerWinnerV=selV;
     renderCollection();
     updateBbar();
-    // Show banner
+    // Show banner — enforce minimum 2s visible + 1s after card is centered
     const wb=document.getElementById('winnerBanner');
+    const bannerShownAt=Date.now();
     if(wb){
       document.getElementById('wbArtist').textContent=vinyls[savedWinner].artist;
       document.getElementById('wbAlbum').textContent=vinyls[savedWinner].album;
       wb.classList.add('show');
+    }
+    function hideBanner(){
+      const elapsed=Date.now()-bannerShownAt;
+      const delay=Math.max(0,2000-elapsed)+1000;
+      setTimeout(()=>{
+        wb&&wb.classList.remove('show');
+        _pickerRunning=false;
+        document.getElementById('randBtn').disabled=false;
+      },delay);
     }
     const winCard=Array.from(grid.children)[savedWinner];
     if(winCard){
@@ -1200,20 +1206,12 @@ function _pickerRestore(winIdx,grid,cards,vinyls){
       const obs=new IntersectionObserver((entries,o)=>{
         if(entries[0].isIntersecting&&entries[0].intersectionRatio>=0.9){
           o.disconnect();
-          setTimeout(()=>{
-            wb&&wb.classList.remove('show');
-            _pickerRunning=false;
-            document.getElementById('randBtn').disabled=false;
-          },1000);
+          hideBanner();
         }
       },{threshold:0.9});
       obs.observe(winCard);
     } else {
-      setTimeout(()=>{
-        wb&&wb.classList.remove('show');
-        _pickerRunning=false;
-        document.getElementById('randBtn').disabled=false;
-      },1000);
+      hideBanner();
     }
   }
 
@@ -1227,6 +1225,7 @@ function _pickerRestore(winIdx,grid,cards,vinyls){
   _flipCards(cards,()=>{
     _restoreGrid(grid);
     grid.style.overflowY='auto';
+    grid.style.gridTemplateColumns='1fr 1fr';
   },{
     totalDur:1000,
     onDone:finish
