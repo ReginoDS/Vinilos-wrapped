@@ -1068,15 +1068,14 @@ function startPickerApp(){
   const {cols,gap:GAP,pad:PAD}=_getPickLayout(n,grid.clientWidth,gridVisH);
   cards.forEach(c=>c.classList.add('picker-dim'));
 
-  // Pre-square cards so FLIP doesn't animate a shape change (avoids squish)
+  // Hide info before FIRST snapshot so cards are already square
   cards.forEach(c=>{
     const info=c.querySelector('.vcard-info');
     const tick=c.querySelector('.sel-tick');
     if(info) info.style.display='none';
     if(tick) tick.style.display='none';
-    c.style.aspectRatio='1';
   });
-  void grid.offsetWidth; // force reflow so FIRST snapshot sees square cards
+  void grid.offsetWidth;
 
   // Always FLIP to compact disc-only grid
   grid.style.overflowY='hidden';
@@ -1149,16 +1148,11 @@ function _restoreGrid(grid){
   grid.style.padding='';
   grid.style.justifyContent='';
   grid.style.alignContent='';
-  // NOTE: do NOT clear aspectRatio here — cards are mid-FLIP and clearing it causes deformation
-  // aspectRatio is cleared in finish() after the animation completes
+  // Keep info hidden during FLIP — restored in finish() after animation
   Array.from(grid.children).forEach(c=>{
-    c.style.width='';c.style.height='';c.style.overflow='';
+    c.style.width='';c.style.height='';c.style.overflow='';c.style.aspectRatio='';
     const wrap=c.querySelector('.vcard-disc-wrap');
-    const info=c.querySelector('.vcard-info');
-    const tick=c.querySelector('.sel-tick');
     if(wrap){wrap.style.width='';wrap.style.height='';wrap.style.flex='';}
-    if(info){info.style.display='';}
-    if(tick){tick.style.display='';}
   });
 }
 
@@ -1229,7 +1223,14 @@ function _pickerRestore(winIdx,grid,cards,vinyls,myRun){
   const savedWinner=winIdx;
 
   function finish(){
-    cards.forEach(c=>{c.classList.remove('picker-lit','picker-dim');c.style.transition='';c.style.transform='';c.style.transformOrigin='';c.style.aspectRatio='';});
+    cards.forEach(c=>{
+      c.classList.remove('picker-lit','picker-dim');
+      c.style.transition='';c.style.transform='';c.style.transformOrigin='';
+      const info=c.querySelector('.vcard-info');
+      const tick=c.querySelector('.sel-tick');
+      if(info) info.style.display='';
+      if(tick) tick.style.display='';
+    });
     // Select winner via normal selectV
     selV=vinyls[savedWinner];
     _pickerWinnerV=selV;
@@ -1266,16 +1267,10 @@ function _pickerRestore(winIdx,grid,cards,vinyls,myRun){
     }
   }
 
-  // Restore labels
-  if(n>16) cards.forEach(card=>{
-    const info=card.querySelector('.vcard-info');
-    if(info){info.style.transition='none';info.style.maxHeight='';info.style.opacity='';info.style.padding='';info.style.marginTop='';}
-  });
-  grid.style.transition='none';
-
-  // Pre-square cards so FLIP back doesn't animate shape change
-  cards.forEach(c=>{c.style.aspectRatio='1';});
+  // Remove dim before FLIP so cards are at full brightness as they move back
+  cards.forEach(c=>c.classList.remove('picker-dim','picker-lit'));
   void grid.offsetWidth;
+  grid.style.transition='none';
 
   _flipCards(cards,()=>{
     _restoreGrid(grid);
