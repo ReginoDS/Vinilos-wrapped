@@ -1157,7 +1157,7 @@ function _restoreGrid(grid){
 }
 
 function _buildPickTimings(n,winnerIdx){
-  const TOTAL_MS=3000,RATIO=10.0,MIN_STEP_MS=128;
+  const TOTAL_MS=3000,RATIO=10.0,MIN_STEP_MS=85;
   function rawSumFor(steps){let s=0;for(let i=0;i<steps;i++){const t=steps>1?i/(steps-1):0;const u=Math.max(0,(t-0.70)/0.30);s+=1.0+(RATIO-1.0)*u*u;}return s;}
   let laps=1;
   while(true){const steps=laps*n+winnerIdx+1;const minDelay=TOTAL_MS/rawSumFor(steps);if(minDelay<=MIN_STEP_MS)break;laps++;}
@@ -1196,7 +1196,12 @@ function _runPickerTick(n,winIdx,grid,cards,vinyls,myRun){
   cards.forEach(c=>c.classList.add('picker-dim'));
   const{totalSteps,delays}=_buildPickTimings(n,winIdx);
   let step=0,litIdx=-1;
-  function tick(){
+  let nextTime=performance.now();
+
+  function tick(now){
+    if(_pickerAbort!==myRun) return;
+    if(now < nextTime){ requestAnimationFrame(tick); return; }
+
     if(litIdx>=0){cards[litIdx].classList.remove('picker-lit');cards[litIdx].classList.add('picker-dim');}
     litIdx=step%n;
     const isLast=step===totalSteps-1;
@@ -1212,10 +1217,11 @@ function _runPickerTick(n,winIdx,grid,cards,vinyls,myRun){
     }
     cards[litIdx].classList.add('picker-lit');
     cards[litIdx].classList.remove('picker-dim');
+    nextTime += delays[step+1];
     step++;
-    setTimeout(()=>{if(_pickerAbort!==myRun)return;tick();},delays[step]);
+    requestAnimationFrame(tick);
   }
-  tick();
+  requestAnimationFrame(tick);
 }
 
 function _pickerRestore(winIdx,grid,cards,vinyls,myRun){
