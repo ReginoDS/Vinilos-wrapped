@@ -329,10 +329,10 @@ select.finput option{background:var(--s2);}
 /* ── EDIT BUTTON ── */
 .btn-e{background:var(--s2);color:var(--accent2);border:1px solid var(--accent2);}
 .btn-rand{background:transparent;color:var(--accent2);border:1px solid var(--accent2);padding:0;display:flex;align-items:center;justify-content:center;}
-#randBtn{flex:1;}
-#rerollBtn{flex:15;min-width:0;max-width:52px;}
-#editBtn{flex:45;}
-#playBtn{flex:45;}
+#randBtn{flex:0 0 44px;}
+#rerollBtn{flex:0 0 44px;}
+#editBtn{flex:1;}
+#playBtn{flex:1;}
 
 /* ── LOG VIEW ── */
 /* log-item border now on .log-wrap */
@@ -1018,11 +1018,28 @@ function renderCollection(){
 /* ── RANDOM PICKER ──────────────────────────────────────────── */
 // Copy of the picker logic from picker-demo3, adapted for the app
 
+let _pickerAbort=null; // incremented to cancel current run
+
 function startPickerApp(){
-  if(_pickerRunning||!DB.vinyls.length) return;
-  // Hide banner if still showing from previous run
+  if(!DB.vinyls.length) return;
+  // Cancel any running picker and start fresh
+  if(_pickerAbort!==null) _pickerAbort++;
+  const myRun=(_pickerAbort===null?0:_pickerAbort);
+  _pickerAbort=myRun;
+  // Hide banner immediately
   const wb=document.getElementById('winnerBanner');
   if(wb) wb.classList.remove('show');
+  // Reset grid to normal state before starting
+  if(_pickerRunning){
+    const g=document.getElementById('vinylGrid');
+    _restoreGrid(g);
+    g.style.overflowY='auto';
+    Array.from(g.children).forEach(c=>{
+      c.classList.remove('picker-dim','picker-lit');
+      c.style.transition='';c.style.transform='';c.style.transformOrigin='';
+      c.style.aspectRatio='';
+    });
+  }
   _pickerRunning=true;
   _pickerWinnerV=null;
   // randBtn stays enabled — _pickerRunning guards against re-entry
@@ -1067,18 +1084,15 @@ function startPickerApp(){
   _flipCards(cards,()=>_setPickGrid(grid,cols,GAP+'px',PAD+'px'),{
     totalDur:1000,
     onDone:()=>{
+      if(_pickerAbort!==myRun){return;}
       cards.forEach(c=>{c.style.transition='';c.style.transform='';c.style.transformOrigin='';});
       grid.scrollTo({top:0,behavior:'instant'});
-      _runPickerTick(n,winIdx,grid,cards,vinyls);
+      _runPickerTick(n,winIdx,grid,cards,vinyls,myRun);
     }
   });
 }
 
 function rerollRandom(){
-  if(_pickerRunning) return;
-  // Hide banner immediately if still showing
-  const wb=document.getElementById('winnerBanner');
-  if(wb) wb.classList.remove('show');
   selV=null;
   _pickerWinnerV=null;
   updateBbar();
@@ -1182,7 +1196,7 @@ function _flipCards(cards,applyLayout,{totalDur=1000,onDone}={}){
   if(onDone) setTimeout(onDone,totalDur+30);
 }
 
-function _runPickerTick(n,winIdx,grid,cards,vinyls){
+function _runPickerTick(n,winIdx,grid,cards,vinyls,myRun){
   cards.forEach(c=>c.classList.add('picker-dim'));
   const{totalSteps,delays}=_buildPickTimings(n,winIdx);
   let step=0,litIdx=-1;
@@ -1194,20 +1208,21 @@ function _runPickerTick(n,winIdx,grid,cards,vinyls){
       cards[litIdx].classList.remove('picker-dim');
       cards[litIdx].classList.add('picker-lit');
       setTimeout(()=>{
+        if(_pickerAbort!==myRun){return;}
         cards[litIdx].classList.remove('picker-lit','picker-dim');
-        _pickerRestore(winIdx,grid,cards,vinyls);
+        _pickerRestore(winIdx,grid,cards,vinyls,myRun);
       },600);
       return;
     }
     cards[litIdx].classList.add('picker-lit');
     cards[litIdx].classList.remove('picker-dim');
     step++;
-    setTimeout(tick,delays[step]);
+    setTimeout(()=>{if(_pickerAbort!==myRun)return;tick();},delays[step]);
   }
   tick();
 }
 
-function _pickerRestore(winIdx,grid,cards,vinyls){
+function _pickerRestore(winIdx,grid,cards,vinyls,myRun){
   const n=vinyls.length;
   const savedWinner=winIdx;
 
@@ -1256,6 +1271,10 @@ function _pickerRestore(winIdx,grid,cards,vinyls){
   });
   grid.style.transition='none';
 
+  // Pre-square cards so FLIP back doesn't animate shape change
+  cards.forEach(c=>{c.style.aspectRatio='1';});
+  void grid.offsetWidth;
+
   _flipCards(cards,()=>{
     _restoreGrid(grid);
     grid.style.overflowY='auto';
@@ -1286,7 +1305,7 @@ function updateBbar(){
     editBtn.style.display='flex';
     playBtn.style.display='flex';
     // Show reroll only if this vinyl was chosen by the picker
-    rerollBtn.style.display=(_pickerWinnerV&&_pickerWinnerV.id===selV.id)?'flex':'none';
+    rerollBtn.style.display='flex';
     randBtn.style.display='none';
   } else {
     addBtn.style.display='flex';
@@ -1294,6 +1313,7 @@ function updateBbar(){
     playBtn.style.display='none';
     rerollBtn.style.display='none';
     randBtn.style.display='flex';
+    randBtn.style.flex='1';
   }
 }
 
