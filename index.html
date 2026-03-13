@@ -1076,16 +1076,25 @@ function _getPickLayout(n,gridW,gridH){
 }
 
 function _setPickGrid(grid,cols,gap,padding){
-  // Use 1fr so columns fill available width evenly — no leftover space
-  grid.style.gridTemplateColumns=`repeat(${cols},1fr)`;
-  grid.style.gridTemplateRows='';
+  const n=DB.vinyls.length;
+  const rows=Math.ceil(n/cols);
+  const GAP=parseInt(gap);
+  const PAD=parseInt(padding);
+  // Cell size = min(available width / cols, available height / rows)
+  const availW=grid.clientWidth - PAD*2 - GAP*(cols-1);
+  const availH=grid.clientHeight - PAD*2 - GAP*(rows-1);
+  const cellPx=Math.floor(Math.min(availW/cols, availH/rows));
+  grid.style.gridTemplateColumns=`repeat(${cols},${cellPx}px)`;
+  grid.style.gridTemplateRows=`repeat(${rows},${cellPx}px)`;
+  grid.style.justifyContent='center';
+  grid.style.alignContent='center';
   grid.style.gap=gap;
   grid.style.padding=padding;
   Array.from(grid.children).forEach(c=>{
-    c.style.width='';
-    c.style.height='';
+    c.style.width=cellPx+'px';
+    c.style.height=cellPx+'px';
     c.style.overflow='hidden';
-    c.style.aspectRatio='1'; // card itself is square
+    c.style.aspectRatio='';
     const wrap=c.querySelector('.vcard-disc-wrap');
     const info=c.querySelector('.vcard-info');
     const tick=c.querySelector('.sel-tick');
@@ -1100,6 +1109,8 @@ function _restoreGrid(grid){
   grid.style.gridTemplateRows='';
   grid.style.gap='';
   grid.style.padding='';
+  grid.style.justifyContent='';
+  grid.style.alignContent='';
   Array.from(grid.children).forEach(c=>{
     c.style.width='';c.style.height='';c.style.overflow='';c.style.aspectRatio='';
     const wrap=c.querySelector('.vcard-disc-wrap');
