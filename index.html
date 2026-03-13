@@ -102,8 +102,9 @@ header{padding:16px 18px 10px;flex-shrink:0;border-bottom:1px solid var(--border
   transition:border-color .2s;
 }
 .vcard.sel .vcard-disc{border-color:var(--accent2);animation:spin 3s linear infinite;will-change:transform;}
-.vcard.picker-lit .vcard-disc{border-color:var(--accent2);border-width:2.5px;animation:spin .45s linear infinite;box-shadow:0 0 12px 3px rgba(201,169,110,.35);}
+.vcard.picker-lit .vcard-disc{border-color:var(--accent2);border-width:2.5px;animation:none;box-shadow:0 0 12px 3px rgba(201,169,110,.35);}
 .vcard.picker-dim .vcard-disc{border-color:var(--dim);}
+.vcard.picker-winner .vcard-disc{border-color:var(--accent2);border-width:2.5px;animation:spin .45s linear infinite;box-shadow:0 0 12px 3px rgba(201,169,110,.35);}
 .vcard.picker-dim .vcard-disc::before{content:'';position:absolute;inset:0;border-radius:50%;background:rgba(10,10,10,.65);z-index:1;pointer-events:none;}
 .vcard.picker-dim .vcard-info{opacity:.18;}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -212,7 +213,7 @@ select.finput option{background:var(--s2);}
 .conf-info{background:var(--s2);border:1px solid var(--border);border-radius:var(--radius);padding:13px;margin-bottom:16px;display:flex;gap:13px;align-items:center;}
 .conf-disc{width:46px;height:46px;border-radius:50%;flex-shrink:0;position:relative;display:flex;align-items:center;justify-content:center;border:1px solid #333;animation:spin 3s linear infinite;
   background:conic-gradient(from 0deg,#0d0d0d 0,#1a1a1a 18deg,#0d0d0d 36deg,#1a1a1a 54deg,#0d0d0d 72deg,#1a1a1a 90deg,#0d0d0d 108deg,#1a1a1a 126deg,#0d0d0d 144deg,#1a1a1a 162deg,#0d0d0d 180deg,#1a1a1a 198deg,#0d0d0d 216deg,#1a1a1a 234deg,#0d0d0d 252deg,#1a1a1a 270deg,#0d0d0d 288deg,#1a1a1a 306deg,#0d0d0d 324deg,#1a1a1a 342deg,#0d0d0d 360deg);}
-.conf-disc img{position:absolute;width:46%;height:46%;border-radius:50%;object-fit:cover;z-index:2;}
+.conf-disc img{position:absolute;width:100%;height:100%;border-radius:50%;object-fit:cover;z-index:2;}
 .conf-disc::after{content:'';width:7px;height:7px;border-radius:50%;background:var(--bg);border:1.5px solid #444;position:absolute;z-index:3;}
 .conf-album{font-family:'DM Serif Display',serif;font-size:17px;color:var(--text);}
 .conf-artist{font-size:11px;color:var(--muted);margin-top:2px;}
@@ -1035,7 +1036,7 @@ function startPickerApp(){
     _restoreGrid(g);
     g.style.overflowY='auto';
     Array.from(g.children).forEach(c=>{
-      c.classList.remove('picker-dim','picker-lit');
+      c.classList.remove('picker-dim','picker-lit','picker-winner');
       c.style.transition='';c.style.transform='';c.style.transformOrigin='';
       c.style.aspectRatio='';
     });
@@ -1157,7 +1158,7 @@ function _restoreGrid(grid){
 }
 
 function _buildPickTimings(n,winnerIdx){
-  const TOTAL_MS=3000,RATIO=10.0,MIN_STEP_MS=300;
+  const TOTAL_MS=3000,RATIO=4.0,MIN_STEP_MS=300;
   function rawSumFor(steps){let s=0;for(let i=0;i<steps;i++){const t=steps>1?i/(steps-1):0;const u=Math.max(0,(t-0.55)/0.45);s+=1.0+(RATIO-1.0)*u*u;}return s;}
   let laps=1;
   while(true){const steps=laps*n+winnerIdx+1;const minDelay=TOTAL_MS/rawSumFor(steps);if(minDelay<=MIN_STEP_MS)break;laps++;}
@@ -1207,10 +1208,10 @@ function _runPickerTick(n,winIdx,grid,cards,vinyls,myRun){
     const isLast=step===totalSteps-1;
     if(isLast){
       cards[litIdx].classList.remove('picker-dim');
-      cards[litIdx].classList.add('picker-lit');
+      cards[litIdx].classList.add('picker-lit','picker-winner');
       setTimeout(()=>{
         if(_pickerAbort!==myRun){return;}
-        cards[litIdx].classList.remove('picker-lit','picker-dim');
+        cards[litIdx].classList.remove('picker-lit','picker-dim','picker-winner');
         _pickerRestore(winIdx,grid,cards,vinyls,myRun);
       },600);
       return;
@@ -1230,7 +1231,7 @@ function _pickerRestore(winIdx,grid,cards,vinyls,myRun){
 
   function finish(){
     cards.forEach(c=>{
-      c.classList.remove('picker-lit','picker-dim');
+      c.classList.remove('picker-lit','picker-dim','picker-winner');
       c.style.transition='';c.style.transform='';c.style.transformOrigin='';
       const info=c.querySelector('.vcard-info');
       const tick=c.querySelector('.sel-tick');
