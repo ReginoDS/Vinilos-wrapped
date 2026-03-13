@@ -328,10 +328,11 @@ select.finput option{background:var(--s2);}
 
 /* ── EDIT BUTTON ── */
 .btn-e{background:var(--s2);color:var(--accent2);border:1px solid var(--accent2);}
-.btn-rand{background:transparent;color:var(--accent2);border:1px solid var(--accent2);flex:0 0 44px;padding:0;display:flex;align-items:center;justify-content:center;}
+.btn-rand{background:transparent;color:var(--accent2);border:1px solid var(--accent2);padding:0;display:flex;align-items:center;justify-content:center;}
+#randBtn{flex:1;}
+#rerollBtn{flex:15;min-width:0;max-width:52px;}
 #editBtn{flex:45;}
 #playBtn{flex:45;}
-#rerollBtn{flex:15;min-width:0;}
 
 /* ── LOG VIEW ── */
 /* log-item border now on .log-wrap */
@@ -583,7 +584,12 @@ select.finput option{background:var(--s2);}
       <div class="wb-album" id="wbAlbum"></div>
     </div>
     <div class="bbar" id="bbar">
-      <button class="btn btn-s" id="addBtn" onclick="openAddVinyl()">+ Añadir</button>
+      <button class="btn btn-rand" id="randBtn" onclick="startPickerApp()" style="flex:1;gap:7px"><svg width="17" height="14" viewBox="0 0 17 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M1 2h2l4 4.5L11 2h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M1 12h2l4-4.5 4 4.5h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M13 2l2 2-2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M13 12l2-2-2-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>Elige por mí</button>
       <button class="btn btn-e" id="editBtn" style="display:none" onclick="openEditVinyl()">✎ Editar</button>
       <button class="btn btn-rand" id="rerollBtn" style="display:none" onclick="rerollRandom()" title="Reroll"><svg width="17" height="14" viewBox="0 0 17 14" fill="none" xmlns="http://www.w3.org/2000/svg">
   <path d="M1 2h2l4 4.5L11 2h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -592,12 +598,7 @@ select.finput option{background:var(--s2);}
   <path d="M13 12l2-2-2-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
 </svg></button>
       <button class="btn btn-p" id="playBtn" style="display:none" onclick="openPlayModal()">▶ Reproducir</button>
-      <button class="btn btn-rand" id="randBtn" onclick="startPickerApp()"><svg width="17" height="14" viewBox="0 0 17 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M1 2h2l4 4.5L11 2h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M1 12h2l4-4.5 4 4.5h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M13 2l2 2-2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M13 12l2-2-2-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-</svg></button>
+      <button class="btn btn-s" id="addBtn" onclick="openAddVinyl()" style="flex:1">+ Añadir a la colección</button>
     </div>
   </div>
 
@@ -1036,36 +1037,25 @@ function startPickerApp(){
   const winIdx=Math.floor(Math.random()*n);
   _pickerWinnerV=vinyls[winIdx];
 
-  const {cols}=_getPickLayout(n,grid.clientWidth,grid.clientHeight);
-  const GAP=4,PAD=8;
+  const {cols,gap:GAP,pad:PAD}=_getPickLayout(n,grid.clientWidth,grid.clientHeight);
   const rows=Math.ceil(n/cols);
   const availW=grid.clientWidth-PAD*2-GAP*(cols-1);
   const availH=grid.clientHeight-PAD*2-GAP*(rows-1);
   const cellPx=Math.floor(Math.min(availW/cols,availH/rows));
 
-  const needsShrink=grid.scrollHeight>grid.clientHeight;
-
   cards.forEach(c=>c.classList.add('picker-dim'));
 
-  if(needsShrink){
-    // hide labels if needed
-    if(n>16) cards.forEach(card=>{
-      const info=card.querySelector('.vcard-info');
-      if(info){info.style.transition='none';info.style.maxHeight='0';info.style.opacity='0';info.style.padding='0';info.style.marginTop='0';}
-    });
-    grid.style.overflowY='hidden';
-    grid.style.transition='none';
-    _flipCards(cards,()=>_setPickGrid(grid,cols,GAP+'px',PAD+'px',cellPx),{
-      totalDur:1000,
-      onDone:()=>{
-        cards.forEach(c=>{c.style.transition='';c.style.transform='';c.style.transformOrigin='';});
-        grid.scrollTo({top:0,behavior:'instant'});
-        _runPickerTick(n,winIdx,grid,cards,vinyls);
-      }
-    });
-  } else {
-    _runPickerTick(n,winIdx,grid,cards,vinyls);
-  }
+  // Always FLIP to compact disc-only grid
+  grid.style.overflowY='hidden';
+  grid.style.transition='none';
+  _flipCards(cards,()=>_setPickGrid(grid,cols,GAP+'px',PAD+'px',cellPx),{
+    totalDur:1000,
+    onDone:()=>{
+      cards.forEach(c=>{c.style.transition='';c.style.transform='';c.style.transformOrigin='';});
+      grid.scrollTo({top:0,behavior:'instant'});
+      _runPickerTick(n,winIdx,grid,cards,vinyls);
+    }
+  });
 }
 
 function rerollRandom(){
@@ -1078,7 +1068,7 @@ function rerollRandom(){
 }
 
 function _getPickLayout(n,gridW,gridH){
-  const GAP=4,PAD=8;
+  const GAP=6,PAD=10;
   let bestCols=1,bestCell=0;
   for(let c=1;c<=n;c++){
     const rows=Math.ceil(n/c);
@@ -1087,16 +1077,26 @@ function _getPickLayout(n,gridW,gridH){
     const cell=Math.min(cellW,cellH);
     if(cell>bestCell){bestCell=cell;bestCols=c;}
   }
-  return{cols:bestCols};
+  return{cols:bestCols,gap:GAP,pad:PAD};
 }
 
 function _setPickGrid(grid,cols,gap,padding,cellPx){
   const rows=Math.ceil(DB.vinyls.length/cols);
   grid.style.gridTemplateColumns=`repeat(${cols},${cellPx}px)`;
   grid.style.gridTemplateRows=`repeat(${rows},${cellPx}px)`;
-  Array.from(grid.children).forEach(c=>{c.style.width=cellPx+'px';c.style.height=cellPx+'px';c.style.overflow='hidden';});
   grid.style.gap=gap;
   grid.style.padding=padding;
+  Array.from(grid.children).forEach(c=>{
+    c.style.width=cellPx+'px';
+    c.style.height=cellPx+'px';
+    c.style.overflow='hidden';
+    const wrap=c.querySelector('.vcard-disc-wrap');
+    const info=c.querySelector('.vcard-info');
+    const tick=c.querySelector('.sel-tick');
+    if(wrap){wrap.style.width='100%';wrap.style.height='100%';wrap.style.flex='none';}
+    if(info){info.style.display='none';}
+    if(tick){tick.style.display='none';}
+  });
 }
 
 function _restoreGrid(grid){
@@ -1104,7 +1104,15 @@ function _restoreGrid(grid){
   grid.style.gridTemplateRows='';
   grid.style.gap='';
   grid.style.padding='';
-  Array.from(grid.children).forEach(c=>{c.style.width='';c.style.height='';c.style.overflow='';});
+  Array.from(grid.children).forEach(c=>{
+    c.style.width='';c.style.height='';c.style.overflow='';
+    const wrap=c.querySelector('.vcard-disc-wrap');
+    const info=c.querySelector('.vcard-info');
+    const tick=c.querySelector('.sel-tick');
+    if(wrap){wrap.style.width='';wrap.style.height='';wrap.style.flex='';}
+    if(info){info.style.display='';}
+    if(tick){tick.style.display='';}
+  });
 }
 
 function _buildPickTimings(n,winnerIdx){
@@ -1170,7 +1178,6 @@ function _runPickerTick(n,winIdx,grid,cards,vinyls){
 
 function _pickerRestore(winIdx,grid,cards,vinyls){
   const n=vinyls.length;
-  const needsShrink=grid.style.gridTemplateColumns!=='';
   const savedWinner=winIdx;
 
   function finish(){
@@ -1208,11 +1215,6 @@ function _pickerRestore(winIdx,grid,cards,vinyls){
         document.getElementById('randBtn').disabled=false;
       },1000);
     }
-  }
-
-  if(!needsShrink){
-    finish();
-    return;
   }
 
   // Restore labels
