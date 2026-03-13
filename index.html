@@ -584,18 +584,18 @@ select.finput option{background:var(--s2);}
       <div class="wb-album" id="wbAlbum"></div>
     </div>
     <div class="bbar" id="bbar">
-      <button class="btn btn-rand" id="randBtn" onclick="startPickerApp()" style="flex:1;gap:7px"><svg width="17" height="14" viewBox="0 0 17 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M1 2h2l4 4.5L11 2h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M1 12h2l4-4.5 4 4.5h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M13 2l2 2-2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M13 12l2-2-2-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <button class="btn btn-rand" id="randBtn" onclick="startPickerApp()" style="flex:1;gap:7px"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="14" viewBox="0 0 20 14">
+  <path d="M1 3 H5 L11 11 H16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M1 11 H5 L11 3 H16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M14 9 L16 11 L14 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M14 1 L16 3 L14 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
 </svg>Elige por mí</button>
       <button class="btn btn-e" id="editBtn" style="display:none" onclick="openEditVinyl()">✎ Editar</button>
-      <button class="btn btn-rand" id="rerollBtn" style="display:none" onclick="rerollRandom()" title="Reroll"><svg width="17" height="14" viewBox="0 0 17 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M1 2h2l4 4.5L11 2h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M1 12h2l4-4.5 4 4.5h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M13 2l2 2-2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M13 12l2-2-2-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <button class="btn btn-rand" id="rerollBtn" style="display:none" onclick="rerollRandom()" title="Reroll"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="14" viewBox="0 0 20 14">
+  <path d="M1 3 H5 L11 11 H16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M1 11 H5 L11 3 H16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M14 9 L16 11 L14 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M14 1 L16 3 L14 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
 </svg></button>
       <button class="btn btn-p" id="playBtn" style="display:none" onclick="openPlayModal()">▶ Reproducir</button>
       <button class="btn btn-s" id="addBtn" onclick="openAddVinyl()" style="flex:1">+ Añadir a la colección</button>
@@ -1020,9 +1020,12 @@ function renderCollection(){
 
 function startPickerApp(){
   if(_pickerRunning||!DB.vinyls.length) return;
+  // Hide banner if still showing from previous run
+  const wb=document.getElementById('winnerBanner');
+  if(wb) wb.classList.remove('show');
   _pickerRunning=true;
   _pickerWinnerV=null;
-  document.getElementById('randBtn').disabled=true;
+  // randBtn stays enabled — _pickerRunning guards against re-entry
 
   const vinyls=DB.vinyls;
   const n=vinyls.length;
@@ -1046,8 +1049,17 @@ function startPickerApp(){
   // Available height = from top of grid to top of bbar
   const gridVisH=bbarRect.top - gridRect.top;
   const {cols,gap:GAP,pad:PAD}=_getPickLayout(n,grid.clientWidth,gridVisH);
-  window._pickerDebug={gridW:grid.clientWidth,gridH:gridVisH,n,cols,GAP,PAD};
   cards.forEach(c=>c.classList.add('picker-dim'));
+
+  // Pre-square cards so FLIP doesn't animate a shape change (avoids squish)
+  cards.forEach(c=>{
+    const info=c.querySelector('.vcard-info');
+    const tick=c.querySelector('.sel-tick');
+    if(info) info.style.display='none';
+    if(tick) tick.style.display='none';
+    c.style.aspectRatio='1';
+  });
+  void grid.offsetWidth; // force reflow so FIRST snapshot sees square cards
 
   // Always FLIP to compact disc-only grid
   grid.style.overflowY='hidden';
@@ -1064,6 +1076,9 @@ function startPickerApp(){
 
 function rerollRandom(){
   if(_pickerRunning) return;
+  // Hide banner immediately if still showing
+  const wb=document.getElementById('winnerBanner');
+  if(wb) wb.classList.remove('show');
   selV=null;
   _pickerWinnerV=null;
   updateBbar();
@@ -1203,30 +1218,6 @@ function _pickerRestore(winIdx,grid,cards,vinyls){
     _pickerWinnerV=selV;
     renderCollection();
     updateBbar();
-    // Debug banner
-    if(window._pickerDebug){
-      const d=window._pickerDebug;
-      const rows=Math.ceil(d.n/d.cols);
-      const msg=`gridW:${d.gridW} gridH:${d.gridH} n:${d.n} → cols:${d.cols} rows:${rows} GAP:${d.GAP} PAD:${d.PAD}`;
-      let dbg=document.getElementById('_pickerDbg');
-      if(!dbg){
-        dbg=document.createElement('div');
-        dbg.id='_pickerDbg';
-        dbg.style.cssText='position:fixed;top:60px;left:10px;right:10px;background:#111;border:1px solid #555;border-radius:8px;padding:10px 12px;font-size:11px;font-family:monospace;color:#eee;z-index:999;word-break:break-all;';
-        document.body.appendChild(dbg);
-      }
-      dbg.textContent=msg;
-      const btnCopy=document.createElement('button');
-      btnCopy.textContent='Copiar';
-      btnCopy.style.cssText='display:block;margin-top:8px;padding:4px 10px;background:#333;border:1px solid #666;border-radius:4px;color:#eee;font-size:10px;cursor:pointer';
-      btnCopy.onclick=()=>navigator.clipboard.writeText(msg).then(()=>{btnCopy.textContent='✓ Copiado';});
-      const btnClose=document.createElement('button');
-      btnClose.textContent='✕ Cerrar';
-      btnClose.style.cssText='display:block;margin-top:4px;padding:4px 10px;background:#333;border:1px solid #666;border-radius:4px;color:#eee;font-size:10px;cursor:pointer';
-      btnClose.onclick=()=>dbg.remove();
-      dbg.appendChild(btnCopy);
-      dbg.appendChild(btnClose);
-    }
     // Show banner — enforce minimum 2s visible + 1s after card is centered
     const wb=document.getElementById('winnerBanner');
     const bannerShownAt=Date.now();
@@ -1241,7 +1232,6 @@ function _pickerRestore(winIdx,grid,cards,vinyls){
       setTimeout(()=>{
         wb&&wb.classList.remove('show');
         _pickerRunning=false;
-        document.getElementById('randBtn').disabled=false;
       },delay);
     }
     const winCard=Array.from(grid.children)[savedWinner];
@@ -1470,7 +1460,7 @@ function renderLog(){
   const enriched=enrichPlays([...rawPlays]).reverse();
   if(!enriched.length){c.innerHTML='<div class="nodata">Sin reproducciones aún.</div>';return;}
   const vinyls=DB.vinyls;
-  const trash=`<svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>`;
+  const trash=`<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 4h10M5 4V3h4v1M3 4l1 8h6l1-8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
   c.innerHTML='<div style="padding:0 18px 38px">'+enriched.map(p=>{
     const v=vinyls.find(x=>x.id===p.vinylId);
     const dt=new Date(p.ts);
