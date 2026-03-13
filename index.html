@@ -1039,19 +1039,11 @@ function startPickerApp(){
 
   // grid.clientHeight = scrollable content height (can be huge with align-content:start)
   // The visual height is constrained by the .view parent (overflow:hidden, flex:1)
-  // Compute true visual height: window height minus tabs and bbar
-  const tabsEl=document.querySelector('.tabs');
-  const bbarEl=document.getElementById('bbar');
-  const gridVisH=window.innerHeight
-    - (tabsEl ? tabsEl.offsetHeight : 0)
-    - (bbarEl ? bbarEl.offsetHeight : 0);
+  // Use the grid's own offsetHeight — measured before any picker changes,
+  // this is the true visual height of the scrollable area
+  const gridVisH=grid.offsetHeight;
   const {cols,gap:GAP,pad:PAD}=_getPickLayout(n,grid.clientWidth,gridVisH);
-  const tabsEl2=document.querySelector('.tabs');
-  const bbarEl2=document.getElementById('bbar');
-  window._pickerDebug={gridW:grid.clientWidth,gridH:gridVisH,n,cols,GAP,PAD,
-    innerH:window.innerHeight,
-    tabsH:tabsEl2?tabsEl2.offsetHeight:-1,
-    bbarH:bbarEl2?bbarEl2.offsetHeight:-1};
+  window._pickerDebug={gridW:grid.clientWidth,gridH:gridVisH,n,cols,GAP,PAD};
   cards.forEach(c=>c.classList.add('picker-dim'));
 
   // Always FLIP to compact disc-only grid
@@ -1212,7 +1204,7 @@ function _pickerRestore(winIdx,grid,cards,vinyls){
     if(window._pickerDebug){
       const d=window._pickerDebug;
       const rows=Math.ceil(d.n/d.cols);
-      const msg=`gridW:${d.gridW} gridH:${d.gridH} n:${d.n} → cols:${d.cols} rows:${rows} GAP:${d.GAP} PAD:${d.PAD} | innerH:${d.innerH} tabsH:${d.tabsH} bbarH:${d.bbarH}`;
+      const msg=`gridW:${d.gridW} gridH:${d.gridH} n:${d.n} → cols:${d.cols} rows:${rows} GAP:${d.GAP} PAD:${d.PAD}`;
       let dbg=document.getElementById('_pickerDbg');
       if(!dbg){
         dbg=document.createElement('div');
