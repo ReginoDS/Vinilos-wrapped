@@ -1042,6 +1042,7 @@ function startPickerApp(){
   const viewEl=grid.closest('.view')||grid.parentElement;
   const gridVisH=viewEl ? viewEl.clientHeight : grid.clientHeight;
   const {cols,gap:GAP,pad:PAD}=_getPickLayout(n,grid.clientWidth,gridVisH);
+  window._pickerDebug={gridW:grid.clientWidth,gridH:gridVisH,n,cols,GAP,PAD};
   cards.forEach(c=>c.classList.add('picker-dim'));
 
   // Always FLIP to compact disc-only grid
@@ -1198,6 +1199,30 @@ function _pickerRestore(winIdx,grid,cards,vinyls){
     _pickerWinnerV=selV;
     renderCollection();
     updateBbar();
+    // Debug banner
+    if(window._pickerDebug){
+      const d=window._pickerDebug;
+      const rows=Math.ceil(d.n/d.cols);
+      const msg=`gridW:${d.gridW} gridH:${d.gridH} n:${d.n} → cols:${d.cols} rows:${rows} GAP:${d.GAP} PAD:${d.PAD}`;
+      let dbg=document.getElementById('_pickerDbg');
+      if(!dbg){
+        dbg=document.createElement('div');
+        dbg.id='_pickerDbg';
+        dbg.style.cssText='position:fixed;top:60px;left:10px;right:10px;background:#111;border:1px solid #555;border-radius:8px;padding:10px 12px;font-size:11px;font-family:monospace;color:#eee;z-index:999;word-break:break-all;';
+        document.body.appendChild(dbg);
+      }
+      dbg.textContent=msg;
+      const btnCopy=document.createElement('button');
+      btnCopy.textContent='Copiar';
+      btnCopy.style.cssText='display:block;margin-top:8px;padding:4px 10px;background:#333;border:1px solid #666;border-radius:4px;color:#eee;font-size:10px;cursor:pointer';
+      btnCopy.onclick=()=>navigator.clipboard.writeText(msg).then(()=>{btnCopy.textContent='✓ Copiado';});
+      const btnClose=document.createElement('button');
+      btnClose.textContent='✕ Cerrar';
+      btnClose.style.cssText='display:block;margin-top:4px;padding:4px 10px;background:#333;border:1px solid #666;border-radius:4px;color:#eee;font-size:10px;cursor:pointer';
+      btnClose.onclick=()=>dbg.remove();
+      dbg.appendChild(btnCopy);
+      dbg.appendChild(btnClose);
+    }
     // Show banner — enforce minimum 2s visible + 1s after card is centered
     const wb=document.getElementById('winnerBanner');
     const bannerShownAt=Date.now();
