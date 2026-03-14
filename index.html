@@ -1246,6 +1246,7 @@ function _pickerRestore(winIdx,grid,cards,vinyls,myRun){
   const savedWinner=winIdx;
 
   function finish(){
+    // Clear inline styles — winner already has .sel so spin continues without interruption
     cards.forEach(c=>{
       c.classList.remove('picker-lit','picker-dim','picker-winner');
       c.style.transition='';c.style.transform='';c.style.transformOrigin='';
@@ -1254,12 +1255,11 @@ function _pickerRestore(winIdx,grid,cards,vinyls,myRun){
       if(info) info.style.display='';
       if(tick) tick.style.display='';
     });
-    // Apply sel state directly — no re-render needed
     selV=vinyls[savedWinner];
     _pickerWinnerV=selV;
+    // .sel already on winner card — just update tick text
     const winnerCard=cards[savedWinner];
     if(winnerCard){
-      winnerCard.classList.add('sel');
       const tickEl=winnerCard.querySelector('.sel-tick');
       if(tickEl) tickEl.textContent='✓';
     }
@@ -1297,9 +1297,18 @@ function _pickerRestore(winIdx,grid,cards,vinyls,myRun){
 
   grid.style.transition='none';
 
-  // Remove dim 70% into the return FLIP
+  // Apply .sel to winner NOW so spin is continuous through the FLIP
+  // (picker-winner → sel handoff with no gap)
+  const winnerCard=cards[savedWinner];
+  if(winnerCard) winnerCard.classList.add('sel');
+
+  // Remove dim + picker classes 70% into return FLIP
+  // winner keeps .sel so spin never stops
   setTimeout(()=>{
-    cards.forEach(c=>c.classList.remove('picker-dim','picker-lit','picker-winner'));
+    cards.forEach((c,i)=>{
+      c.classList.remove('picker-dim','picker-lit','picker-winner');
+      // winner already has .sel — spin continues uninterrupted
+    });
   }, 700);
 
   _flipCards(cards,()=>{
