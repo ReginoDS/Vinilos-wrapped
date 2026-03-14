@@ -330,6 +330,8 @@ select.finput option{background:var(--s2);}
 /* ── EDIT BUTTON ── */
 .btn-e{background:var(--s2);color:var(--accent2);border:1px solid var(--accent2);}
 .btn-rand{background:transparent;color:var(--accent2);border:1px solid var(--accent2);padding:0;display:flex;align-items:center;justify-content:center;}
+.btn-rand:disabled{color:var(--dim);border-color:var(--dim);opacity:0.4;cursor:default;}
+.btn-rand:disabled:active{transform:none;}
 #randBtn{flex:0 0 44px;}
 #rerollBtn{flex:0 0 44px;}
 #editBtn{flex:1;}
@@ -585,14 +587,14 @@ select.finput option{background:var(--s2);}
       <div class="wb-album" id="wbAlbum"></div>
     </div>
     <div class="bbar" id="bbar">
-      <button class="btn btn-rand" id="randBtn" onclick="startPickerApp()" style="flex:1;gap:7px"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="14" viewBox="0 0 20 14">
+      <button class="btn btn-rand" id="randBtn" onclick="startPickerApp()" style="flex:1;gap:7px" disabled><svg xmlns="http://www.w3.org/2000/svg" width="20" height="14" viewBox="0 0 20 14">
   <path d="M1 3 H5 L11 11 H16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
   <path d="M1 11 H5 L11 3 H16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
   <path d="M14 9 L16 11 L14 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
   <path d="M14 1 L16 3 L14 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
 </svg>Elige por mí</button>
       <button class="btn btn-e" id="editBtn" style="display:none" onclick="openEditVinyl()">✎ Editar</button>
-      <button class="btn btn-rand" id="rerollBtn" style="display:none" onclick="rerollRandom()" title="Reroll"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="14" viewBox="0 0 20 14">
+      <button class="btn btn-rand" id="rerollBtn" style="display:none" onclick="rerollRandom()" title="Reroll" disabled><svg xmlns="http://www.w3.org/2000/svg" width="20" height="14" viewBox="0 0 20 14">
   <path d="M1 3 H5 L11 11 H16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
   <path d="M1 11 H5 L11 3 H16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
   <path d="M14 9 L16 11 L14 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
@@ -1091,10 +1093,13 @@ function startPickerApp(){
       if(_pickerAbort!==myRun){return;}
       cards.forEach(c=>{c.style.transition='';c.style.transform='';c.style.transformOrigin='';});
       grid.scrollTo({top:0,behavior:'instant'});
-      // Step 3: apply dim to all except first, then start tick
-      cards.forEach((c,i)=>{ if(i>0) c.classList.add('picker-dim'); });
-      void grid.offsetWidth;
-      _runPickerTick(n,winIdx,grid,cards,vinyls,myRun);
+      // Step 3: wait 150ms then apply dim, then start tick
+      setTimeout(()=>{
+        if(_pickerAbort!==myRun) return;
+        cards.forEach((c,i)=>{ if(i>0) c.classList.add('picker-dim'); });
+        void grid.offsetWidth;
+        _runPickerTick(n,winIdx,grid,cards,vinyls,myRun);
+      },150);
     }
   });
 }
@@ -1224,7 +1229,7 @@ function _runPickerTick(n,winIdx,grid,cards,vinyls,myRun){
           cards[litIdx].classList.remove('picker-lit','picker-dim','picker-winner');
           _pickerRestore(winIdx,grid,cards,vinyls,myRun);
         },600);
-      },180);
+      },250);
       return;
     }
     cards[litIdx].classList.add('picker-lit');
@@ -1285,10 +1290,12 @@ function _pickerRestore(winIdx,grid,cards,vinyls,myRun){
     }
   }
 
-  // Remove dim before FLIP so cards are at full brightness as they move back
-  cards.forEach(c=>c.classList.remove('picker-dim','picker-lit'));
-  void grid.offsetWidth;
   grid.style.transition='none';
+
+  // Remove dim 70% into the return FLIP
+  setTimeout(()=>{
+    cards.forEach(c=>c.classList.remove('picker-dim','picker-lit','picker-winner'));
+  }, 700);
 
   _flipCards(cards,()=>{
     _restoreGrid(grid);
