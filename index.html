@@ -1254,20 +1254,16 @@ function _pickerRestore(winIdx,grid,cards,vinyls,myRun){
       if(info) info.style.display='';
       if(tick) tick.style.display='';
     });
-    // Apply sel class directly to winner card without re-rendering
+    // Apply sel state directly — no re-render needed
     selV=vinyls[savedWinner];
     _pickerWinnerV=selV;
     const winnerCard=cards[savedWinner];
     if(winnerCard){
       winnerCard.classList.add('sel');
-      const disc=winnerCard.querySelector('.vcard-disc');
       const tickEl=winnerCard.querySelector('.sel-tick');
       if(tickEl) tickEl.textContent='✓';
-      // Disc spin is already running via .sel CSS — no re-render needed yet
     }
     updateBbar();
-    // Defer full re-render so spin animation isn't interrupted
-    requestAnimationFrame(()=>renderCollection());
     // Show banner — enforce minimum 2s visible + 1s after card is centered
     const wb=document.getElementById('winnerBanner');
     const bannerShownAt=Date.now();
@@ -1284,23 +1280,19 @@ function _pickerRestore(winIdx,grid,cards,vinyls,myRun){
         _pickerRunning=false;
       },delay);
     }
-    // winCard must be looked up after renderCollection re-renders the DOM
-    requestAnimationFrame(()=>{
-      const winVinyl=vinyls[savedWinner];
-      const winCard=winVinyl ? document.querySelector(`[data-id="${winVinyl.id}"]`) : null;
-      if(winCard){
-        winCard.scrollIntoView({behavior:'smooth',block:'center'});
-        const obs=new IntersectionObserver((entries,o)=>{
-          if(entries[0].isIntersecting&&entries[0].intersectionRatio>=0.9){
-            o.disconnect();
-            hideBanner();
-          }
-        },{threshold:0.9});
-        obs.observe(winCard);
-      } else {
-        hideBanner();
-      }
-    });
+    const winCard=cards[savedWinner];
+    if(winCard){
+      winCard.scrollIntoView({behavior:'smooth',block:'center'});
+      const obs=new IntersectionObserver((entries,o)=>{
+        if(entries[0].isIntersecting&&entries[0].intersectionRatio>=0.9){
+          o.disconnect();
+          hideBanner();
+        }
+      },{threshold:0.9});
+      obs.observe(winCard);
+    } else {
+      hideBanner();
+    }
   }
 
   grid.style.transition='none';
