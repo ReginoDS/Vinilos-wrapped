@@ -1109,7 +1109,7 @@ function startPickerApp(){
           if(_pickerAbort!==myRun) return;
           cards[0].classList.remove('picker-lit');
           _runPickerTick(n,winIdx,grid,cards,vinyls,myRun);
-        },500);
+        },300);
       },150);
     }
   });
@@ -1257,7 +1257,8 @@ function _pickerRestore(winIdx,grid,cards,vinyls,myRun){
   const savedWinner=winIdx;
 
   function finish(){
-    // Step 1: clear inline styles
+    // Step 1: re-enable shuffle and clear inline styles
+    ['randBtn','rerollBtn'].forEach(id=>{const b=document.getElementById(id);if(b)b.disabled=false;});
     const winCard=cards[savedWinner];
     cards.forEach(c=>{
       c.classList.remove('picker-lit','picker-dim','picker-winner');
@@ -1312,7 +1313,6 @@ function _pickerRestore(winIdx,grid,cards,vinyls,myRun){
       setTimeout(()=>{
         wb&&wb.classList.remove('show');
         _pickerRunning=false;
-        ['randBtn','rerollBtn'].forEach(id=>{const b=document.getElementById(id);if(b)b.disabled=false;});
       },delay);
     }
     if(winCard){
