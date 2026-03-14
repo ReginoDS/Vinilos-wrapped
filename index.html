@@ -112,7 +112,7 @@ header{padding:16px 18px 10px;flex-shrink:0;border-bottom:1px solid var(--border
 .winner-banner{
   position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateY(100%);
   background:var(--surface);border:1px solid var(--accent2);border-bottom:none;
-  border-radius:12px 12px 0 0;padding:10px 24px 14px;
+  border-radius:12px 12px 0 0;padding:6px 24px 10px;
   text-align:center;z-index:5;max-width:480px;width:100%;
   transition:transform .4s cubic-bezier(.4,0,.2,1);
   pointer-events:none;
@@ -858,6 +858,12 @@ function setSS(st,lbl){
   // Show sync button only when GitHub is configured (not local mode)
   const sb=document.getElementById('syncBtn');
   if(sb) sb.style.display=(st===''||st==='local')?'none':'inline';
+  // Disable shuffle buttons while syncing
+  const isSyncing=st==='syncing';
+  ['randBtn','rerollBtn'].forEach(id=>{
+    const btn=document.getElementById(id);
+    if(btn) btn.disabled=isSyncing;
+  });
 }
 
 // ════════════════════════════════════════════════════════════
@@ -1085,8 +1091,8 @@ function startPickerApp(){
       if(_pickerAbort!==myRun){return;}
       cards.forEach(c=>{c.style.transition='';c.style.transform='';c.style.transformOrigin='';});
       grid.scrollTo({top:0,behavior:'instant'});
-      // Step 3: apply dim after cards are in place, then start tick
-      cards.forEach(c=>c.classList.add('picker-dim'));
+      // Step 3: apply dim to all except first, then start tick
+      cards.forEach((c,i)=>{ if(i>0) c.classList.add('picker-dim'); });
       void grid.offsetWidth;
       _runPickerTick(n,winIdx,grid,cards,vinyls,myRun);
     }
@@ -1209,12 +1215,16 @@ function _runPickerTick(n,winIdx,grid,cards,vinyls,myRun){
     const isLast=step===totalSteps-1;
     if(isLast){
       cards[litIdx].classList.remove('picker-dim');
-      cards[litIdx].classList.add('picker-lit','picker-winner');
+      cards[litIdx].classList.add('picker-lit');
       setTimeout(()=>{
         if(_pickerAbort!==myRun){return;}
-        cards[litIdx].classList.remove('picker-lit','picker-dim','picker-winner');
-        _pickerRestore(winIdx,grid,cards,vinyls,myRun);
-      },600);
+        cards[litIdx].classList.add('picker-winner');
+        setTimeout(()=>{
+          if(_pickerAbort!==myRun){return;}
+          cards[litIdx].classList.remove('picker-lit','picker-dim','picker-winner');
+          _pickerRestore(winIdx,grid,cards,vinyls,myRun);
+        },600);
+      },180);
       return;
     }
     cards[litIdx].classList.add('picker-lit');
