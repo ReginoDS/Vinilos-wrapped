@@ -282,6 +282,9 @@ select.finput option{background:var(--s2);}
 .cldot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
 #chartReveal{opacity:0;transition:opacity .8s;}
 .rev-win{background:var(--surface);border:1px solid var(--accent2);border-radius:var(--radius);padding:14px;text-align:center;}
+.podium-name-div{opacity:0;transition:opacity 0.4s ease;}
+.podium-name-div.visible{opacity:1;}
+
 .rev-lbl{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:7px;}
 .rev-name{font-family:'DM Serif Display',serif;font-size:24px;color:var(--accent);}
 
@@ -301,7 +304,6 @@ select.finput option{background:var(--s2);}
 .hdet span{color:var(--text);}
 
 /* CONFETTI */
-#ccanvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:200;}
 
 /* TOAST */
 .toast{position:fixed;bottom:105px;left:50%;transform:translateX(-50%) translateY(18px);background:var(--s2);border:1px solid var(--accent2);color:var(--accent);font-size:12px;padding:8px 17px;border-radius:100px;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;z-index:99;}
@@ -413,7 +415,6 @@ select.finput option{background:var(--s2);}
 </style>
 </head>
 <body>
-<canvas id="ccanvas"></canvas>
 
 <!-- ══════════════════════════════════════════
      LOGIN — nombre de usuario
@@ -951,7 +952,6 @@ let addGenres=[];
 let currentSubTab = 'smonth';
 
 function showMainTab(tab) {
-  if(currentTab==='wrapped' && tab!=='wrapped' && currentSubTab==='syear') stopConfetti();
   currentTab = tab;
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.querySelectorAll('.tabs-main .tab').forEach(t => t.classList.remove('active'));
@@ -962,7 +962,6 @@ function showMainTab(tab) {
 }
 
 function showSubTab(stab, rerender=true) {
-  if(currentSubTab==='syear' && stab!=='syear') stopConfetti();
   currentSubTab = stab;
   document.querySelectorAll('.subview').forEach(v => v.classList.remove('active'));
   document.querySelectorAll('.subtab').forEach(t => t.classList.remove('active'));
@@ -1771,6 +1770,118 @@ function enrichAlbums(plays){
 }
 function enrichArtists(plays){ return topN(countBy(plays,'artist')); }
 
+function podiumName(name, cx, baseY, colW){
+  // ~7px per char at font-size 13 — if fits in colW use one line, else split
+  const maxChars = Math.floor(colW / 7);
+  const words = name.split(' ');
+  const lines = [];
+  let cur = '';
+  for(const w of words){
+    const test = cur ? cur+' '+w : w;
+    if(test.length <= maxChars){ cur = test; }
+    else { if(cur) lines.push(cur); cur = w; }
+  }
+  if(cur) lines.push(cur);
+  // font size: shrink if any single line still too long
+  const longest = Math.max(...lines.map(l=>l.length));
+  const fs = longest > maxChars ? Math.max(8, Math.floor(13 * maxChars / longest)) : 13;
+  const lineH = fs + 2;
+  const totalH = lines.length * lineH;
+  return lines.map((line, i) => {
+    const y = baseY - totalH + (i+1)*lineH;
+    return `<text x="${cx}" y="${y}" text-anchor="middle" font-family="DM Serif Display,serif" font-size="${fs}" fill="var(--accent)">${h(line)}</text>`;
+  }).join('');
+}
+
+function podiumCard(tar, lbl){
+  if(tar.length < 3) {
+    const winners = tar.filter(([,c])=>c===tar[0]?.[1]);
+    return `<div class="rev-win" style="margin-bottom:10px;">
+      <div class="rev-lbl">${lbl}</div>
+      <div class="rev-name">${winners.map(([a])=>h(a)).join(' · ')||'—'}</div>
+    </div>`;
+  }
+  const [p1,p2,p3] = [tar[0],tar[1],tar[2]];
+  const h1=55,h2=38,h3=26;
+  const W=270, col=W/3, pad=8;
+  const gap=14;
+  const svgH = h1 + 4;
+  const base = svgH - gap;
+  const x0=0, x1=col, x2=col*2, x3=W;
+  const yf = (hh) => svgH - hh;
+  const pts = [
+    [x0, base],[x0, yf(h2)],[x1, yf(h2)],[x1, yf(h1)],
+    [x2, yf(h1)],[x2, yf(h3)],[x3, yf(h3)],[x3, base],
+  ].map(([px,py])=>`${px},${py}`).join(' ');
+  const nameReserve = 44;
+  const totalH = svgH + nameReserve;
+  const nb1 = h1, nb2 = h2, nb3 = h3;
+  const ns = `font-family:'DM Serif Display',serif;font-size:14px;color:var(--accent);text-align:center;line-height:1.2;word-break:break-word;position:absolute;width:calc(100%/3);padding:0 2px;`;
+  const os = `font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);text-align:center;`;
+  // count block: big number, small "escuchas" label — positioned just below the line (bottom:svgH → above 0)
+  // SVG bottom = 36px (space for count+ordinal below)
+  const svgBottom = 36;
+  // count bottom = svgBottom + 0 (flush just below its step line)
+  // step tops from bottom of svg: h1, h2, h3 — plus svgBottom offset
+  const cntStyle = (left, stepH) => `position:absolute;bottom:${svgBottom + stepH - 8}px;${left};width:calc(100%/3);text-align:center;transform:translateY(100%);`;
+  const pid = 'podium-'+Math.random().toString(36).slice(2,7);
+  return `<div class="rev-win" style="margin-bottom:10px;padding:14px ${pad}px 10px;overflow:hidden;" data-podium="${pid}">
+    <div class="rev-lbl" style="margin-bottom:6px;">${lbl}</div>
+    <div style="position:relative;height:${totalH + svgBottom}px;">
+      <div id="${pid}-n2" class="podium-name-div" style="${ns}bottom:${nb2 + svgBottom}px;left:0;">${h(p2[0])}</div>
+      <div id="${pid}-n1" class="podium-name-div" style="${ns}bottom:${nb1 + svgBottom}px;left:calc(100%/3);">${h(p1[0])}</div>
+      <div id="${pid}-n3" class="podium-name-div" style="${ns}bottom:${nb3 + svgBottom}px;left:calc(200%/3);">${h(p3[0])}</div>
+      <svg id="${pid}-svg" width="100%" height="${svgH}" viewBox="0 0 ${W} ${svgH}" preserveAspectRatio="none" style="position:absolute;bottom:${svgBottom}px;left:0;">
+        <polyline id="${pid}-line" points="${pts}" fill="none" stroke="var(--accent2)" stroke-width="1.5" stroke-linejoin="miter" style="stroke-dasharray:9999;stroke-dashoffset:9999;"/>
+      </svg>
+      <div id="${pid}-c2" class="podium-name-div" style="${cntStyle('left:0', h2)}">
+        <span style="font-family:'DM Serif Display',serif;font-size:22px;color:var(--accent2);line-height:1;display:block;">${p2[1]}</span>
+        <span style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);">escuchas</span>
+      </div>
+      <div id="${pid}-c1" class="podium-name-div" style="${cntStyle('left:calc(100%/3)', h1)}">
+        <span style="font-family:'DM Serif Display',serif;font-size:28px;color:var(--accent2);line-height:1;display:block;">${p1[1]}</span>
+        <span style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);">escuchas</span>
+      </div>
+      <div id="${pid}-c3" class="podium-name-div" style="${cntStyle('left:calc(200%/3)', h3)}">
+        <span style="font-family:'DM Serif Display',serif;font-size:18px;color:var(--accent2);line-height:1;display:block;">${p3[1]}</span>
+        <span style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);">escuchas</span>
+      </div>
+      <div style="position:absolute;bottom:0;width:100%;display:flex;">
+        <div id="${pid}-o2" class="podium-name-div" style="flex:1;${os}">2°</div>
+        <div id="${pid}-o1" class="podium-name-div" style="flex:1;${os}">1°</div>
+        <div id="${pid}-o3" class="podium-name-div" style="flex:1;${os}">3°</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+
+function animatePodium(pid, onDone){
+  const line=document.getElementById(pid+'-line');
+  if(!line) return;
+  const len=line.getTotalLength();
+  // Set real length (overrides the 9999 placeholder set in HTML)
+  line.style.strokeDasharray=len;
+  line.style.strokeDashoffset=len;
+  line.style.transition='none';
+  void line.getBoundingClientRect();
+  line.style.transition='stroke-dashoffset 1000ms cubic-bezier(.4,0,.2,1)';
+  line.style.strokeDashoffset='0';
+  const showEl=(id,delay)=>setTimeout(()=>{const e=document.getElementById(id);if(e)e.classList.add('visible');},delay);
+  // 3rd: count+ordinal, then name
+  showEl(pid+'-c3',1050); showEl(pid+'-o3',1050);
+  showEl(pid+'-n3',1350);
+  // 2nd: count+ordinal, then name
+  showEl(pid+'-c2',1700); showEl(pid+'-o2',1700);
+  showEl(pid+'-n2',2000);
+  // 1st: count+ordinal, then confetti reveals name
+  showEl(pid+'-c1',2350); showEl(pid+'-o1',2350);
+  setTimeout(()=>launchPodiumConfetti(pid,()=>{
+    showEl(pid+'-n1',0);
+    if(onDone) setTimeout(onDone,500);
+  }), 3400);
+}
+
 // ── EDAD MUSICAL ─────────────────────────────────────────
 function calcEdadMusical(plays, currentYear){
   const vinyls=DB.vinyls;
@@ -2003,19 +2114,22 @@ function renderMonth(forceKey){
         <canvas id="monthChart"></canvas>
         <div class="clegend" id="mclegend"></div>
       </div>
-      <div class="rev-win" style="margin-bottom:10px;">
-        <div class="rev-lbl">Tu artista más escuchado del mes…</div>
-        <div class="rev-name">${h(tar[0]?.[0]||'—')}</div>
+      <div id="monthPodiumWrap" style="opacity:0;transition:opacity .6s;">
+        ${podiumCard(tar, `Top artistas de ${MF[MM]} ${MY}`)}
       </div>
-      ${cardAlbum(ta[0]?.[0]||'—','Álbum del mes')}
-      <div class="two-6535">
-        ${himnoCard(p,'del mes')}
-        ${cardTopDay(bd)}
+      <div id="afterPodiumMonth" style="opacity:0;transition:opacity .8s;">
+        ${cardAlbum(ta[0]?.[0]||'—','Álbum del mes')}
+        <div class="two-6535">
+          ${himnoCard(p,'del mes')}
+          ${cardTopDay(bd)}
+        </div>
+        ${edadCard(p,'del mes')}
       </div>
-      ${edadCard(p,'del mes')}
     </div>
-    <div class="ssect"><div class="slabel">Ranking álbumes del mes</div><div class="scard">${rankBars(ta,true)}</div></div>
-    <div class="ssect"><div class="slabel">Ranking artistas del mes</div><div class="scard">${rankBars(tar)}</div></div>`;
+    <div id="afterPodiumMonthSects" style="opacity:0;transition:opacity .8s;">
+      <div class="ssect"><div class="slabel">Ranking álbumes del mes</div><div class="scard">${rankBars(ta,true)}</div></div>
+      <div class="ssect"><div class="slabel">Ranking artistas del mes</div><div class="scard">${rankBars(tar)}</div></div>
+    </div>`;
 
   // Build month chart data: day 1 to last day of month
   const COLS=['#e8d5b0','#c9a96e','#7faadc','#52c87a','#e0956a','#e05252','#b48eff'];
@@ -2047,14 +2161,31 @@ function renderMonth(forceKey){
   document.getElementById('mclegend').innerHTML=monthArtists.map(a=>`<div class="cli"><div class="cldot" style="background:${a.color}"></div><span>${h(a.name)}</span></div>`).join('');
   const mcv=document.getElementById('monthChart');
   mcv.style.width='100%'; mcv.style.display='block';
-  setTimeout(()=>animChart(monthArtists,dayLabels,dayTicks,daysInMonth,todayIdxM,true),50);
+  setTimeout(()=>animChart(monthArtists,dayLabels,dayTicks,daysInMonth,todayIdxM,true,null,()=>{
+    // Chart done: fade in podium
+    const pw=document.getElementById('monthPodiumWrap');
+    if(pw){ pw.style.opacity='1'; }
+    const mp=document.querySelector('#monthContent [data-podium]');
+    if(mp) setTimeout(()=>{
+      animatePodium(mp.dataset.podium, ()=>{
+        // Podium done: fade in rest
+        const ap=document.getElementById('afterPodiumMonth');
+        const as=document.getElementById('afterPodiumMonthSects');
+        if(ap) ap.style.opacity='1';
+        if(as) as.style.opacity='1';
+        const nc=ap?.querySelector('.himno-stars');
+        if(nc) setTimeout(()=>initNocheStars(nc.id),50);
+      });
+    },300);
+  }),50);
+  // Show podium after chart finishes — hooked via animChart callback
+  // animChart will call _onMonthChartDone when done
 }
 
 // ════════════════════════════════════════════════════════════
 //  YEAR STATS
 // ════════════════════════════════════════════════════════════
 let chartAnimId=null;
-const _confettiFiredYears=new Set(); // tracks which years have shown confetti this session
 let selectedYear=null; // null = auto (latest year with data)
 let selectedMonth=null; // null = auto (current month)
 
@@ -2129,7 +2260,7 @@ function renderYear(forceYear){
         <div class="clegend" id="clegend"></div>
       </div>
       <div id="chartReveal" style="opacity:0;transition:opacity 1s;">
-        <div class="rev-win"><div class="rev-lbl">Tu${tar.filter(([,c])=>c===tar[0]?.[1]).length>1?'s artistas más escuchados de':'  artista más escuchado de'} ${YEAR}…</div><div class="rev-name">${tar.filter(([,c])=>c===tar[0]?.[1]).map(([a])=>h(a)).join(' · ')}</div></div>
+        ${podiumCard(tar, `Top artistas de ${YEAR}`)}
       </div>
     </div>
     <div id="afterAnim" style="display:none">
@@ -2150,10 +2281,24 @@ function renderYear(forceYear){
   // Size canvas after render
   const cv=document.getElementById('yearChart');
   cv.style.width='100%'; cv.style.display='block';
-  setTimeout(()=>animChart(artists,MS,monthTicks,chartDays,todayIdx,false,YEAR),50);
+  setTimeout(()=>animChart(artists,MS,monthTicks,chartDays,todayIdx,false,YEAR,()=>{
+    // Chart done: fade in podium
+    const rev=document.getElementById('chartReveal');
+    if(rev){ rev.style.opacity='1'; }
+    const yp=rev?.querySelector('[data-podium]');
+    if(yp) setTimeout(()=>animatePodium(yp.dataset.podium, ()=>{
+      // Podium done: show afterAnim
+      const after=document.getElementById('afterAnim');
+      if(after){
+        after.style.display='block'; after.style.opacity='0'; after.style.transition='opacity 1s';
+        requestAnimationFrame(()=>{after.style.opacity='1';});
+        setTimeout(()=>{const nc=after.querySelector('.himno-stars');if(nc)initNocheStars(nc.id);},50);
+      }
+    }),300);
+  }),50);
 }
 
-function animChart(artists,months,monthTicks,totalDays,todayIdx,noConfetti,confettiYear){
+function animChart(artists,months,monthTicks,totalDays,todayIdx,noConfetti,confettiYear,onChartDone){
   const cvId=noConfetti?'monthChart':'yearChart';
   const cv=document.getElementById(cvId); if(!cv) return;
   const ctx=cv.getContext('2d');
@@ -2324,24 +2469,23 @@ function animChart(artists,months,monthTicks,totalDays,todayIdx,noConfetti,confe
     if(!animDone){
       chartAnimId=requestAnimationFrame(draw);
     } else {
-      // Keep rAF alive for breathing pulse; trigger reveal on first done frame
-      if(!noConfetti&&rev&&!rev._revealed) setTimeout(()=>{
+      // Chart done — fire callback or default reveal
+      if(onChartDone && !draw._cbFired){ draw._cbFired=true; setTimeout(onChartDone,200); }
+      else if(!onChartDone && rev&&!rev._revealed){
         rev._revealed=true;
         rev.style.opacity='1';
-        if(confettiYear&&!_confettiFiredYears.has(confettiYear)){launchConfetti();_confettiFiredYears.add(confettiYear);}
-        const after=document.getElementById('afterAnim');
-        if(after) setTimeout(()=>{
-          after.style.display='block';
-          after.style.opacity='0';
-          after.style.transition='opacity 1s';
-          requestAnimationFrame(()=>{after.style.opacity='1';});
-          // Init noche stars AFTER afterAnim is visible so canvas has real dimensions
-          setTimeout(()=>{
-            const nc=after.querySelector('.himno-stars');
-            if(nc) initNocheStars(nc.id);
-          },50);
-        },600);
-      },200);
+        setTimeout(()=>{
+          const _yp=rev.querySelector('[data-podium]');
+          if(_yp) animatePodium(_yp.dataset.podium, ()=>{
+            const after=document.getElementById('afterAnim');
+            if(after){
+              after.style.display='block'; after.style.opacity='0'; after.style.transition='opacity 1s';
+              requestAnimationFrame(()=>{after.style.opacity='1';});
+              setTimeout(()=>{const nc=after.querySelector('.himno-stars');if(nc)initNocheStars(nc.id);},50);
+            }
+          });
+        },300);
+      }
       chartAnimId=requestAnimationFrame(draw);
     }
   }
@@ -2433,29 +2577,51 @@ function renderHist(){
 // ════════════════════════════════════════════════════════════
 //  CONFETTI
 // ════════════════════════════════════════════════════════════
-let _confettiAnimId=null;
-function launchConfetti(){
-  const cv=document.getElementById('ccanvas'),ctx=cv.getContext('2d');
-  cv.width=window.innerWidth; cv.height=window.innerHeight;
-  const ps=Array.from({length:90},()=>({x:Math.random()*cv.width,y:-10-Math.random()*120,vx:(Math.random()-.5)*3,vy:2+Math.random()*3,w:4+Math.random()*6,h:8+Math.random()*8,r:Math.random()*Math.PI*2,rv:(Math.random()-.5)*.2,col:['#e8d5b0','#c9a96e','#e05252','#52c87a','#7faadc','#fff'][Math.floor(Math.random()*6)]}));
+let _podiumConfettiAnimId=null;
+function launchPodiumConfetti(pid, onReveal){
+  const container=document.querySelector(`[data-podium="${pid}"]`);
+  if(!container) return;
+  // Create a canvas confined to the podium box
+  let cv=document.getElementById(pid+'-canvas');
+  if(!cv){
+    cv=document.createElement('canvas');
+    cv.id=pid+'-canvas';
+    cv.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:10;border-radius:inherit;';
+    container.style.position='relative';
+    container.appendChild(cv);
+  }
+  const rect=container.getBoundingClientRect();
+  cv.width=rect.width; cv.height=rect.height;
+  const ctx=cv.getContext('2d');
+  const GOLD=['#e8d5b0','#c9a96e','#f0d080','#d4a84b','#fff8e7'];
+  // Only spawn from the center third (1st place column)
+  const cx0=cv.width/3, cx1=cv.width*2/3;
+  const ps=Array.from({length:120},()=>({
+    x:cx0+Math.random()*(cx1-cx0), y:-5-Math.random()*20,
+    vx:(Math.random()-.5)*1.2, vy:0.6+Math.random()*1.0,
+    w:2+Math.random()*3, h:4+Math.random()*5,
+    r:Math.random()*Math.PI*2, rv:(Math.random()-.5)*.1,
+    col:GOLD[Math.floor(Math.random()*GOLD.length)]
+  }));
   let f=0;
-  if(_confettiAnimId) cancelAnimationFrame(_confettiAnimId);
+  if(_podiumConfettiAnimId) cancelAnimationFrame(_podiumConfettiAnimId);
   function dc(){
     ctx.clearRect(0,0,cv.width,cv.height);
-    ps.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.05;p.r+=p.rv;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.r);ctx.fillStyle=p.col;ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx.restore();});
+    ps.forEach(p=>{
+      p.x+=p.vx; p.y+=p.vy; p.vy+=.015; p.r+=p.rv;
+      ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.r);
+      ctx.fillStyle=p.col; ctx.globalAlpha=Math.max(0,1-f/180);
+      ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
+      ctx.restore();
+    });
     f++;
-    if(f<220) _confettiAnimId=requestAnimationFrame(dc);
-    else{ ctx.clearRect(0,0,cv.width,cv.height); _confettiAnimId=null; }
+    if(f===40 && onReveal) onReveal();
+    if(f<200) _podiumConfettiAnimId=requestAnimationFrame(dc);
+    else{ ctx.clearRect(0,0,cv.width,cv.height); _podiumConfettiAnimId=null; cv.remove(); }
   }
-  _confettiAnimId=requestAnimationFrame(dc);
+  _podiumConfettiAnimId=requestAnimationFrame(dc);
 }
-function stopConfetti(){
-  // Stop chart animation too — otherwise it fires confetti after we've left
-  if(chartAnimId){ cancelAnimationFrame(chartAnimId); chartAnimId=null; }
-  if(_confettiAnimId){ cancelAnimationFrame(_confettiAnimId); _confettiAnimId=null; }
-  const cv=document.getElementById('ccanvas');
-  if(cv) cv.getContext('2d').clearRect(0,0,cv.width,cv.height);
-}
+
 
 // ════════════════════════════════════════════════════════════
 //  RENDER ALL
