@@ -1040,6 +1040,8 @@ function startPickerApp(){
   // Hide banner immediately
   const wb=document.getElementById('winnerBanner');
   if(wb) wb.classList.remove('show');
+  // Re-enable shuffle buttons (will be disabled again below)
+  ['randBtn','rerollBtn'].forEach(id=>{const b=document.getElementById(id);if(b)b.disabled=false;});
   // Reset grid to normal state before starting
   if(_pickerRunning){
     const g=document.getElementById('vinylGrid');
@@ -1052,6 +1054,7 @@ function startPickerApp(){
     });
   }
   _pickerRunning=true;
+  ['randBtn','rerollBtn'].forEach(id=>{const b=document.getElementById(id);if(b)b.disabled=true;});
   _pickerWinnerV=null;
   // randBtn stays enabled — _pickerRunning guards against re-entry
 
@@ -1095,12 +1098,18 @@ function startPickerApp(){
       if(_pickerAbort!==myRun){return;}
       cards.forEach(c=>{c.style.transition='';c.style.transform='';c.style.transformOrigin='';});
       grid.scrollTo({top:0,behavior:'instant'});
-      // Step 3: wait 150ms then apply dim, then start tick
+      // Step 3: wait 150ms, apply dim to all except first
       setTimeout(()=>{
         if(_pickerAbort!==myRun) return;
         cards.forEach((c,i)=>{ if(i>0) c.classList.add('picker-dim'); });
+        cards[0].classList.add('picker-lit');
         void grid.offsetWidth;
-        _runPickerTick(n,winIdx,grid,cards,vinyls,myRun);
+        // Step 4: hold first card lit for 500ms, then start tick
+        setTimeout(()=>{
+          if(_pickerAbort!==myRun) return;
+          cards[0].classList.remove('picker-lit');
+          _runPickerTick(n,winIdx,grid,cards,vinyls,myRun);
+        },500);
       },150);
     }
   });
@@ -1303,6 +1312,7 @@ function _pickerRestore(winIdx,grid,cards,vinyls,myRun){
       setTimeout(()=>{
         wb&&wb.classList.remove('show');
         _pickerRunning=false;
+        ['randBtn','rerollBtn'].forEach(id=>{const b=document.getElementById(id);if(b)b.disabled=false;});
       },delay);
     }
     if(winCard){
