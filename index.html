@@ -107,6 +107,8 @@ header{padding:16px 18px 10px;flex-shrink:0;border-bottom:1px solid var(--border
 .vcard.picker-winner .vcard-disc{border-color:var(--accent2);border-width:2.5px;animation:spin 3s linear infinite;box-shadow:0 0 12px 3px rgba(201,169,110,.35);}
 .vcard.picker-dim .vcard-disc::before{content:'';position:absolute;inset:0;border-radius:50%;background:rgba(10,10,10,.80);z-index:3;pointer-events:none;}
 .vcard.picker-dim .vcard-info{opacity:.18;}
+.vcard-info.expanding{overflow:hidden;max-height:0;opacity:0;transition:max-height 350ms cubic-bezier(.4,0,.2,1), opacity 300ms ease 80ms;}
+.vcard-info.expanding.expanded{max-height:80px;opacity:1;}
 @keyframes spin{to{transform:rotate(360deg)}}
 .bbar{contain:layout style;}
 .winner-banner{
@@ -330,7 +332,7 @@ select.finput option{background:var(--s2);}
 /* ── EDIT BUTTON ── */
 .btn-e{background:var(--s2);color:var(--accent2);border:1px solid var(--accent2);}
 .btn-rand{background:transparent;color:var(--accent2);border:1px solid var(--accent2);padding:0;display:flex;align-items:center;justify-content:center;}
-.btn-rand:disabled{color:var(--dim);border-color:var(--dim);opacity:0.4;cursor:default;}
+.btn-rand:disabled{color:var(--muted);border-color:var(--muted);opacity:0.5;cursor:default;}
 .btn-rand:disabled:active{transform:none;}
 #randBtn{flex:0 0 44px;}
 #rerollBtn{flex:0 0 44px;}
@@ -1246,25 +1248,48 @@ function _pickerRestore(winIdx,grid,cards,vinyls,myRun){
   const savedWinner=winIdx;
 
   function finish(){
-    // Clear inline styles — winner already has .sel so spin continues without interruption
+    // Step 1: clear inline styles
+    const winCard=cards[savedWinner];
     cards.forEach(c=>{
       c.classList.remove('picker-lit','picker-dim','picker-winner');
       c.style.transition='';c.style.transform='';c.style.transformOrigin='';
-      const info=c.querySelector('.vcard-info');
       const tick=c.querySelector('.sel-tick');
-      if(info) info.style.display='';
       if(tick) tick.style.display='';
+      // info revealed via expand animation below
     });
     selV=vinyls[savedWinner];
     _pickerWinnerV=selV;
     // .sel already on winner card — just update tick text
-    const winnerCard=cards[savedWinner];
-    if(winnerCard){
-      const tickEl=winnerCard.querySelector('.sel-tick');
+    if(winCard){
+      const tickEl=winCard.querySelector('.sel-tick');
       if(tickEl) tickEl.textContent='✓';
     }
     updateBbar();
-    // Show banner — enforce minimum 2s visible + 1s after card is centered
+
+    // Step 3: reveal info with expand animation
+    cards.forEach(c=>{
+      const info=c.querySelector('.vcard-info');
+      if(info){
+        info.style.display='';
+        info.classList.add('expanding');
+      }
+    });
+    void cards[0].offsetWidth;
+    cards.forEach(c=>{
+      const info=c.querySelector('.vcard-info');
+      if(info) info.classList.add('expanded');
+    });
+    // Step 4: once expand finishes, clean up and scroll
+    setTimeout(()=>{
+      cards.forEach(c=>{
+        const info=c.querySelector('.vcard-info');
+        if(info){ info.classList.remove('expanding','expanded'); info.style.maxHeight=''; info.style.opacity=''; }
+      });
+      // Step 5: scroll to winner
+      if(winCard) winCard.scrollIntoView({behavior:'smooth',block:'center'});
+    }, 380);
+
+    // Show banner
     const wb=document.getElementById('winnerBanner');
     const bannerShownAt=Date.now();
     if(wb){
@@ -1280,9 +1305,7 @@ function _pickerRestore(winIdx,grid,cards,vinyls,myRun){
         _pickerRunning=false;
       },delay);
     }
-    const winCard=cards[savedWinner];
     if(winCard){
-      winCard.scrollIntoView({behavior:'smooth',block:'center'});
       const obs=new IntersectionObserver((entries,o)=>{
         if(entries[0].isIntersecting&&entries[0].intersectionRatio>=0.9){
           o.disconnect();
