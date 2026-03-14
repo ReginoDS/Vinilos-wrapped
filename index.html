@@ -1004,7 +1004,7 @@ function renderCollection(){
     if(v.year) metaParts.push(v.year);
     if(v.genres?.length) metaParts.push(v.genres.join(', '));
     if(v.country) metaParts.push(v.country);
-    return `<div class="vcard${isSel?' sel':''}" onclick="selectV(${v.id})">
+    return `<div class="vcard${isSel?' sel':''}" data-id="${v.id}" onclick="selectV(${v.id})">
       <div class="vcard-disc-wrap">
         <div class="vcard-disc">
           ${cov}
@@ -1284,19 +1284,23 @@ function _pickerRestore(winIdx,grid,cards,vinyls,myRun){
         _pickerRunning=false;
       },delay);
     }
-    const winCard=Array.from(grid.children)[savedWinner];
-    if(winCard){
-      winCard.scrollIntoView({behavior:'smooth',block:'center'});
-      const obs=new IntersectionObserver((entries,o)=>{
-        if(entries[0].isIntersecting&&entries[0].intersectionRatio>=0.9){
-          o.disconnect();
-          hideBanner();
-        }
-      },{threshold:0.9});
-      obs.observe(winCard);
-    } else {
-      hideBanner();
-    }
+    // winCard must be looked up after renderCollection re-renders the DOM
+    requestAnimationFrame(()=>{
+      const winVinyl=vinyls[savedWinner];
+      const winCard=winVinyl ? document.querySelector(`[data-id="${winVinyl.id}"]`) : null;
+      if(winCard){
+        winCard.scrollIntoView({behavior:'smooth',block:'center'});
+        const obs=new IntersectionObserver((entries,o)=>{
+          if(entries[0].isIntersecting&&entries[0].intersectionRatio>=0.9){
+            o.disconnect();
+            hideBanner();
+          }
+        },{threshold:0.9});
+        obs.observe(winCard);
+      } else {
+        hideBanner();
+      }
+    });
   }
 
   grid.style.transition='none';
