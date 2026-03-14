@@ -1067,9 +1067,7 @@ function startPickerApp(){
   // Available height = from top of grid to top of bbar
   const gridVisH=bbarRect.top - gridRect.top;
   const {cols,gap:GAP,pad:PAD}=_getPickLayout(n,grid.clientWidth,gridVisH);
-  cards.forEach(c=>c.classList.add('picker-dim'));
-
-  // Hide info before FIRST snapshot so cards are already square
+  // Step 1: hide info so cards are square for FIRST snapshot
   cards.forEach(c=>{
     const info=c.querySelector('.vcard-info');
     const tick=c.querySelector('.sel-tick');
@@ -1078,7 +1076,7 @@ function startPickerApp(){
   });
   void grid.offsetWidth;
 
-  // Always FLIP to compact disc-only grid
+  // Step 2: FLIP to compact grid (no dim yet)
   grid.style.overflowY='hidden';
   grid.style.transition='none';
   _flipCards(cards,()=>_setPickGrid(grid,cols,GAP+'px',PAD+'px'),{
@@ -1087,6 +1085,9 @@ function startPickerApp(){
       if(_pickerAbort!==myRun){return;}
       cards.forEach(c=>{c.style.transition='';c.style.transform='';c.style.transformOrigin='';});
       grid.scrollTo({top:0,behavior:'instant'});
+      // Step 3: apply dim after cards are in place, then start tick
+      cards.forEach(c=>c.classList.add('picker-dim'));
+      void grid.offsetWidth;
       _runPickerTick(n,winIdx,grid,cards,vinyls,myRun);
     }
   });
