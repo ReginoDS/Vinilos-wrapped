@@ -1825,7 +1825,11 @@ function podiumCard(tar, lbl){
   // step tops from bottom of svg: h1, h2, h3 — plus svgBottom offset
   const cntStyle = (left, stepH) => `position:absolute;bottom:${svgBottom + stepH - 8}px;${left};width:calc(100%/3);text-align:center;transform:translateY(100%);`;
   const pid = 'podium-'+Math.random().toString(36).slice(2,7);
-  return `<div class="rev-win" style="margin-bottom:10px;padding:14px ${pad}px 10px;overflow:hidden;" data-podium="${pid}">
+  return `<div style="position:relative;margin-bottom:10px;" data-podium="${pid}">
+    <svg id="${pid}-border" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;" preserveAspectRatio="none">
+      <rect id="${pid}-border-rect" x="1" y="1" width="calc(100% - 2px)" height="calc(100% - 2px)" rx="8" ry="8" fill="none" stroke="var(--accent2)" stroke-width="1.5" style="stroke-dasharray:9999;stroke-dashoffset:9999;"/>
+    </svg>
+    <div class="rev-win" id="${pid}-inner" style="margin-bottom:0;padding:14px ${pad}px 10px;overflow:hidden;border:none;background:transparent;transition:background 400ms ease;">
     <div class="rev-lbl" style="margin-bottom:6px;">${lbl}</div>
     <div style="position:relative;height:${totalH + svgBottom}px;">
       <div id="${pid}-n2" class="podium-name-div" style="${ns}bottom:${nb2 + svgBottom}px;left:0;">${h(p2[0])}</div>
@@ -1852,9 +1856,33 @@ function podiumCard(tar, lbl){
         <div id="${pid}-o3" class="podium-name-div" style="flex:1;${os}">3°</div>
       </div>
     </div>
+  </div>
   </div>`;
 }
 
+
+function _animPodiumBorder(pid){
+  const borderRect=document.getElementById(pid+'-border-rect');
+  if(!borderRect) return;
+  const bsvg=document.getElementById(pid+'-border');
+  if(!bsvg) return;
+  const w=bsvg.getBoundingClientRect().width;
+  const h=bsvg.getBoundingClientRect().height;
+  const r=8;
+  const perim=2*(w-2*r)+2*(h-2*r)+2*Math.PI*r;
+  borderRect.setAttribute('width',w-2);
+  borderRect.setAttribute('height',h-2);
+  borderRect.style.strokeDasharray=perim;
+  borderRect.style.strokeDashoffset=perim;
+  borderRect.style.transition='none';
+  void borderRect.getBoundingClientRect();
+  borderRect.style.transition='stroke-dashoffset 600ms cubic-bezier(.4,0,.2,1)';
+  borderRect.style.strokeDashoffset='0';
+  setTimeout(()=>{
+    const inner=document.getElementById(pid+'-inner');
+    if(inner) inner.style.background='var(--surface)';
+  }, 620);
+}
 
 function animatePodium(pid, onDone){
   const line=document.getElementById(pid+'-line');
@@ -1869,17 +1897,15 @@ function animatePodium(pid, onDone){
   line.style.strokeDashoffset='0';
   const showEl=(id,delay)=>setTimeout(()=>{const e=document.getElementById(id);if(e)e.classList.add('visible');},delay);
   // 3rd: count+ordinal, then name
+  showEl(pid+'-n3', 550);
   showEl(pid+'-c3',1050); showEl(pid+'-o3',1050);
-  showEl(pid+'-n3',1350);
-  // 2nd: count+ordinal, then name
+  showEl(pid+'-n2',1200);
   showEl(pid+'-c2',1700); showEl(pid+'-o2',1700);
-  showEl(pid+'-n2',2000);
-  // 1st: count+ordinal, then confetti reveals name
-  showEl(pid+'-c1',2350); showEl(pid+'-o1',2350);
+  showEl(pid+'-c1',1850); showEl(pid+'-o1',1850);
   setTimeout(()=>launchPodiumConfetti(pid,()=>{
     showEl(pid+'-n1',0);
     if(onDone) setTimeout(onDone,500);
-  }), 3050);
+  }), 1850);
 }
 
 // ── EDAD MUSICAL ─────────────────────────────────────────
@@ -2114,7 +2140,7 @@ function renderMonth(forceKey){
         <canvas id="monthChart"></canvas>
         <div class="clegend" id="mclegend"></div>
       </div>
-      <div id="monthPodiumWrap" style="opacity:0;transition:opacity .6s;">
+      <div id="monthPodiumWrap">
         ${podiumCard(tar, `Top artistas de ${MF[MM]} ${MY}`)}
       </div>
       <div id="afterPodiumMonth" style="opacity:0;transition:opacity .8s;">
@@ -2161,25 +2187,20 @@ function renderMonth(forceKey){
   document.getElementById('mclegend').innerHTML=monthArtists.map(a=>`<div class="cli"><div class="cldot" style="background:${a.color}"></div><span>${h(a.name)}</span></div>`).join('');
   const mcv=document.getElementById('monthChart');
   mcv.style.width='100%'; mcv.style.display='block';
-  setTimeout(()=>animChart(monthArtists,dayLabels,dayTicks,daysInMonth,todayIdxM,true,null,()=>{
-    // Chart done: fade in podium
-    const pw=document.getElementById('monthPodiumWrap');
-    if(pw){ pw.style.opacity='1'; }
-    const mp=document.querySelector('#monthContent [data-podium]');
-    if(mp) setTimeout(()=>{
-      animatePodium(mp.dataset.podium, ()=>{
-        // Podium done: fade in rest
-        const ap=document.getElementById('afterPodiumMonth');
-        const as=document.getElementById('afterPodiumMonthSects');
-        if(ap) ap.style.opacity='1';
-        if(as) as.style.opacity='1';
-        const nc=ap?.querySelector('.himno-stars');
-        if(nc) setTimeout(()=>initNocheStars(nc.id),50);
-      });
-    },300);
-  }),50);
-  // Show podium after chart finishes — hooked via animChart callback
-  // animChart will call _onMonthChartDone when done
+  // Start chart and podium simultaneously
+  const _mp=document.querySelector('#monthContent [data-podium]');
+  if(_mp){
+    _animPodiumBorder(_mp.dataset.podium);
+    animatePodium(_mp.dataset.podium, ()=>{
+      const ap=document.getElementById('afterPodiumMonth');
+      const as=document.getElementById('afterPodiumMonthSects');
+      if(ap) ap.style.opacity='1';
+      if(as) as.style.opacity='1';
+      const nc=ap?.querySelector('.himno-stars');
+      if(nc) setTimeout(()=>initNocheStars(nc.id),50);
+    });
+  }
+  setTimeout(()=>animChart(monthArtists,dayLabels,dayTicks,daysInMonth,todayIdxM,true),50);
 }
 
 // ════════════════════════════════════════════════════════════
@@ -2259,7 +2280,7 @@ function renderYear(forceYear){
         <canvas id="yearChart"></canvas>
         <div class="clegend" id="clegend"></div>
       </div>
-      <div id="chartReveal" style="opacity:0;transition:opacity 1s;">
+      <div id="chartReveal" style="opacity:1;">
         ${podiumCard(tar, `Top artistas de ${YEAR}`)}
       </div>
     </div>
@@ -2281,24 +2302,24 @@ function renderYear(forceYear){
   // Size canvas after render
   const cv=document.getElementById('yearChart');
   cv.style.width='100%'; cv.style.display='block';
-  setTimeout(()=>animChart(artists,MS,monthTicks,chartDays,todayIdx,false,YEAR,()=>{
-    // Chart done: fade in podium
-    const rev=document.getElementById('chartReveal');
-    if(rev){ rev.style.opacity='1'; }
-    const yp=rev?.querySelector('[data-podium]');
-    if(yp) setTimeout(()=>animatePodium(yp.dataset.podium, ()=>{
-      // Podium done: show afterAnim
+  // Start chart and podium simultaneously
+  const _rev=document.getElementById('chartReveal');
+  const _yp=_rev?.querySelector('[data-podium]');
+  if(_yp){
+    _animPodiumBorder(_yp.dataset.podium);
+    animatePodium(_yp.dataset.podium, ()=>{
       const after=document.getElementById('afterAnim');
       if(after){
         after.style.display='block'; after.style.opacity='0'; after.style.transition='opacity 1s';
         requestAnimationFrame(()=>{after.style.opacity='1';});
         setTimeout(()=>{const nc=after.querySelector('.himno-stars');if(nc)initNocheStars(nc.id);},50);
       }
-    }),300);
-  }),50);
+    });
+  }
+  setTimeout(()=>animChart(artists,MS,monthTicks,chartDays,todayIdx,false,YEAR),50);
 }
 
-function animChart(artists,months,monthTicks,totalDays,todayIdx,noConfetti,confettiYear,onChartDone){
+function animChart(artists,months,monthTicks,totalDays,todayIdx,noConfetti,confettiYear){
   const cvId=noConfetti?'monthChart':'yearChart';
   const cv=document.getElementById(cvId); if(!cv) return;
   const ctx=cv.getContext('2d');
@@ -2311,7 +2332,6 @@ function animChart(artists,months,monthTicks,totalDays,todayIdx,noConfetti,confe
   const P={t:14,r:18,b:24,l:44},cW=W-P.l-P.r,cH=H-P.t-P.b;
   const mx=Math.max(...artists.map(a=>a.data[a.data.length-1]),1);
   if(chartAnimId) cancelAnimationFrame(chartAnimId);
-  const rev=document.getElementById('chartReveal'); if(rev) rev.style.opacity='0';
 
   // ── Monotone cubic interpolation (Fritsch-Carlson) ───────────
   // Guarantees no overshoot or undershoot between data points.
@@ -2469,23 +2489,7 @@ function animChart(artists,months,monthTicks,totalDays,todayIdx,noConfetti,confe
     if(!animDone){
       chartAnimId=requestAnimationFrame(draw);
     } else {
-      // Chart done — fire callback or default reveal
-      if(onChartDone && !draw._cbFired){ draw._cbFired=true; setTimeout(onChartDone,200); }
-      else if(!onChartDone && rev&&!rev._revealed){
-        rev._revealed=true;
-        rev.style.opacity='1';
-        setTimeout(()=>{
-          const _yp=rev.querySelector('[data-podium]');
-          if(_yp) animatePodium(_yp.dataset.podium, ()=>{
-            const after=document.getElementById('afterAnim');
-            if(after){
-              after.style.display='block'; after.style.opacity='0'; after.style.transition='opacity 1s';
-              requestAnimationFrame(()=>{after.style.opacity='1';});
-              setTimeout(()=>{const nc=after.querySelector('.himno-stars');if(nc)initNocheStars(nc.id);},50);
-            }
-          });
-        },300);
-      }
+      // Keep rAF alive for breathing pulse only
       chartAnimId=requestAnimationFrame(draw);
     }
   }
@@ -2596,27 +2600,37 @@ function launchPodiumConfetti(pid, onReveal){
   const GOLD=['#e8d5b0','#c9a96e','#f0d080','#d4a84b','#fff8e7'];
   // Only spawn from the center third (1st place column)
   const cx0=cv.width/3, cx1=cv.width*2/3;
-  const ps=Array.from({length:120},()=>({
-    x:cx0+Math.random()*(cx1-cx0), y:-5-Math.random()*20,
-    vx:(Math.random()-.5)*1.2, vy:0.6+Math.random()*1.0,
-    w:2+Math.random()*3, h:4+Math.random()*5,
-    r:Math.random()*Math.PI*2, rv:(Math.random()-.5)*.1,
-    col:GOLD[Math.floor(Math.random()*GOLD.length)]
-  }));
-  let f=0;
+  const ps=Array.from({length:120},()=>{
+    const x=cx0+Math.random()*(cx1-cx0), y=-5-Math.random()*20;
+    return {
+      x0:x, y0:y, x, y,
+      vx:(Math.random()-.5)*1.8, vy:1.5+Math.random()*2.0,
+      w:2+Math.random()*3, h:4+Math.random()*5,
+      r0:Math.random()*Math.PI*2, r:0, rv:(Math.random()-.5)*.1,
+      col:GOLD[Math.floor(Math.random()*GOLD.length)]
+    };
+  });
+  const DURATION=2000; // ms total
+  const REVEAL_AT=350;  // ms — when particles reach name position
+  let startT=null, revealed=false;
   if(_podiumConfettiAnimId) cancelAnimationFrame(_podiumConfettiAnimId);
-  function dc(){
+  function dc(ts){
+    if(!startT) startT=ts;
+    const elapsed=ts-startT;
+    const progress=Math.min(elapsed/DURATION,1);
     ctx.clearRect(0,0,cv.width,cv.height);
     ps.forEach(p=>{
-      p.x+=p.vx; p.y+=p.vy; p.vy+=.015; p.r+=p.rv;
+      const dt=elapsed/16.67; // normalize to 60fps ticks
+      p.x=p.x0+p.vx*dt;
+      p.y=p.y0+p.vy*dt+0.5*0.015*dt*dt;
+      p.r=p.r0+p.rv*dt;
       ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.r);
-      ctx.fillStyle=p.col; ctx.globalAlpha=Math.max(0,1-f/180);
+      ctx.fillStyle=p.col; ctx.globalAlpha=Math.max(0,1-progress);
       ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
       ctx.restore();
     });
-    f++;
-    if(f===40 && onReveal) onReveal();
-    if(f<200) _podiumConfettiAnimId=requestAnimationFrame(dc);
+    if(!revealed && elapsed>=REVEAL_AT){ revealed=true; if(onReveal) onReveal(); }
+    if(progress<1) _podiumConfettiAnimId=requestAnimationFrame(dc);
     else{ ctx.clearRect(0,0,cv.width,cv.height); _podiumConfettiAnimId=null; cv.remove(); }
   }
   _podiumConfettiAnimId=requestAnimationFrame(dc);
