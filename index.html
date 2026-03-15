@@ -227,9 +227,9 @@ select.finput option{background:var(--s2);}
 .cfg-note{font-size:10px;color:var(--muted);line-height:1.7;margin-top:8px;}
 
 /* ── STATS ── */
-.sscroll{flex:1;overflow-y:auto;padding:16px 18px 38px;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
-.ssect{margin-top:12px;}
-.slabel{font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:13px;padding-bottom:7px;border-bottom:1px solid var(--border);}
+.sscroll{flex:1;overflow-y:auto;padding:0 18px 38px;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+.ssect{margin-top:12px;}.ssect:first-child{margin-top:5px;}
+.slabel{font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--border);}
 .scard{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:13px;margin-bottom:10px;box-sizing:border-box;}
 .scard-center{text-align:center;display:flex;flex-direction:column;align-items:center;}
 .scard-gold{border-color:var(--accent2);}
@@ -275,7 +275,7 @@ select.finput option{background:var(--s2);}
 
 /* CHART */
 .chart-c{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:13px;margin-bottom:9px;}
-.chart-ttl{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:9px;}
+.chart-ttl{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:6px;}
 #yearChart{width:100%;height:145px;}
 .clegend{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px;}
 .cli{display:flex;align-items:center;gap:4px;font-size:9px;color:var(--muted);}
@@ -351,8 +351,8 @@ select.finput option{background:var(--s2);}
 .log-time{font-size:9px;color:var(--muted);text-align:right;flex-shrink:0;line-height:1.6;}
 
 /* ── YEAR SELECT ── */
-.year-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:13px;padding-bottom:7px;border-bottom:1px solid var(--border);}
-.year-select{background:var(--s2);border:1px solid var(--border);color:var(--accent);font-family:'DM Mono',monospace;font-size:13px;padding:5px 10px;border-radius:var(--radius);outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;padding-right:26px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23c9a96e' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;}
+.year-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;padding-bottom:5px;border-bottom:1px solid var(--border);}
+.year-select{background:var(--s2);border:1px solid var(--border);color:var(--accent);font-family:'DM Mono',monospace;font-size:11px;padding:3px 8px;border-radius:var(--radius);outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;padding-right:26px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23c9a96e' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;}
 
 /* ── ALBUM TOP CARD (year) ── */
 .album-top-card{display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:13px;margin-bottom:10px;}
@@ -365,7 +365,7 @@ select.finput option{background:var(--s2);}
 
 /* ── CHART CANVAS ── */
 #yearChart{width:100%;display:block;margin:0;}
-.chart-c{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:12px;}
+.chart-c{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:8px;margin-bottom:8px;}
 
 /* ── LOG SWIPE TO DELETE ── */
 .log-wrap{position:relative;overflow:hidden;border-bottom:1px solid var(--border);}
@@ -1802,7 +1802,7 @@ function podiumCard(tar, lbl){
     </div>`;
   }
   const [p1,p2,p3] = [tar[0],tar[1],tar[2]];
-  const h1=55,h2=38,h3=26;
+  const h1=44,h2=30,h3=20;
   const W=270, col=W/3, pad=8;
   const gap=14;
   const svgH = h1 + 4;
@@ -1813,14 +1813,14 @@ function podiumCard(tar, lbl){
     [x0, base],[x0, yf(h2)],[x1, yf(h2)],[x1, yf(h1)],
     [x2, yf(h1)],[x2, yf(h3)],[x3, yf(h3)],[x3, base],
   ].map(([px,py])=>`${px},${py}`).join(' ');
-  const nameReserve = 44;
+  const nameReserve = 36;
   const totalH = svgH + nameReserve;
   const nb1 = h1, nb2 = h2, nb3 = h3;
   const ns = `font-family:'DM Serif Display',serif;font-size:14px;color:var(--accent);text-align:center;line-height:1.2;word-break:break-word;position:absolute;width:calc(100%/3);padding:0 2px;`;
   const os = `font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);text-align:center;`;
   // count block: big number, small "escuchas" label — positioned just below the line (bottom:svgH → above 0)
   // SVG bottom = 36px (space for count+ordinal below)
-  const svgBottom = 36;
+  const svgBottom = 28;
   // count bottom = svgBottom + 0 (flush just below its step line)
   // step tops from bottom of svg: h1, h2, h3 — plus svgBottom offset
   const cntStyle = (left, stepH) => `position:absolute;bottom:${svgBottom + stepH - 8}px;${left};width:calc(100%/3);text-align:center;transform:translateY(100%);`;
@@ -1829,8 +1829,8 @@ function podiumCard(tar, lbl){
     <svg id="${pid}-border" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;" preserveAspectRatio="none">
       <rect id="${pid}-border-rect" x="1" y="1" width="calc(100% - 2px)" height="calc(100% - 2px)" rx="8" ry="8" fill="none" stroke="var(--accent2)" stroke-width="1.5" style="stroke-dasharray:9999;stroke-dashoffset:9999;"/>
     </svg>
-    <div class="rev-win" id="${pid}-inner" style="margin-bottom:0;padding:14px ${pad}px 10px;overflow:hidden;border:none;background:transparent;transition:background 400ms ease;">
-    <div class="rev-lbl" style="margin-bottom:6px;">${lbl}</div>
+    <div class="rev-win" id="${pid}-inner" style="margin-bottom:0;padding:14px ${pad}px 1px;overflow:hidden;border:none;background:transparent;transition:background 400ms ease;">
+    <div class="rev-lbl" style="margin-bottom:2px;">${lbl}</div>
     <div style="position:relative;height:${totalH + svgBottom}px;">
       <div id="${pid}-n2" class="podium-name-div" style="${ns}bottom:${nb2 + svgBottom}px;left:0;">${h(p2[0])}</div>
       <div id="${pid}-n1" class="podium-name-div" style="${ns}bottom:${nb1 + svgBottom}px;left:calc(100%/3);">${h(p1[0])}</div>
@@ -1850,11 +1850,7 @@ function podiumCard(tar, lbl){
         <span style="font-family:'DM Serif Display',serif;font-size:18px;color:var(--accent2);line-height:1;display:block;">${p3[1]}</span>
         <span style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);">escuchas</span>
       </div>
-      <div style="position:absolute;bottom:0;width:100%;display:flex;">
-        <div id="${pid}-o2" class="podium-name-div" style="flex:1;${os}">2°</div>
-        <div id="${pid}-o1" class="podium-name-div" style="flex:1;${os}">1°</div>
-        <div id="${pid}-o3" class="podium-name-div" style="flex:1;${os}">3°</div>
-      </div>
+
     </div>
   </div>
   </div>`;
@@ -1898,10 +1894,10 @@ function animatePodium(pid, onDone){
   const showEl=(id,delay)=>setTimeout(()=>{const e=document.getElementById(id);if(e)e.classList.add('visible');},delay);
   // 3rd: count+ordinal, then name
   showEl(pid+'-n3', 550);
-  showEl(pid+'-c3',1050); showEl(pid+'-o3',1050);
+  showEl(pid+'-c3',1050);
   showEl(pid+'-n2',1200);
-  showEl(pid+'-c2',1700); showEl(pid+'-o2',1700);
-  showEl(pid+'-c1',1850); showEl(pid+'-o1',1850);
+  showEl(pid+'-c2',1700);
+  showEl(pid+'-c1',1850);
   setTimeout(()=>launchPodiumConfetti(pid,()=>{
     showEl(pid+'-n1',0);
     if(onDone) setTimeout(onDone,500);
@@ -2325,7 +2321,7 @@ function animChart(artists,months,monthTicks,totalDays,todayIdx,noConfetti,confe
   const ctx=cv.getContext('2d');
   const dpr=window.devicePixelRatio||1;
   const W=cv.offsetWidth||cv.parentElement?.offsetWidth||340;
-  const H=Math.round(W*0.52);
+  const H=Math.round(W*0.40);
   cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr);
   cv.style.width=W+'px'; cv.style.height=H+'px';
   ctx.scale(dpr,dpr);
