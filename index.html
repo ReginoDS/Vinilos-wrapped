@@ -107,7 +107,7 @@ header{padding:16px 18px 10px;flex-shrink:0;border-bottom:1px solid var(--border
 .vcard.picker-winner .vcard-disc{border-color:var(--accent2);border-width:2.5px;animation:spin 3s linear infinite;box-shadow:0 0 12px 3px rgba(201,169,110,.35);}
 .vcard.picker-dim .vcard-disc::before{content:'';position:absolute;inset:0;border-radius:50%;background:rgba(10,10,10,.80);z-index:3;pointer-events:none;}
 .vcard.picker-dim .vcard-info{opacity:.18;}
-.vcard-info.expanding{overflow:hidden;max-height:0;opacity:0;transition:max-height 350ms cubic-bezier(.4,0,.2,1), opacity 300ms ease 80ms;}
+.vcard-info.expanding{height:0;overflow:hidden;opacity:0;transition:max-height 350ms cubic-bezier(.4,0,.2,1), opacity 300ms ease 80ms;}
 .vcard-info.expanding.expanded{max-height:80px;opacity:1;}
 @keyframes spin{to{transform:rotate(360deg)}}
 .bbar{contain:layout style;}
@@ -381,6 +381,14 @@ select.finput option{background:var(--s2);}
 .log-item.swiped{transform:translateX(-64px);}
 
 /* ── HIMNO CARD ── */
+.himno-circle-wrap{position:relative;width:100%;aspect-ratio:1;border-radius:50%;overflow:hidden;margin-top:10px;margin-bottom:10px;}
+.himno-sector{position:absolute;inset:0;overflow:hidden;}
+.himno-sector.manana{clip-path:polygon(50% 50%, 6.70% 75.00%, 4.32% 70.34%, 2.45% 65.45%, 1.09% 60.40%, 0.27% 55.23%, 0.00% 50.00%, 0.27% 44.77%, 1.09% 39.60%, 2.45% 34.55%, 4.32% 29.66%, 6.70% 25.00%, 9.55% 20.61%, 12.84% 16.54%, 16.54% 12.84%, 20.61% 9.55%, 25.00% 6.70%, 29.66% 4.32%, 34.55% 2.45%, 39.60% 1.09%, 44.77% 0.27%, 50.00% 0.00%);}
+.himno-sector.tarde{clip-path:polygon(50% 50%, 50.00% 0.00%, 55.23% 0.27%, 60.40% 1.09%, 65.45% 2.45%, 70.34% 4.32%, 75.00% 6.70%, 79.39% 9.55%, 83.46% 12.84%, 87.16% 16.54%, 90.45% 20.61%, 93.30% 25.00%, 95.68% 29.66%, 97.55% 34.55%, 98.91% 39.60%, 99.73% 44.77%, 100.00% 50.00%, 99.73% 55.23%, 98.91% 60.40%, 97.55% 65.45%, 95.68% 70.34%, 93.30% 75.00%);}
+.himno-sector.noche{clip-path:polygon(50% 50%, 93.30% 75.00%, 90.45% 79.39%, 87.16% 83.46%, 83.46% 87.16%, 79.39% 90.45%, 75.00% 93.30%, 70.34% 95.68%, 65.45% 97.55%, 60.40% 98.91%, 55.23% 99.73%, 50.00% 100.00%, 44.77% 99.73%, 39.60% 98.91%, 34.55% 97.55%, 29.66% 95.68%, 25.00% 93.30%, 20.61% 90.45%, 16.54% 87.16%, 12.84% 83.46%, 9.55% 79.39%, 6.70% 75.00%);}
+.himno-circle-divider{position:absolute;inset:0;pointer-events:none;}
+.himno-circle-overlay{position:absolute;inset:0;border-radius:50%;pointer-events:none;z-index:10;}
+.himno-sector-content{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:2;}
 @keyframes himno-pulse{0%,100%{opacity:.7;}50%{opacity:1;}}
 .himno-card{display:flex;align-items:center;gap:12px;border-radius:var(--radius);padding:12px;box-sizing:border-box;border:1px solid var(--border);position:relative;overflow:hidden;margin-top:10px;margin-bottom:10px;height:100%;}
 .himno-card.manana{background:var(--bg);border-color:#3d3010;}
@@ -1813,7 +1821,7 @@ function podiumCard(tar, lbl){
     [x0, base],[x0, yf(h2)],[x1, yf(h2)],[x1, yf(h1)],
     [x2, yf(h1)],[x2, yf(h3)],[x3, yf(h3)],[x3, base],
   ].map(([px,py])=>`${px},${py}`).join(' ');
-  const nameReserve = 36;
+  const nameReserve = 28;
   const totalH = svgH + nameReserve;
   const nb1 = h1, nb2 = h2, nb3 = h3;
   const ns = `font-family:'DM Serif Display',serif;font-size:14px;color:var(--accent);text-align:center;line-height:1.2;word-break:break-word;position:absolute;width:calc(100%/3);padding:0 2px;`;
@@ -1823,7 +1831,7 @@ function podiumCard(tar, lbl){
   const svgBottom = 28;
   // count bottom = svgBottom + 0 (flush just below its step line)
   // step tops from bottom of svg: h1, h2, h3 — plus svgBottom offset
-  const cntStyle = (left, stepH) => `position:absolute;bottom:${svgBottom + stepH - 8}px;${left};width:calc(100%/3);text-align:center;transform:translateY(100%);`;
+  const cntStyle = (left, stepH) => `position:absolute;bottom:${svgBottom + stepH - 2}px;${left};width:calc(100%/3);text-align:center;transform:translateY(100%);`;
   const pid = 'podium-'+Math.random().toString(36).slice(2,7);
   return `<div style="position:relative;margin-bottom:10px;" data-podium="${pid}">
     <svg id="${pid}-border" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;" preserveAspectRatio="none">
@@ -1839,16 +1847,16 @@ function podiumCard(tar, lbl){
         <polyline id="${pid}-line" points="${pts}" fill="none" stroke="var(--accent2)" stroke-width="1.5" stroke-linejoin="miter" style="stroke-dasharray:9999;stroke-dashoffset:9999;"/>
       </svg>
       <div id="${pid}-c2" class="podium-name-div" style="${cntStyle('left:0', h2)}">
-        <span style="font-family:'DM Serif Display',serif;font-size:22px;color:var(--accent2);line-height:1;display:block;">${p2[1]}</span>
-        <span style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);">escuchas</span>
+        <span style="font-family:'DM Serif Display',serif;font-size:22px;color:var(--accent2);line-height:1;display:block;margin-bottom:1px;">${p2[1]}</span>
+        <span style="font-family:'DM Mono',monospace;font-size:7px;color:var(--muted);line-height:1;">escuchas</span>
       </div>
       <div id="${pid}-c1" class="podium-name-div" style="${cntStyle('left:calc(100%/3)', h1)}">
-        <span style="font-family:'DM Serif Display',serif;font-size:28px;color:var(--accent2);line-height:1;display:block;">${p1[1]}</span>
-        <span style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);">escuchas</span>
+        <span style="font-family:'DM Serif Display',serif;font-size:28px;color:var(--accent2);line-height:1;display:block;margin-bottom:1px;">${p1[1]}</span>
+        <span style="font-family:'DM Mono',monospace;font-size:7px;color:var(--muted);line-height:1;">escuchas</span>
       </div>
       <div id="${pid}-c3" class="podium-name-div" style="${cntStyle('left:calc(200%/3)', h3)}">
-        <span style="font-family:'DM Serif Display',serif;font-size:18px;color:var(--accent2);line-height:1;display:block;">${p3[1]}</span>
-        <span style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);">escuchas</span>
+        <span style="font-family:'DM Serif Display',serif;font-size:18px;color:var(--accent2);line-height:1;display:block;margin-bottom:1px;">${p3[1]}</span>
+        <span style="font-family:'DM Mono',monospace;font-size:7px;color:var(--muted);line-height:1;">escuchas</span>
       </div>
 
     </div>
@@ -2005,53 +2013,178 @@ function initNocheStars(canvasId){
   _nocheStarsRaf=requestAnimationFrame(loop);
 }
 
-// ── HIMNO (top álbum por franja horaria) ─────────────────────
-function himnoCard(plays, label){
-  // mañanas 6-12, tardes 12-20, noches 20-6
-  const franjas = {
-    mañanas: plays.filter(p=>{ const h=new Date(p.ts).getHours(); return h>=6&&h<12; }),
-    tardes:  plays.filter(p=>{ const h=new Date(p.ts).getHours(); return h>=12&&h<20; }),
-    noches:  plays.filter(p=>{ const h=new Date(p.ts).getHours(); return h>=20||h<6; }),
-  };
-  const labels = {mañanas:'mañanas',tardes:'tardes',noches:'noches'};
-  const icons  = {mañanas:'☀️',tardes:'🌇',noches:'🌙'};
-  // Pick franja with most plays; if tie, prefer noches > tardes > mañanas
-  const order = ['noches','tardes','mañanas'];
-  let best = null, bestFranja = null;
-  for(const f of ['mañanas','tardes','noches']){
-    const cnt = franjas[f].length;
-    if(cnt > 0 && (!best || cnt >= best.length)) { best = franjas[f]; bestFranja = f; }
+
+function initNocheStarsCircle(starsId, cid){
+  const cv=document.getElementById(starsId);
+  const wrap=document.getElementById(cid);
+  if(!cv||!wrap) return;
+  const dpr=window.devicePixelRatio||1;
+  const W=wrap.offsetWidth, H=wrap.offsetHeight;
+  if(!W||!H){ setTimeout(()=>initNocheStarsCircle(starsId,cid),100); return; }
+  cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr);
+  cv.style.width=W+'px'; cv.style.height=H+'px';
+  const ctx=cv.getContext('2d');
+  ctx.scale(dpr,dpr);
+  const ACCENT='#c9a96e';
+  const starDefs=[
+    {x:.12,y:.22,phase:0.0},{x:.28,y:.55,phase:0.7},{x:.45,y:.15,phase:1.3},
+    {x:.62,y:.70,phase:0.4},{x:.78,y:.30,phase:1.8},{x:.88,y:.60,phase:0.9},
+    {x:.20,y:.80,phase:2.1},{x:.55,y:.40,phase:1.5},{x:.92,y:.20,phase:0.2},
+    {x:.35,y:.90,phase:2.5},{x:.70,y:.10,phase:1.1},{x:.05,y:.50,phase:3.0},
+    {x:.38,y:.65,phase:0.5},{x:.82,y:.48,phase:1.6},{x:.15,y:.42,phase:2.8},
+    {x:.58,y:.82,phase:0.3},{x:.72,y:.60,phase:1.9},{x:.48,y:.30,phase:3.1},
+    {x:.25,y:.72,phase:2.3},{x:.65,y:.25,phase:0.8},{x:.90,y:.78,phase:1.2},
+  ];
+  function drawStar(cx2,cy2,t,phase){
+    const cycle=(t*0.001+phase)%(Math.PI*2);
+    const plusScale=0.5+0.5*Math.sin(cycle);
+    const crossScale=0.5+0.5*Math.sin(cycle+Math.PI);
+    const alpha=0.3+0.7*plusScale;
+    ctx.save(); ctx.translate(cx2,cy2); ctx.globalAlpha=alpha;
+    const vLen=2.8+3.6*plusScale, hLen=1.8+1.8*plusScale;
+    const grad=(len,isV)=>{
+      const x1=isV?0:-len,y1=isV?-len:0,x2=isV?0:len,y2=isV?len:0;
+      const g=ctx.createLinearGradient(x1,y1,x2,y2);
+      g.addColorStop(0,'transparent');g.addColorStop(0.3,ACCENT);
+      g.addColorStop(0.5,ACCENT);g.addColorStop(0.7,ACCENT);g.addColorStop(1,'transparent');
+      return g;
+    };
+    ctx.beginPath();ctx.strokeStyle=grad(vLen,true);ctx.lineWidth=1.0+0.7*plusScale;ctx.lineCap='round';
+    ctx.moveTo(0,-vLen);ctx.lineTo(0,vLen);ctx.stroke();
+    ctx.beginPath();ctx.strokeStyle=grad(hLen,false);ctx.lineWidth=0.7+0.4*plusScale;
+    ctx.moveTo(-hLen,0);ctx.lineTo(hLen,0);ctx.stroke();
+    ctx.globalAlpha=alpha*0.45;ctx.rotate(Math.PI/4);
+    const dLen=1.8+2.2*crossScale;
+    ctx.beginPath();ctx.strokeStyle=grad(dLen,true);ctx.lineWidth=0.5+0.2*crossScale;
+    ctx.moveTo(0,-dLen);ctx.lineTo(0,dLen);ctx.stroke();
+    ctx.beginPath();ctx.strokeStyle=grad(dLen,false);ctx.moveTo(-dLen,0);ctx.lineTo(dLen,0);ctx.stroke();
+    ctx.restore();
   }
-  if(!best||!best.length) return '';
-  // Top album in that franja
-  const ac = countBy(best,'album');
-  const top = topN(ac,1)[0];
-  if(!top) return '';
-  const [albumName, cnt] = top;
-  const coverV = DB.vinyls.find(x=>x.album===albumName);
-  const coverUrl = coverV?.cover||'';
-  const cssClass = {mañanas:'manana',tardes:'tarde',noches:'noche'}[bestFranja];
-  const artHtml = coverUrl
-    ? `<img src="${h(coverUrl)}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
-    : '';
-  const fallbackIcons = {mañanas:'🌤',tardes:'🌆',noches:'🌙'};
-  const nocheId = cssClass==='noche' ? `himnoStars${Date.now()}` : '';
-  const nocheCanvas = nocheId ? `<canvas class="himno-stars" id="${nocheId}"></canvas>` : '';
-  const html = `<div class="himno-card ${cssClass}">
-    ${nocheCanvas}
-    <div class="himno-art">
-      ${artHtml}
-      <div class="himno-art-placeholder" style="${coverUrl?'display:none':'display:flex'}">${fallbackIcons[bestFranja]}</div>
+  function loop(t){
+    ctx.clearRect(0,0,W,H);
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(W/2,H/2);
+    ctx.lineTo(W*0.933,H*0.75);
+    ctx.arc(W/2,H/2,W/2,Math.atan2(H*0.75-H/2,W*0.933-W/2),Math.atan2(H*0.75-H/2,W*0.067-W/2));
+    ctx.closePath();ctx.clip();
+    starDefs.forEach(s=>drawStar(W*(0.2+s.x*0.6),H*(0.52+s.y*0.44),t,s.phase));
+    ctx.restore();
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+}
+
+// ── HIMNO (top álbum por franja horaria) ─────────────────────
+function himnoCard(plays, label, albumRevealId){
+  const franjas = {
+    manana: plays.filter(p=>{ const hh=new Date(p.ts).getHours(); return hh>=6&&hh<12; }),
+    tarde:  plays.filter(p=>{ const hh=new Date(p.ts).getHours(); return hh>=12&&hh<20; }),
+    noche:  plays.filter(p=>{ const hh=new Date(p.ts).getHours(); return hh>=20||hh<6; }),
+  };
+  function topForFranja(ps){
+    if(!ps.length) return null; const ac=countBy(ps,'album'); const top=topN(ac,1)[0]; if(!top) return null;
+    const [albumName,cnt]=top; const coverV=DB.vinyls.find(x=>x.album===albumName);
+    return {albumName,cnt,coverUrl:coverV?.cover||'',edition:coverV?.edition||'',artist:coverV?.artist||''};
+  }
+  const data={manana:topForFranja(franjas.manana),tarde:topForFranja(franjas.tarde),noche:topForFranja(franjas.noche)};
+  if(!data.manana&&!data.tarde&&!data.noche) return '';
+  const cid='hc'+Date.now(); const starsId='hs'+Date.now();
+
+  // Font sizes matching original SVG (scaled as % of container = 400px viewBox)
+  // label: 9px/400 = 2.25%, count: 16px/400 = 4%, album: 7.5px/400 = 1.875%
+  // sub: 6px/400 = 1.5%, disc radius 52/400 = 13% → width 26%
+  function sectorDiv(d, fi, lbl, lblColor, numColor, subColor, discLeft, discTop, lblLeft, lblTop){
+    const disc = d ? `
+      <div style="position:absolute;left:${discLeft};top:${discTop};width:26%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;background:conic-gradient(from 0deg,#0d0d0d 0,#1a1a1a 18deg,#0d0d0d 36deg,#1a1a1a 54deg,#0d0d0d 72deg,#1a1a1a 90deg,#0d0d0d 108deg,#1a1a1a 126deg,#0d0d0d 144deg,#1a1a1a 162deg,#0d0d0d 180deg);border:1.5px solid ${numColor};overflow:hidden;">
+        ${d.coverUrl?`<img src="${h(d.coverUrl)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.style.display='none'"/>`:''}
+        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:17%;height:17%;border-radius:50%;background:#0a0a0a;border:0.8px solid ${numColor}40;z-index:2;"></div>
+      </div>` : '';
+    const info = d ? `
+      <div style="position:absolute;left:${discLeft};top:calc(${discTop} + 14%);width:27%;transform:translateX(-50%);text-align:center;">
+        <div style="font-family:'DM Serif Display',serif;font-size:8%;color:${numColor};line-height:1;">${d.cnt}</div>
+        <div style="font-family:'DM Serif Display',serif;font-size:1.9%;color:${lblColor};line-height:1.2;word-break:break-word;margin-top:0.5%;">${h(d.albumName)}</div>
+        ${d.edition?`<div style="font-family:'DM Mono',monospace;font-size:1.5%;color:${subColor};margin-top:0.3%;">${h(d.edition)}</div>`:''}
+        <div style="font-family:'DM Mono',monospace;font-size:1.5%;color:${subColor};margin-top:0.3%;">${d.artist}</div>
+      </div>`
+      : `<div style="position:absolute;left:${discLeft};top:calc(${discTop} + 5%);width:27%;transform:translateX(-50%);text-align:center;font-family:'DM Mono',monospace;font-size:1.5%;color:${subColor};line-height:1.3;">Sin escuchas<br>en esta franja</div>`;
+    return `
+      <div style="position:absolute;left:${lblLeft};top:${lblTop};transform:translateX(-50%);font-family:'DM Mono',monospace;font-size:3%;text-transform:uppercase;letter-spacing:0.5%;color:${lblColor};white-space:nowrap;">${lbl}</div>
+      ${disc}
+      ${info}`;
+  }
+
+  const html=`<div id="${cid}-outer" style="display:none;"><div class="himno-circle-wrap" id="${cid}">
+    <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;width:100%;height:100%;z-index:1;">
+      <defs>
+        <clipPath id="${cid}-cm"><path d="M200,200 L26.8,300 A200,200 0 0,1 200,0 Z"/></clipPath>
+        <clipPath id="${cid}-ct"><path d="M200,200 L200,0 A200,200 0 0,1 373.2,300 Z"/></clipPath>
+        <clipPath id="${cid}-cn"><path d="M200,200 L373.2,300 A200,200 0 0,1 26.8,300 Z"/></clipPath>
+        <radialGradient id="${cid}-gm" cx="200" cy="200" r="200" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#c9a96e" stop-opacity="0.6"/><stop offset="45%" stop-color="#c9a96e" stop-opacity="0.22"/><stop offset="100%" stop-color="#c9a96e" stop-opacity="0"/></radialGradient>
+        <radialGradient id="${cid}-gt" cx="373.2" cy="100" r="280" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#c9a96e" stop-opacity="0.6"/><stop offset="40%" stop-color="#c9a96e" stop-opacity="0.22"/><stop offset="100%" stop-color="#c9a96e" stop-opacity="0"/></radialGradient>
+      </defs>
+      <g clip-path="url(#${cid}-cm)"><rect width="400" height="400" fill="var(--bg)"/><rect id="${cid}-pm" width="400" height="400" fill="url(#${cid}-gm)" opacity="0.75"/></g>
+      <g clip-path="url(#${cid}-ct)"><rect width="400" height="400" fill="var(--bg)"/><rect id="${cid}-pt" width="400" height="400" fill="url(#${cid}-gt)" opacity="0.75"/></g>
+      <g clip-path="url(#${cid}-cn)"><rect width="400" height="400" fill="#080812"/></g>
+      <g stroke="var(--bg)" stroke-width="3"><line x1="200" y1="200" x2="200" y2="0"/><line x1="200" y1="200" x2="373.2" y2="300"/><line x1="200" y1="200" x2="26.8" y2="300"/></g>
+      <circle cx="200" cy="200" r="199" fill="none" stroke="#252525" stroke-width="1.5"/>
+      
+    </svg>
+    <canvas id="${starsId}" style="position:absolute;inset:0;width:100%;height:100%;z-index:2;border-radius:50%;"></canvas>
+    <div style="position:absolute;inset:0;z-index:3;border-radius:50%;overflow:hidden;">
+      ${sectorDiv(data.manana,'🌤','MAÑANAS','var(--accent)','var(--accent2)','var(--muted)','26.2%','32.5%','32.8%','14%')}
+      ${sectorDiv(data.tarde,'🌆','TARDES','var(--accent2)','var(--accent2)','var(--muted)','73.8%','32.5%','67.2%','14%')}
+      ${sectorDiv(data.noche,'🌙','NOCHES','#7070a0','#7070a0','#555','50%','73.8%','50%','57%')}
     </div>
-    <div class="himno-info">
-      <div class="himno-lbl">Tu himno de las ${labels[bestFranja]} ${label}</div>
-      <div class="himno-val">${h(albumName)}</div>
-      <div class="himno-sub">${cnt} escucha${cnt!==1?'s':''} en esa franja</div>
-    </div>
-  </div>`;
-  if(nocheId) setTimeout(()=>initNocheStars(nocheId),80);
+    <div id="${cid}-overlay" style="position:absolute;inset:0;border-radius:50%;z-index:4;pointer-events:none;--revealed:0deg;background:conic-gradient(from 240deg,transparent 0deg var(--revealed),#0a0a0a var(--revealed) 360deg);"></div>
+  </div></div>`;
+
+  window['_himnoAnim_'+cid]=()=>{
+    const outer=document.getElementById(cid+'-outer');
+    if(outer) outer.style.display='block';
+    initNocheStarsCircle(starsId,cid);
+    const pm=document.getElementById(cid+'-pm'),pt=document.getElementById(cid+'-pt');
+    if(pm&&pt){function pulse(ts){const t=ts/1000;const pv=(0.75+0.12*Math.sin(t*Math.PI/3)).toFixed(3);pm.setAttribute('opacity',pv);pt.setAttribute('opacity',pv);requestAnimationFrame(pulse);}requestAnimationFrame(pulse);}
+    const overlay=document.getElementById(cid+'-overlay');
+    if(!overlay) return;
+    const DURATION=1400; let startT=null;
+    function animReveal(ts){
+      if(!startT) startT=ts;
+      const prog=Math.min((ts-startT)/DURATION,1);
+      const t=prog*prog*(3-2*prog); const revealed=t*360;
+      overlay.style.setProperty('--revealed',revealed+'deg');
+      
+      if(prog<1){requestAnimationFrame(animReveal);}
+      else{overlay.style.display='none';if(albumRevealId){const d=document.getElementById(albumRevealId);if(d){
+          d.style.overflow='hidden';
+          const target=d.scrollHeight||200;
+          // Spring physics for height — allows overshooting for bounce
+          let pos=0, vel=0;
+          const k=120, damp=10;
+          let last=null;
+          function step(ts){
+            if(!last) last=ts;
+            const dt=Math.min((ts-last)/1000, 0.05);
+            last=ts;
+            vel += (-k*(pos-target) - damp*vel) * dt;
+            pos += vel*dt;
+            d.style.height=Math.max(0,pos)+'px';
+            if(Math.abs(pos-target)>0.3||Math.abs(vel)>1){
+              requestAnimationFrame(step);
+            } else {
+              d.style.height='auto';
+              d.style.overflow='visible';
+            }
+          }
+          d.style.opacity='1';
+          requestAnimationFrame(step);
+        }}}
+    }
+    requestAnimationFrame(animReveal);
+  };
   return html;
 }
+
 
 function edadCard(plays,label){
   const currentYear=new Date().getFullYear();
@@ -2139,13 +2272,13 @@ function renderMonth(forceKey){
       <div id="monthPodiumWrap">
         ${podiumCard(tar, `Top artistas de ${MF[MM]} ${MY}`)}
       </div>
+      <div id="album-reveal-month" style="height:0;overflow:hidden;">${cardAlbum(ta[0]?.[0]||'—','Álbum del mes')}</div>
+      ${himnoCard(p,'del mes','album-reveal-month')}
       <div id="afterPodiumMonth" style="opacity:0;transition:opacity .8s;">
-        ${cardAlbum(ta[0]?.[0]||'—','Álbum del mes')}
-        <div class="two-6535">
-          ${himnoCard(p,'del mes')}
+        <div class="two">
+          ${edadCard(p,'del mes')}
           ${cardTopDay(bd)}
         </div>
-        ${edadCard(p,'del mes')}
       </div>
     </div>
     <div id="afterPodiumMonthSects" style="opacity:0;transition:opacity .8s;">
@@ -2184,7 +2317,14 @@ function renderMonth(forceKey){
   const mcv=document.getElementById('monthChart');
   mcv.style.width='100%'; mcv.style.display='block';
   // Start chart and podium simultaneously
+  setTimeout(()=>{
+    const _hm=document.querySelector('#monthContent .himno-circle-wrap');
+    if(_hm && window['_himnoAnim_'+_hm.id]) window['_himnoAnim_'+_hm.id]();
+  },50);
   const _mp=document.querySelector('#monthContent [data-podium]');
+  // Trigger himno circle animation at same time as podium/chart
+  setTimeout(()=>{
+  },50);
   if(_mp){
     _animPodiumBorder(_mp.dataset.podium);
     animatePodium(_mp.dataset.podium, ()=>{
@@ -2280,14 +2420,14 @@ function renderYear(forceYear){
         ${podiumCard(tar, `Top artistas de ${YEAR}`)}
       </div>
     </div>
+        <div id="album-reveal-year" style="height:0;overflow:hidden;">${cardAlbum(topAlbumName,'Álbum del año')}</div>
+        ${himnoCard(p,'del año','album-reveal-year')}
     <div id="afterAnim" style="display:none">
       <div class="ssect">
-        ${cardAlbum(topAlbumName,'Álbum del año')}
         <div class="two">
           ${cardTopDay(bd)}
           ${cardMesActivo(tm)}
         </div>
-        ${himnoCard(p,'del año')}
         ${edadCard(p,'del año')}
       </div>
       <div class="ssect"><div class="slabel">Ranking álbumes del año</div><div class="scard">${rankBars(ta,true)}</div></div>
@@ -2299,7 +2439,14 @@ function renderYear(forceYear){
   const cv=document.getElementById('yearChart');
   cv.style.width='100%'; cv.style.display='block';
   // Start chart and podium simultaneously
+  setTimeout(()=>{
+    const _hy=document.querySelector('#yearContent .himno-circle-wrap');
+    if(_hy && window['_himnoAnim_'+_hy.id]) window['_himnoAnim_'+_hy.id]();
+  },50);
   const _rev=document.getElementById('chartReveal');
+  // Trigger himno circle animation at same time as podium/chart
+  setTimeout(()=>{
+  },50);
   const _yp=_rev?.querySelector('[data-podium]');
   if(_yp){
     _animPodiumBorder(_yp.dataset.podium);
