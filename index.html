@@ -2158,33 +2158,9 @@ function himnoCard(plays, label, albumRevealId){
       
       if(prog<1){requestAnimationFrame(animReveal);}
       else{overlay.style.display='none';if(albumRevealId){const d=document.getElementById(albumRevealId);if(d){
-          // Measure real height: temporarily show to get scrollHeight
-          d.style.height='auto';
-          d.style.overflow='visible';
-          const target=d.scrollHeight||300;
-          d.style.height='0';
-          d.style.overflow='hidden';
-          void d.offsetHeight; // force reflow
-          // Spring physics for height — allows overshooting for bounce
-          let pos=0, vel=0;
-          const k=120, damp=10;
-          let last=null;
-          function step(ts){
-            if(!last) last=ts;
-            const dt=Math.min((ts-last)/1000, 0.05);
-            last=ts;
-            vel += (-k*(pos-target) - damp*vel) * dt;
-            pos += vel*dt;
-            d.style.height=Math.max(0,pos)+'px';
-            if(Math.abs(pos-target)>0.3||Math.abs(vel)>1){
-              requestAnimationFrame(step);
-            } else {
-              d.style.height='auto';
-              d.style.overflow='visible';
-            }
-          }
+          d.style.transition='max-height 0.8s cubic-bezier(0.34,1.56,0.64,1), opacity 0.4s ease';
+          d.style.maxHeight='500px';
           d.style.opacity='1';
-          requestAnimationFrame(step);
         }}}
     }
     requestAnimationFrame(animReveal);
@@ -2279,7 +2255,7 @@ function renderMonth(forceKey){
       <div id="monthPodiumWrap">
         ${podiumCard(tar, `Top artistas de ${MF[MM]} ${MY}`)}
       </div>
-      <div id="album-reveal-month" style="height:0;overflow:hidden;">${cardAlbum(ta[0]?.[0]||'—','Álbum del mes')}</div>
+      <div id="album-reveal-month" style="max-height:0;overflow:hidden;opacity:0;">${cardAlbum(ta[0]?.[0]||'—','Álbum del mes')}</div>
       ${himnoCard(p,'del mes','album-reveal-month')}
       <div id="afterPodiumMonth" style="opacity:0;transition:opacity .8s;">
         <div class="two">
@@ -2427,7 +2403,7 @@ function renderYear(forceYear){
         ${podiumCard(tar, `Top artistas de ${YEAR}`)}
       </div>
     </div>
-        <div id="album-reveal-year" style="height:0;overflow:hidden;">${cardAlbum(topAlbumName,'Álbum del año')}</div>
+        <div id="album-reveal-year" style="max-height:0;overflow:hidden;opacity:0;">${cardAlbum(topAlbumName,'Álbum del año')}</div>
         ${himnoCard(p,'del año','album-reveal-year')}
     <div id="afterAnim" style="display:none">
       <div class="ssect">
