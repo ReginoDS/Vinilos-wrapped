@@ -2158,8 +2158,13 @@ function himnoCard(plays, label, albumRevealId){
       
       if(prog<1){requestAnimationFrame(animReveal);}
       else{overlay.style.display='none';if(albumRevealId){const d=document.getElementById(albumRevealId);if(d){
+          // Measure real height: temporarily show to get scrollHeight
+          d.style.height='auto';
+          d.style.overflow='visible';
+          const target=d.scrollHeight||300;
+          d.style.height='0';
           d.style.overflow='hidden';
-          const target=d.scrollHeight||200;
+          void d.offsetHeight; // force reflow
           // Spring physics for height — allows overshooting for bounce
           let pos=0, vel=0;
           const k=120, damp=10;
