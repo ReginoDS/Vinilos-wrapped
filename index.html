@@ -2093,7 +2093,7 @@ function himnoCard(plays, label, albumRevealId){
   // Font sizes matching original SVG (scaled as % of container = 400px viewBox)
   // label: 9px/400 = 2.25%, count: 16px/400 = 4%, album: 7.5px/400 = 1.875%
   // sub: 6px/400 = 1.5%, disc radius 52/400 = 13% → width 26%
-  function sectorDiv(d, fi, lbl, lblColor, numColor, subColor, discLeft, discTop, lblLeft, lblTop, gap="17%"){
+  function sectorDiv(d, fi, lbl, lblColor, numColor, subColor, discLeft, discTop, lblLeft, lblTop, gap="14%"){
     const disc = d ? `
       <div style="position:absolute;left:${discLeft};top:${discTop};width:26%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;background:conic-gradient(from 0deg,#0d0d0d 0,#1a1a1a 18deg,#0d0d0d 36deg,#1a1a1a 54deg,#0d0d0d 72deg,#1a1a1a 90deg,#0d0d0d 108deg,#1a1a1a 126deg,#0d0d0d 144deg,#1a1a1a 162deg,#0d0d0d 180deg);border:1.5px solid ${numColor};overflow:hidden;">
         ${d.coverUrl?`<img src="${h(d.coverUrl)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.style.display='none'"/>`:''}
@@ -2102,11 +2102,11 @@ function himnoCard(plays, label, albumRevealId){
     const info = d ? `
       <div style="position:absolute;left:${discLeft};top:calc(${discTop} + ${gap});width:27%;transform:translateX(-50%);text-align:center;">
         <div style="font-family:'DM Serif Display',serif;font-size:1.1em;color:${numColor};line-height:1;">${d.cnt}</div>
-        <div style="font-family:'DM Serif Display',serif;font-size:0.48em;color:${lblColor};line-height:1.2;word-break:break-word;margin-top:0.5%;">${h(d.albumName)}</div>
-        ${d.edition?`<div style="font-family:'DM Mono',monospace;font-size:0.38em;color:${subColor};margin-top:0.3%;">${h(d.edition)}</div>`:''}
-        <div style="font-family:'DM Mono',monospace;font-size:0.38em;color:${subColor};margin-top:0.3%;">${d.artist}</div>
+        <div style="font-family:'DM Serif Display',serif;font-size:0.62em;color:${lblColor};line-height:1.2;word-break:break-word;margin-top:0.5%;">${h(d.albumName)}</div>
+        ${d.edition?`<div style="font-family:'DM Mono',monospace;font-size:0.52em;color:${subColor};margin-top:0.3%;">${h(d.edition)}</div>`:''}
+        <div style="font-family:'DM Mono',monospace;font-size:0.52em;color:${subColor};margin-top:0.3%;">${d.artist}</div>
       </div>`
-      : `<div style="position:absolute;left:${discLeft};top:calc(${discTop} + 5%);width:27%;transform:translateX(-50%);text-align:center;font-family:'DM Mono',monospace;font-size:0.38em;color:${subColor};line-height:1.3;">Sin escuchas<br>en esta franja</div>`;
+      : `<div style="position:absolute;left:${discLeft};top:calc(${discTop} + 5%);width:27%;transform:translateX(-50%);text-align:center;font-family:'DM Mono',monospace;font-size:0.52em;color:${subColor};line-height:1.3;">Sin escuchas<br>en esta franja</div>`;
     return `
       <div style="position:absolute;left:${lblLeft};top:${lblTop};transform:translateX(-50%);font-family:'DM Mono',monospace;font-size:0.7em;text-transform:uppercase;letter-spacing:0.5%;color:${lblColor};white-space:nowrap;">${lbl}</div>
       ${disc}
@@ -2131,9 +2131,9 @@ function himnoCard(plays, label, albumRevealId){
     </svg>
     <canvas id="${starsId}" style="position:absolute;inset:0;width:100%;height:100%;z-index:2;border-radius:50%;"></canvas>
     <div style="position:absolute;inset:0;z-index:3;border-radius:50%;overflow:hidden;">
-      ${sectorDiv(data.manana,'🌤','MAÑANAS','var(--accent)','var(--accent2)','var(--muted)','26.2%','29%','32.8%','9%')}
-      ${sectorDiv(data.tarde,'🌆','TARDES','var(--accent2)','var(--accent2)','var(--muted)','73.8%','29%','67.2%','9%')}
-      ${sectorDiv(data.noche,'🌙','NOCHES','#7070a0','#7070a0','#555','50%','73.8%','50%','55%','14%')}
+      ${sectorDiv(data.manana,'🌤','MAÑANAS','var(--accent)','var(--accent2)','var(--muted)','26.2%','30%','32.8%','11%')}
+      ${sectorDiv(data.tarde,'🌆','TARDES','var(--accent2)','var(--accent2)','var(--muted)','73.8%','30%','67.2%','11%')}
+      ${sectorDiv(data.noche,'🌙','NOCHES','#7070a0','#7070a0','#555','50%','72%','50%','55%','14%')}
     </div>
     <div id="${cid}-overlay" style="position:absolute;inset:0;border-radius:50%;z-index:4;pointer-events:none;--revealed:0deg;background:conic-gradient(from 240deg,transparent 0deg var(--revealed),#0a0a0a var(--revealed) 360deg);"></div>
   </div></div>`;
