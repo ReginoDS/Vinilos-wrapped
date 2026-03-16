@@ -59,7 +59,7 @@ header{padding:16px 18px 10px;flex-shrink:0;border-bottom:1px solid var(--border
 .sp-val{font-family:'DM Serif Display',serif;font-size:18px;color:var(--accent);line-height:1;}
 
 /* SYNC */
-.sync{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted);margin-top:6px;}
+.sync{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted);}
 .sdot{width:6px;height:6px;border-radius:50%;background:var(--dim);flex-shrink:0;}
 .sdot.ok{background:#52c87a;}.sdot.err{background:#e05252;}.sdot.syncing{background:var(--accent2);animation:blink 1s infinite;}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
@@ -568,7 +568,7 @@ select.finput option{background:var(--s2);}
 <div id="app">
   <header>
     <div class="hrow1">
-      <div><div class="app-title">Vinilos</div><div class="app-sub">Tu colección</div></div>
+      <div><div class="app-title">Vinilos</div><div style="display:flex;align-items:center;gap:6px;"><div class="app-sub">Tu colección</div><div class="sync" style="margin-top:0;"><button id="syncBtn" onclick="syncNow()" style="display:none;background:none;border:none;color:var(--accent2);font-size:13px;cursor:pointer;padding:0;margin-right:2px;line-height:1;">↻</button><div class="sdot" id="sdot"></div><span id="slabel">Local</span></div></div></div>
       <div class="hbtns">
         <span class="user-chip" id="userChip">—</span>
         <div class="icon-btn" onclick="window.location.reload()" title="Actualizar app">⟳</div>
@@ -580,7 +580,6 @@ select.finput option{background:var(--s2);}
       <div class="stat-pill"><div class="sp-label">Este año</div><div class="sp-val" id="cntYear">0</div></div>
       <div class="stat-pill"><div class="sp-label">Total</div><div class="sp-val" id="cntTotal">0</div></div>
     </div>
-    <div class="sync"><button id="syncBtn" onclick="syncNow()" style="display:none;background:none;border:none;color:var(--accent2);font-size:13px;cursor:pointer;padding:0;margin-right:6px;line-height:1;">↻</button><div class="sdot" id="sdot"></div><span id="slabel">Local</span></div>
   </header>
 
   <div class="tabs tabs-main">
@@ -2094,22 +2093,22 @@ function himnoCard(plays, label, albumRevealId){
   // Font sizes matching original SVG (scaled as % of container = 400px viewBox)
   // label: 9px/400 = 2.25%, count: 16px/400 = 4%, album: 7.5px/400 = 1.875%
   // sub: 6px/400 = 1.5%, disc radius 52/400 = 13% → width 26%
-  function sectorDiv(d, fi, lbl, lblColor, numColor, subColor, discLeft, discTop, lblLeft, lblTop){
+  function sectorDiv(d, fi, lbl, lblColor, numColor, subColor, discLeft, discTop, lblLeft, lblTop, gap="17%"){
     const disc = d ? `
       <div style="position:absolute;left:${discLeft};top:${discTop};width:26%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;background:conic-gradient(from 0deg,#0d0d0d 0,#1a1a1a 18deg,#0d0d0d 36deg,#1a1a1a 54deg,#0d0d0d 72deg,#1a1a1a 90deg,#0d0d0d 108deg,#1a1a1a 126deg,#0d0d0d 144deg,#1a1a1a 162deg,#0d0d0d 180deg);border:1.5px solid ${numColor};overflow:hidden;">
         ${d.coverUrl?`<img src="${h(d.coverUrl)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.style.display='none'"/>`:''}
         <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:17%;height:17%;border-radius:50%;background:#0a0a0a;border:0.8px solid ${numColor}40;z-index:2;"></div>
       </div>` : '';
     const info = d ? `
-      <div style="position:absolute;left:${discLeft};top:calc(${discTop} + 14%);width:27%;transform:translateX(-50%);text-align:center;">
-        <div style="font-family:'DM Serif Display',serif;font-size:8%;color:${numColor};line-height:1;">${d.cnt}</div>
+      <div style="position:absolute;left:${discLeft};top:calc(${discTop} + ${gap});width:27%;transform:translateX(-50%);text-align:center;">
+        <div style="font-family:'DM Serif Display',serif;font-size:1.1em;color:${numColor};line-height:1;">${d.cnt}</div>
         <div style="font-family:'DM Serif Display',serif;font-size:1.9%;color:${lblColor};line-height:1.2;word-break:break-word;margin-top:0.5%;">${h(d.albumName)}</div>
         ${d.edition?`<div style="font-family:'DM Mono',monospace;font-size:1.5%;color:${subColor};margin-top:0.3%;">${h(d.edition)}</div>`:''}
         <div style="font-family:'DM Mono',monospace;font-size:1.5%;color:${subColor};margin-top:0.3%;">${d.artist}</div>
       </div>`
       : `<div style="position:absolute;left:${discLeft};top:calc(${discTop} + 5%);width:27%;transform:translateX(-50%);text-align:center;font-family:'DM Mono',monospace;font-size:1.5%;color:${subColor};line-height:1.3;">Sin escuchas<br>en esta franja</div>`;
     return `
-      <div style="position:absolute;left:${lblLeft};top:${lblTop};transform:translateX(-50%);font-family:'DM Mono',monospace;font-size:3%;text-transform:uppercase;letter-spacing:0.5%;color:${lblColor};white-space:nowrap;">${lbl}</div>
+      <div style="position:absolute;left:${lblLeft};top:${lblTop};transform:translateX(-50%);font-family:'DM Mono',monospace;font-size:0.7em;text-transform:uppercase;letter-spacing:0.5%;color:${lblColor};white-space:nowrap;">${lbl}</div>
       ${disc}
       ${info}`;
   }
@@ -2132,9 +2131,9 @@ function himnoCard(plays, label, albumRevealId){
     </svg>
     <canvas id="${starsId}" style="position:absolute;inset:0;width:100%;height:100%;z-index:2;border-radius:50%;"></canvas>
     <div style="position:absolute;inset:0;z-index:3;border-radius:50%;overflow:hidden;">
-      ${sectorDiv(data.manana,'🌤','MAÑANAS','var(--accent)','var(--accent2)','var(--muted)','26.2%','32.5%','32.8%','14%')}
-      ${sectorDiv(data.tarde,'🌆','TARDES','var(--accent2)','var(--accent2)','var(--muted)','73.8%','32.5%','67.2%','14%')}
-      ${sectorDiv(data.noche,'🌙','NOCHES','#7070a0','#7070a0','#555','50%','73.8%','50%','57%')}
+      ${sectorDiv(data.manana,'🌤','MAÑANAS','var(--accent)','var(--accent2)','var(--muted)','26.2%','29%','32.8%','9%')}
+      ${sectorDiv(data.tarde,'🌆','TARDES','var(--accent2)','var(--accent2)','var(--muted)','73.8%','29%','67.2%','9%')}
+      ${sectorDiv(data.noche,'🌙','NOCHES','#7070a0','#7070a0','#555','50%','73.8%','50%','55%','14%')}
     </div>
     <div id="${cid}-overlay" style="position:absolute;inset:0;border-radius:50%;z-index:4;pointer-events:none;--revealed:0deg;background:conic-gradient(from 240deg,transparent 0deg var(--revealed),#0a0a0a var(--revealed) 360deg);"></div>
   </div></div>`;
@@ -2142,6 +2141,9 @@ function himnoCard(plays, label, albumRevealId){
   window['_himnoAnim_'+cid]=()=>{
     const outer=document.getElementById(cid+'-outer');
     if(outer) outer.style.display='block';
+    // Set base font-size on wrap so em units scale correctly with circle
+    const wrapEl=document.getElementById(cid);
+    if(wrapEl){ const sz=wrapEl.offsetWidth; wrapEl.style.fontSize=(sz*0.04)+'px'; }
     initNocheStarsCircle(starsId,cid);
     const pm=document.getElementById(cid+'-pm'),pt=document.getElementById(cid+'-pt');
     if(pm&&pt){function pulse(ts){const t=ts/1000;const pv=(0.75+0.12*Math.sin(t*Math.PI/3)).toFixed(3);pm.setAttribute('opacity',pv);pt.setAttribute('opacity',pv);requestAnimationFrame(pulse);}requestAnimationFrame(pulse);}
