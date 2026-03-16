@@ -381,7 +381,7 @@ select.finput option{background:var(--s2);}
 .log-item.swiped{transform:translateX(-64px);}
 
 /* ── HIMNO CARD ── */
-.himno-circle-wrap{position:relative;width:100%;aspect-ratio:1;border-radius:50%;overflow:hidden;margin-top:10px;margin-bottom:10px;}.himno-circle-month{width:min(45svh,100%);margin-left:auto;margin-right:auto;}
+.himno-circle-wrap{position:relative;width:100%;aspect-ratio:1;border-radius:50%;overflow:hidden;margin-top:10px;margin-bottom:10px;}
 .himno-sector{position:absolute;inset:0;overflow:hidden;}
 .himno-sector.manana{clip-path:polygon(50% 50%, 6.70% 75.00%, 4.32% 70.34%, 2.45% 65.45%, 1.09% 60.40%, 0.27% 55.23%, 0.00% 50.00%, 0.27% 44.77%, 1.09% 39.60%, 2.45% 34.55%, 4.32% 29.66%, 6.70% 25.00%, 9.55% 20.61%, 12.84% 16.54%, 16.54% 12.84%, 20.61% 9.55%, 25.00% 6.70%, 29.66% 4.32%, 34.55% 2.45%, 39.60% 1.09%, 44.77% 0.27%, 50.00% 0.00%);}
 .himno-sector.tarde{clip-path:polygon(50% 50%, 50.00% 0.00%, 55.23% 0.27%, 60.40% 1.09%, 65.45% 2.45%, 70.34% 4.32%, 75.00% 6.70%, 79.39% 9.55%, 83.46% 12.84%, 87.16% 16.54%, 90.45% 20.61%, 93.30% 25.00%, 95.68% 29.66%, 97.55% 34.55%, 98.91% 39.60%, 99.73% 44.77%, 100.00% 50.00%, 99.73% 55.23%, 98.91% 60.40%, 97.55% 65.45%, 95.68% 70.34%, 93.30% 75.00%);}
@@ -2262,16 +2262,16 @@ function renderMonth(forceKey){
         <div class="slabel" style="margin-bottom:0;border:none;padding:0">Wrapped Mensual</div>
         <select class="year-select" onchange="renderMonth(this.value)">${monthOpts}</select>
       </div>
-      <div class="chart-c" style="height:35svh;min-height:120px;display:flex;flex-direction:column;margin-bottom:0;">
+      <div class="chart-c">
         <div class="chart-ttl">Escuchas acumuladas por artista</div>
-        <canvas id="monthChart" style="flex:1;min-height:0;"></canvas>
+        <canvas id="monthChart"></canvas>
         <div class="clegend" id="mclegend"></div>
       </div>
-      <div id="monthPodiumWrap" style="height:20svh;min-height:80px;overflow:hidden;">
+      <div id="monthPodiumWrap">
         ${podiumCard(tar, `Top artistas de ${MF[MM]} ${MY}`)}
       </div>
       <div id="album-reveal-month" style="height:0;overflow:hidden;opacity:0;">${cardAlbum(ta[0]?.[0]||'—','Álbum del mes')}</div>
-      <div class='himno-circle-month'>${himnoCard(p,'del mes','album-reveal-month')}</div>
+      ${himnoCard(p,'del mes','album-reveal-month')}
       <div id="afterPodiumMonth" style="opacity:0;transition:opacity .8s;">
         <div class="two">
           ${edadCard(p,'del mes')}
