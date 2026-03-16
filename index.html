@@ -247,7 +247,7 @@ select.finput option{background:var(--s2);}
 .sday-n{font-family:'DM Serif Display',serif;font-size:30px;color:var(--accent);line-height:1;}
 .sday-u{font-size:11px;color:var(--muted);margin-top:2px;}
 .sday-date{font-size:11px;color:var(--muted);margin-top:5px;font-style:italic;}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:9px;align-items:stretch;}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:9px;align-items:stretch;}.two>.edad-card,.two>.scard{height:100%;box-sizing:border-box;margin:0;}
 .two>.scard{margin-bottom:0;height:100%;box-sizing:border-box;justify-content:center;min-height:90px;}
 .two>.himno-card{margin-top:0;margin-bottom:0;}
 .two-6535{display:grid;grid-template-columns:65fr 35fr;gap:9px;align-items:stretch;margin-top:10px;}
@@ -381,7 +381,7 @@ select.finput option{background:var(--s2);}
 .log-item.swiped{transform:translateX(-64px);}
 
 /* ── HIMNO CARD ── */
-.himno-circle-wrap{position:relative;width:100%;aspect-ratio:1;border-radius:50%;overflow:hidden;margin-top:10px;margin-bottom:10px;}
+.himno-circle-wrap{position:relative;width:100%;aspect-ratio:1;border-radius:50%;overflow:hidden;margin-top:10px;margin-bottom:10px;}.himno-circle-month{width:min(45svh,100%);margin-left:auto;margin-right:auto;}
 .himno-sector{position:absolute;inset:0;overflow:hidden;}
 .himno-sector.manana{clip-path:polygon(50% 50%, 6.70% 75.00%, 4.32% 70.34%, 2.45% 65.45%, 1.09% 60.40%, 0.27% 55.23%, 0.00% 50.00%, 0.27% 44.77%, 1.09% 39.60%, 2.45% 34.55%, 4.32% 29.66%, 6.70% 25.00%, 9.55% 20.61%, 12.84% 16.54%, 16.54% 12.84%, 20.61% 9.55%, 25.00% 6.70%, 29.66% 4.32%, 34.55% 2.45%, 39.60% 1.09%, 44.77% 0.27%, 50.00% 0.00%);}
 .himno-sector.tarde{clip-path:polygon(50% 50%, 50.00% 0.00%, 55.23% 0.27%, 60.40% 1.09%, 65.45% 2.45%, 70.34% 4.32%, 75.00% 6.70%, 79.39% 9.55%, 83.46% 12.84%, 87.16% 16.54%, 90.45% 20.61%, 93.30% 25.00%, 95.68% 29.66%, 97.55% 34.55%, 98.91% 39.60%, 99.73% 44.77%, 100.00% 50.00%, 99.73% 55.23%, 98.91% 60.40%, 97.55% 65.45%, 95.68% 70.34%, 93.30% 75.00%);}
@@ -2102,18 +2102,18 @@ function himnoCard(plays, label, albumRevealId){
     const info = d ? `
       <div style="position:absolute;left:${discLeft};top:calc(${discTop} + ${gap});width:27%;transform:translateX(-50%);text-align:center;">
         <div style="font-family:'DM Serif Display',serif;font-size:1.1em;color:${numColor};line-height:1;">${d.cnt}</div>
-        <div style="font-family:'DM Serif Display',serif;font-size:1.9%;color:${lblColor};line-height:1.2;word-break:break-word;margin-top:0.5%;">${h(d.albumName)}</div>
-        ${d.edition?`<div style="font-family:'DM Mono',monospace;font-size:1.5%;color:${subColor};margin-top:0.3%;">${h(d.edition)}</div>`:''}
-        <div style="font-family:'DM Mono',monospace;font-size:1.5%;color:${subColor};margin-top:0.3%;">${d.artist}</div>
+        <div style="font-family:'DM Serif Display',serif;font-size:0.48em;color:${lblColor};line-height:1.2;word-break:break-word;margin-top:0.5%;">${h(d.albumName)}</div>
+        ${d.edition?`<div style="font-family:'DM Mono',monospace;font-size:0.38em;color:${subColor};margin-top:0.3%;">${h(d.edition)}</div>`:''}
+        <div style="font-family:'DM Mono',monospace;font-size:0.38em;color:${subColor};margin-top:0.3%;">${d.artist}</div>
       </div>`
-      : `<div style="position:absolute;left:${discLeft};top:calc(${discTop} + 5%);width:27%;transform:translateX(-50%);text-align:center;font-family:'DM Mono',monospace;font-size:1.5%;color:${subColor};line-height:1.3;">Sin escuchas<br>en esta franja</div>`;
+      : `<div style="position:absolute;left:${discLeft};top:calc(${discTop} + 5%);width:27%;transform:translateX(-50%);text-align:center;font-family:'DM Mono',monospace;font-size:0.38em;color:${subColor};line-height:1.3;">Sin escuchas<br>en esta franja</div>`;
     return `
       <div style="position:absolute;left:${lblLeft};top:${lblTop};transform:translateX(-50%);font-family:'DM Mono',monospace;font-size:0.7em;text-transform:uppercase;letter-spacing:0.5%;color:${lblColor};white-space:nowrap;">${lbl}</div>
       ${disc}
       ${info}`;
   }
 
-  const html=`<div id="${cid}-outer" style="display:none;"><div class="himno-circle-wrap" id="${cid}">
+  const html=`<div id="${cid}-outer" style="display:none;"><div style="font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);text-align:center;margin-bottom:6px;">Así suena tu día</div><div class="himno-circle-wrap" id="${cid}">
     <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;width:100%;height:100%;z-index:1;">
       <defs>
         <clipPath id="${cid}-cm"><path d="M200,200 L26.8,300 A200,200 0 0,1 200,0 Z"/></clipPath>
@@ -2149,7 +2149,7 @@ function himnoCard(plays, label, albumRevealId){
     if(pm&&pt){function pulse(ts){const t=ts/1000;const pv=(0.75+0.12*Math.sin(t*Math.PI/3)).toFixed(3);pm.setAttribute('opacity',pv);pt.setAttribute('opacity',pv);requestAnimationFrame(pulse);}requestAnimationFrame(pulse);}
     const overlay=document.getElementById(cid+'-overlay');
     if(!overlay) return;
-    const DURATION=1400; let startT=null;
+    const DURATION=2350; let startT=null;
     function animReveal(ts){
       if(!startT) startT=ts;
       const prog=Math.min((ts-startT)/DURATION,1);
@@ -2158,9 +2158,24 @@ function himnoCard(plays, label, albumRevealId){
       
       if(prog<1){requestAnimationFrame(animReveal);}
       else{overlay.style.display='none';if(albumRevealId){const d=document.getElementById(albumRevealId);if(d){
-          d.style.transition='max-height 0.8s cubic-bezier(0.34,1.56,0.64,1), opacity 0.4s ease';
-          d.style.maxHeight='500px';
+          // Spring physics on height for bouncy push-down
+          d.style.overflow='hidden';
           d.style.opacity='1';
+          const target=d.scrollHeight||300;
+          d.style.height='0px';
+          let pos=0, vel=0;
+          const k=120, damp=10;
+          let last=null;
+          function step(ts){
+            if(!last) last=ts;
+            const dt=Math.min((ts-last)/1000,0.05); last=ts;
+            vel+=(-k*(pos-target)-damp*vel)*dt;
+            pos+=vel*dt;
+            d.style.height=Math.max(0,pos)+'px';
+            if(Math.abs(pos-target)>0.3||Math.abs(vel)>1){ requestAnimationFrame(step); }
+            else{ d.style.height='auto'; d.style.overflow='visible'; }
+          }
+          requestAnimationFrame(step);
         }}}
     }
     requestAnimationFrame(animReveal);
@@ -2247,16 +2262,16 @@ function renderMonth(forceKey){
         <div class="slabel" style="margin-bottom:0;border:none;padding:0">Wrapped Mensual</div>
         <select class="year-select" onchange="renderMonth(this.value)">${monthOpts}</select>
       </div>
-      <div class="chart-c">
+      <div class="chart-c" style="height:35svh;min-height:120px;display:flex;flex-direction:column;margin-bottom:0;">
         <div class="chart-ttl">Escuchas acumuladas por artista</div>
-        <canvas id="monthChart"></canvas>
+        <canvas id="monthChart" style="flex:1;min-height:0;"></canvas>
         <div class="clegend" id="mclegend"></div>
       </div>
-      <div id="monthPodiumWrap">
+      <div id="monthPodiumWrap" style="height:20svh;min-height:80px;overflow:hidden;">
         ${podiumCard(tar, `Top artistas de ${MF[MM]} ${MY}`)}
       </div>
-      <div id="album-reveal-month" style="max-height:0;overflow:hidden;opacity:0;">${cardAlbum(ta[0]?.[0]||'—','Álbum del mes')}</div>
-      ${himnoCard(p,'del mes','album-reveal-month')}
+      <div id="album-reveal-month" style="height:0;overflow:hidden;opacity:0;">${cardAlbum(ta[0]?.[0]||'—','Álbum del mes')}</div>
+      <div class='himno-circle-month'>${himnoCard(p,'del mes','album-reveal-month')}</div>
       <div id="afterPodiumMonth" style="opacity:0;transition:opacity .8s;">
         <div class="two">
           ${edadCard(p,'del mes')}
@@ -2403,7 +2418,7 @@ function renderYear(forceYear){
         ${podiumCard(tar, `Top artistas de ${YEAR}`)}
       </div>
     </div>
-        <div id="album-reveal-year" style="max-height:0;overflow:hidden;opacity:0;">${cardAlbum(topAlbumName,'Álbum del año')}</div>
+        <div id="album-reveal-year" style="height:0;overflow:hidden;opacity:0;">${cardAlbum(topAlbumName,'Álbum del año')}</div>
         ${himnoCard(p,'del año','album-reveal-year')}
     <div id="afterAnim" style="display:none">
       <div class="ssect">
