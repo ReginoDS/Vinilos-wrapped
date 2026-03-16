@@ -2146,7 +2146,7 @@ function himnoCard(plays, label, albumRevealId){
     if(wrapEl){ const sz=wrapEl.offsetWidth; wrapEl.style.fontSize=(sz*0.04)+'px'; }
     initNocheStarsCircle(starsId,cid);
     const pm=document.getElementById(cid+'-pm'),pt=document.getElementById(cid+'-pt');
-    if(pm&&pt){function pulse(ts){const t=ts/1000;const pv=(0.75+0.12*Math.sin(t*Math.PI/3)).toFixed(3);pm.setAttribute('opacity',pv);pt.setAttribute('opacity',pv);requestAnimationFrame(pulse);}requestAnimationFrame(pulse);}
+    if(pm&&pt){function pulse(ts){const t=ts/1000;const pv=(0.75+0.12*Math.sin(t*Math.PI/3)).toFixed(3);pm.setAttribute('opacity',pv);pt.setAttribute('opacity',pv);_hinnoPulseRaf=requestAnimationFrame(pulse);}_hinnoPulseRaf=requestAnimationFrame(pulse);}
     const overlay=document.getElementById(cid+'-overlay');
     if(!overlay) return;
     const DURATION=2350; let startT=null;
