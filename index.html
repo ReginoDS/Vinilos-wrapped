@@ -100,8 +100,9 @@ header{padding:16px 18px 10px;flex-shrink:0;border-bottom:1px solid var(--border
   overflow:hidden;
   background:conic-gradient(from 0deg,#0d0d0d 0,#1a1a1a 18deg,#0d0d0d 36deg,#1a1a1a 54deg,#0d0d0d 72deg,#1a1a1a 90deg,#0d0d0d 108deg,#1a1a1a 126deg,#0d0d0d 144deg,#1a1a1a 162deg,#0d0d0d 180deg,#1a1a1a 198deg,#0d0d0d 216deg,#1a1a1a 234deg,#0d0d0d 252deg,#1a1a1a 270deg,#0d0d0d 288deg,#1a1a1a 306deg,#0d0d0d 324deg,#1a1a1a 342deg,#0d0d0d 360deg);
   transition:border-color .2s;
+  will-change:transform;
 }
-.vcard.sel .vcard-disc{border-color:var(--accent2);animation:spin 3s linear infinite;will-change:transform;}
+.vcard.sel .vcard-disc{border-color:var(--accent2);animation:spin 3s linear infinite;}
 .vcard.picker-lit .vcard-disc{border-color:var(--accent2);border-width:2.5px;animation:none;box-shadow:0 0 12px 3px rgba(201,169,110,.35);}
 .vcard.picker-dim .vcard-disc{border-color:var(--dim);}
 .vcard.picker-winner .vcard-disc{border-color:var(--accent2);border-width:2.5px;animation:spin 3s linear infinite;box-shadow:0 0 12px 3px rgba(201,169,110,.35);}
@@ -568,7 +569,7 @@ select.finput option{background:var(--s2);}
 <div id="app">
   <header>
     <div class="hrow1">
-      <div><div class="app-title">Vinilos</div><div style="display:flex;align-items:center;gap:6px;"><div class="sdot" id="sdot"></div><span class="app-sub" id="slabel">Colección local</span><button id="syncBtn" onclick="syncNow()" style="display:none;background:none;border:none;color:var(--accent2);font-size:13px;cursor:pointer;padding:0;line-height:1;">↻</button></div></div>
+      <div><div class="app-title" ontouchstart="perfTitleTouchStart()" ontouchend="perfTitleTouchEnd()" style="user-select:none;">Vinilos</div><div style="display:flex;align-items:center;gap:6px;"><div class="sdot" id="sdot"></div><span class="app-sub" id="slabel">Colección local</span><button id="syncBtn" onclick="syncNow()" style="display:none;background:none;border:none;color:var(--accent2);font-size:13px;cursor:pointer;padding:0;line-height:1;">↻</button></div></div>
       <div class="hbtns">
         <span class="user-chip" id="userChip">—</span>
         <div class="icon-btn" onclick="window.location.reload()" title="Actualizar app">⟳</div>
@@ -855,6 +856,62 @@ function mergePlays(a, b, delA=[], delB=[]){
 // ════════════════════════════════════════════════════════════
 //  SYNC STATUS
 // ════════════════════════════════════════════════════════════
+
+// ── PERF PROFILER ────────────────────────────────────────────
+let _perfLog = [];
+let _perfEnabled = false;
+function perfMark(label){
+  if(!_perfEnabled) return;
+  _perfLog.push({t: performance.now(), label});
+}
+let _perfDebugMode = false;
+function perfStart(){
+  if(!_perfDebugMode) return;
+  _perfEnabled = true;
+  _perfLog = [];
+  perfMark('tap');
+}
+function perfShow(){
+  if(!_perfLog.length) return;
+  const t0 = _perfLog[0].t;
+  const lines = _perfLog.map(e => `+${Math.round(e.t-t0)}ms  ${e.label}`);
+  const text = lines.join('\n');
+  // Create overlay
+  let ov = document.getElementById('perfOverlay');
+  if(!ov){
+    ov = document.createElement('div');
+    ov.id = 'perfOverlay';
+    ov.style.cssText = 'position:fixed;top:20px;left:10px;right:10px;z-index:9999;background:#111;border:1px solid #c9a96e;border-radius:10px;padding:14px;font-family:DM Mono,monospace;font-size:11px;color:#e8d5b0;white-space:pre;max-height:60vh;overflow-y:auto;';
+    document.body.appendChild(ov);
+  }
+  ov.textContent = 'PERF LOG (tap a vinilo)\n\n' + text;
+  const btn = document.createElement('button');
+  btn.textContent = '📋 Copiar';
+  btn.style.cssText = 'display:block;margin-top:10px;background:#c9a96e;color:#0a0a0a;border:none;padding:6px 14px;border-radius:6px;font-family:DM Mono,monospace;font-size:11px;cursor:pointer;';
+  btn.onclick = () => { try{ const ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;top:0;left:0;opacity:0;';document.body.appendChild(ta);ta.focus();ta.select();document.execCommand('copy');document.body.removeChild(ta);btn.textContent='✓ Copiado'; }catch(e){btn.textContent='Error';} };
+  const cls = document.createElement('button');
+  cls.textContent = '✕';
+  cls.style.cssText = 'position:absolute;top:8px;right:10px;background:none;border:none;color:#666;font-size:16px;cursor:pointer;';
+  cls.onclick = () => ov.remove();
+  ov.appendChild(btn);
+  ov.appendChild(cls);
+  _perfEnabled = false;
+}
+// ─────────────────────────────────────────────────────────────
+let _perfTapTimer=null;
+function perfTitleTouchStart(){
+  if(_perfTapTimer) return;
+  _perfTapTimer=setTimeout(()=>{
+    _perfDebugMode = !_perfDebugMode;
+    _perfEnabled = false;
+    _perfLog = [];
+    showToast(_perfDebugMode ? 'Debug ON — toca un vinilo' : 'Debug OFF');
+    _perfTapTimer=null;
+  },2000);
+}
+function perfTitleTouchEnd(){
+  clearTimeout(_perfTapTimer); _perfTapTimer=null;
+}
 let _dotsInterval=null;
 function setSS(st,lbl){
   document.getElementById('sdot').className='sdot '+st;
@@ -958,7 +1015,16 @@ let addGenres=[];
 // ════════════════════════════════════════════════════════════
 let currentSubTab = 'smonth';
 
+function killActiveLoops(){
+  if(_nocheStarsRaf){cancelAnimationFrame(_nocheStarsRaf);_nocheStarsRaf=null;}
+  if(_himnoStarsRaf){cancelAnimationFrame(_himnoStarsRaf);_himnoStarsRaf=null;}
+  if(_hinnoPulseRaf){cancelAnimationFrame(_hinnoPulseRaf);_hinnoPulseRaf=null;}
+  if(typeof chartAnimId!=='undefined'&&chartAnimId){cancelAnimationFrame(chartAnimId);chartAnimId=null;}
+  if(typeof _podiumConfettiAnimId!=='undefined'&&_podiumConfettiAnimId){cancelAnimationFrame(_podiumConfettiAnimId);_podiumConfettiAnimId=null;}
+}
+
 function showMainTab(tab) {
+  killActiveLoops();
   currentTab = tab;
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.querySelectorAll('.tabs-main .tab').forEach(t => t.classList.remove('active'));
@@ -969,6 +1035,7 @@ function showMainTab(tab) {
 }
 
 function showSubTab(stab, rerender=true) {
+  killActiveLoops();
   currentSubTab = stab;
   document.querySelectorAll('.subview').forEach(v => v.classList.remove('active'));
   document.querySelectorAll('.subtab').forEach(t => t.classList.remove('active'));
@@ -997,13 +1064,32 @@ function updateCounters(){
 // ════════════════════════════════════════════════════════════
 function ytUrl(v){ return v.youtube && v.youtube.trim() ? v.youtube : 'https://www.youtube.com/results?search_query='+encodeURIComponent(v.artist+' '+v.album+' full album'); }
 
+let _collectionRenderKey = null;
 function renderCollection(){
   const vinyls=DB.vinyls;
   const grid=document.getElementById('vinylGrid');
   if(!vinyls.length){
+    _collectionRenderKey = null;
     grid.innerHTML=`<div class="empty"><div class="big">◎</div><p>Tu colección está vacía.<br>Añade tu primer vinilo abajo.</p></div>`;
     document.getElementById('playBtn').disabled=true; return;
   }
+  // Skip re-render if collection hasn't changed
+  perfMark('renderCollection called');
+  const renderKey = vinyls.map(v=>v.id+':'+v.album+':'+(v.cover||'')).join('|');
+  if(renderKey === _collectionRenderKey && grid.children.length === vinyls.length){
+    perfMark('renderCollection SKIP (no change)');
+    // Just update selection state
+    Array.from(grid.children).forEach(c=>{
+      const isS = selV && c.dataset.id == selV.id;
+      c.classList.toggle('sel', isS);
+      const tick = c.querySelector('.sel-tick');
+      if(tick) tick.textContent = isS ? '✓' : '';
+    });
+    document.getElementById('playBtn').disabled=!selV;
+    return;
+  }
+  perfMark('renderCollection REBUILD DOM');
+  _collectionRenderKey = renderKey;
   grid.innerHTML=vinyls.map(v=>{
     const isSel=selV?.id===v.id;
     const cov=v.cover?`<img class="disc-cover" src="${h(v.cover)}" alt="" onerror="this.style.display='none'">`:'';
@@ -1037,8 +1123,23 @@ function renderCollection(){
 
 let _pickerAbort=null; // incremented to cancel current run
 
+// Pre-cached card rects for faster FLIP (updated after each renderGrid)
+let _cachedCardRects = null;
+let _cachedCardCount = 0;
+
+function precacheCardRects(){
+  const grid = document.getElementById('vinylGrid');
+  if(!grid) return;
+  const cards = Array.from(grid.children);
+  if(!cards.length) return;
+  // Batch all reads in one pass (no interleaving with writes)
+  _cachedCardRects = cards.map(c => c.getBoundingClientRect());
+  _cachedCardCount = cards.length;
+}
+
 function startPickerApp(){
   if(!DB.vinyls.length) return;
+  perfStart();
   // Cancel any running picker and start fresh
   if(_pickerAbort!==null) _pickerAbort++;
   const myRun=(_pickerAbort===null?0:_pickerAbort);
@@ -1081,10 +1182,12 @@ function startPickerApp(){
   // The visual height is constrained by the .view parent (overflow:hidden, flex:1)
   // getBoundingClientRect().height gives the actual rendered height on screen
   // This is reliable even on iOS Safari where window.innerHeight includes hidden UI
+  perfMark('getBoundingClientRect start');
   const gridRect=grid.getBoundingClientRect();
   const bbarRect=document.getElementById('bbar').getBoundingClientRect();
   // Available height = from top of grid to top of bbar
   const gridVisH=bbarRect.top - gridRect.top;
+  perfMark('_getPickLayout');
   const {cols,gap:GAP,pad:PAD}=_getPickLayout(n,grid.clientWidth,gridVisH);
   // Step 1: hide info so cards are square for FIRST snapshot
   cards.forEach(c=>{
@@ -1095,6 +1198,7 @@ function startPickerApp(){
   });
   void grid.offsetWidth;
 
+  perfMark('before _flipCards');
   // Step 2: FLIP to compact grid (no dim yet)
   grid.style.overflowY='hidden';
   grid.style.transition='none';
@@ -1102,6 +1206,7 @@ function startPickerApp(){
     totalDur:1000,
     onDone:()=>{
       if(_pickerAbort!==myRun){return;}
+      perfMark('flipCards onDone'); perfShow();
       cards.forEach(c=>{c.style.transition='';c.style.transform='';c.style.transformOrigin='';});
       grid.scrollTo({top:0,behavior:'instant'});
       // Step 3: wait 150ms, apply dim to all except first
@@ -1203,12 +1308,18 @@ function _flipCards(cards,applyLayout,{totalDur=1000,onDone}={}){
   const staggerSpread=n>1?Math.floor(totalDur*0.4):0;
   const stagger=n>1?Math.floor(staggerSpread/(n-1)):0;
   const cardDur=totalDur-staggerSpread;
-  // Phase 1: measure BEFORE — do this in current frame
-  const first=cards.map(c=>c.getBoundingClientRect());
+  // Phase 1: use pre-cached rects if available and count matches
+  perfMark('_flipCards enter');
+  const first = (_cachedCardRects && _cachedCardRects.length === cards.length)
+    ? _cachedCardRects
+    : cards.map(c=>c.getBoundingClientRect());
+  _cachedCardRects = null; // consume cache
+  perfMark('rects first done');
   // Apply layout change
   applyLayout();
   // Phase 2: measure AFTER in next rAF so browser can flush layout once
   requestAnimationFrame(()=>{
+    perfMark('rAF1 - measuring last rects');
     const last=cards.map(c=>c.getBoundingClientRect());
     // Apply inverse transforms (FLIP: set to old positions)
     cards.forEach((card,i)=>{
@@ -1220,6 +1331,7 @@ function _flipCards(cards,applyLayout,{totalDur=1000,onDone}={}){
     });
     // Animate to final in next rAF (separate frame so transitions fire)
     requestAnimationFrame(()=>{
+      perfMark('rAF2 - applying transitions');
       cards.forEach((card,i)=>{
         card.style.transition=`transform ${cardDur}ms cubic-bezier(.4,0,.2,1) ${i*stagger}ms`;
         card.style.transform='none';
@@ -1370,10 +1482,44 @@ function _pickerRestore(winIdx,grid,cards,vinyls,myRun){
 /* ────────────────────────────────────────────────────────────── */
 
 function selectV(id){
+  perfStart();
+  const _al=[['nocheStars',_nocheStarsRaf],['himnoStars',_himnoStarsRaf],['hinnoPulse',_hinnoPulseRaf],['chart',typeof chartAnimId!=='undefined'?chartAnimId:null],['confetti',typeof _podiumConfettiAnimId!=='undefined'?_podiumConfettiAnimId:null]].filter(([,v])=>v).map(([k])=>k); perfMark('selectV | loops: '+(_al.length?_al.join(','):'none'));
   const v=DB.vinyls.find(x=>x.id===id);
   selV=selV?.id===id?null:v;
+  perfMark('before renderCollection');
   renderCollection();
+  perfMark('after renderCollection');
   updateBbar();
+  perfMark('after updateBbar');
+  // Also observe when the selected card's animation actually starts
+  if(selV){
+    const selCard = document.querySelector(`[data-id="${selV.id}"]`);
+    if(selCard){
+      const disc = selCard.querySelector('.vcard-disc');
+      if(disc){
+        perfMark('disc found - waiting for animationstart');
+        disc.addEventListener('animationstart', function onAnim(){
+          perfMark('animationstart fired');
+          disc.removeEventListener('animationstart', onAnim);
+        }, {once:true});
+      }
+    }
+  }
+  // Show perf after next paint
+  // Double rAF: first fires before paint, second fires after
+  requestAnimationFrame(()=>{
+    perfMark('rAF1 (pre-paint)');
+    requestAnimationFrame(()=>{
+      perfMark('rAF2 (post-paint)');
+      requestAnimationFrame(()=>{
+        perfMark('rAF3 (second frame)');
+        requestAnimationFrame(()=>{
+          perfMark('rAF4 (third frame)');
+          perfShow();
+        });
+      });
+    });
+  });
 }
 
 function updateBbar(){
@@ -2078,9 +2224,9 @@ function initNocheStarsCircle(starsId, cid){
     ctx.closePath();ctx.clip();
     starDefs.forEach(s=>drawStar(W*(0.2+s.x*0.6),H*(0.52+s.y*0.44),t,s.phase));
     ctx.restore();
-    requestAnimationFrame(loop);
+    _himnoStarsRaf=requestAnimationFrame(loop);
   }
-  requestAnimationFrame(loop);
+  _himnoStarsRaf=requestAnimationFrame(loop);
 }
 
 // ── HIMNO (top álbum por franja horaria) ─────────────────────
@@ -2147,6 +2293,9 @@ function himnoCard(plays, label, albumRevealId){
     <div id="${cid}-overlay" style="position:absolute;inset:0;border-radius:50%;z-index:4;pointer-events:none;--revealed:0deg;background:conic-gradient(from 240deg,transparent 0deg var(--revealed),#0a0a0a var(--revealed) 360deg);"></div>
   </div></div>`;
 
+  // Clean up previous himno anim closure to prevent memory accumulation
+  if(window._lastHimnoAnimKey) { try{delete window[window._lastHimnoAnimKey];}catch(e){} }
+  window._lastHimnoAnimKey='_himnoAnim_'+cid;
   window['_himnoAnim_'+cid]=()=>{
     const outer=document.getElementById(cid+'-outer');
     if(outer) outer.style.display='block';
@@ -2155,7 +2304,7 @@ function himnoCard(plays, label, albumRevealId){
     if(wrapEl){ const sz=wrapEl.offsetWidth; wrapEl.style.fontSize=(sz*0.04)+'px'; }
     initNocheStarsCircle(starsId,cid);
     const pm=document.getElementById(cid+'-pm'),pt=document.getElementById(cid+'-pt');
-    if(pm&&pt){function pulse(ts){const t=ts/1000;const pv=(0.75+0.12*Math.sin(t*Math.PI/3)).toFixed(3);pm.setAttribute('opacity',pv);pt.setAttribute('opacity',pv);_hinnoPulseRaf=requestAnimationFrame(pulse);}_hinnoPulseRaf=requestAnimationFrame(pulse);}
+    if(pm&&pt){function pulse(ts){const t=ts/1000;const pv=(0.75+0.12*Math.sin(t*Math.PI/3)).toFixed(3);pm.setAttribute('opacity',pv);pt.setAttribute('opacity',pv);_hinnoPulseRaf=requestAnimationFrame(pulse);} _hinnoPulseRaf=requestAnimationFrame(pulse); if(_perfEnabled) perfMark('hinnoPulse started id:'+_hinnoPulseRaf);}
     const overlay=document.getElementById(cid+'-overlay');
     if(!overlay) return;
     const DURATION=2350; let startT=null;
@@ -2253,6 +2402,7 @@ function getAvailableMonths(){
 }
 
 function renderMonth(forceKey){
+  killActiveLoops();
   const MF=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   const c=document.getElementById('monthContent');
   const months=getAvailableMonths();
@@ -2359,6 +2509,7 @@ function getAvailableYears(){
 }
 
 function renderYear(forceYear){
+  killActiveLoops();
   const MF=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   const MS=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
   const c=document.getElementById('yearContent');
