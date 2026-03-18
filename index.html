@@ -869,7 +869,7 @@ function setSS(st,lbl){
   }
   // Show sync button only when GitHub is configured (not local mode)
   const sb=document.getElementById('syncBtn');
-  if(sb) sb.style.display=(st===''||st==='local')?'none':'inline';
+  if(sb) sb.style.display=(st===''||st==='local'||st==='syncing')?'none':'inline';
   // Disable shuffle buttons while syncing
   const isSyncing=st==='syncing';
   ['randBtn','rerollBtn'].forEach(id=>{
@@ -1203,23 +1203,30 @@ function _flipCards(cards,applyLayout,{totalDur=1000,onDone}={}){
   const staggerSpread=n>1?Math.floor(totalDur*0.4):0;
   const stagger=n>1?Math.floor(staggerSpread/(n-1)):0;
   const cardDur=totalDur-staggerSpread;
+  // Phase 1: measure BEFORE — do this in current frame
   const first=cards.map(c=>c.getBoundingClientRect());
+  // Apply layout change
   applyLayout();
-  void cards[0].offsetWidth;
-  const last=cards.map(c=>c.getBoundingClientRect());
-  cards.forEach((card,i)=>{
-    const dx=first[i].left-last[i].left,dy=first[i].top-last[i].top;
-    const sx=first[i].width/last[i].width,sy=first[i].height/last[i].height;
-    card.style.transition='none';
-    card.style.transform=`translate(${dx}px,${dy}px) scale(${sx},${sy})`;
-    card.style.transformOrigin='top left';
+  // Phase 2: measure AFTER in next rAF so browser can flush layout once
+  requestAnimationFrame(()=>{
+    const last=cards.map(c=>c.getBoundingClientRect());
+    // Apply inverse transforms (FLIP: set to old positions)
+    cards.forEach((card,i)=>{
+      const dx=first[i].left-last[i].left,dy=first[i].top-last[i].top;
+      const sx=first[i].width/last[i].width,sy=first[i].height/last[i].height;
+      card.style.transition='none';
+      card.style.transform=`translate(${dx}px,${dy}px) scale(${sx},${sy})`;
+      card.style.transformOrigin='top left';
+    });
+    // Animate to final in next rAF (separate frame so transitions fire)
+    requestAnimationFrame(()=>{
+      cards.forEach((card,i)=>{
+        card.style.transition=`transform ${cardDur}ms cubic-bezier(.4,0,.2,1) ${i*stagger}ms`;
+        card.style.transform='none';
+      });
+      if(onDone) setTimeout(onDone,totalDur+30);
+    });
   });
-  void cards[0].offsetWidth;
-  cards.forEach((card,i)=>{
-    card.style.transition=`transform ${cardDur}ms cubic-bezier(.4,0,.2,1) ${i*stagger}ms`;
-    card.style.transform='none';
-  });
-  if(onDone) setTimeout(onDone,totalDur+30);
 }
 
 function _runPickerTick(n,winIdx,grid,cards,vinyls,myRun){
