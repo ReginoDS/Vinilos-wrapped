@@ -948,8 +948,11 @@ function setSS(st,lbl){
 //  Plays merge: union (local + remote), deletions respected.
 // ════════════════════════════════════════════════════════════
 
+let _syncInProgress = false;
 async function syncNow(){
   if(!GH.ok){ openModal('configModal'); return; }
+  if(_syncInProgress){ return; } // skip if already syncing
+  _syncInProgress = true;
   setSS('syncing','Sincronizando colección');
   try{
     const remCol = await GH.readFile('collection.json');
@@ -974,16 +977,21 @@ async function syncNow(){
     await GH.writeFile('collection.json', {vinylLog:mergedLog, users, _sha:remCol?._sha});
     await GH.writeFile('plays.json', {plays:mergedPls.plays, deletedPlayIds:mergedPls.deletedIds, _sha:remPls?._sha});
 
+    _syncInProgress = false;
     setSS('ok','Colección sincronizada');
     renderAll();
     resolveNfcPlay();
     showToast('Sincronizado ✓');
   } catch(e){
+    _syncInProgress = false;
     setSS('err','Error de sincronización');
     const msg = e.message||'';
     if(msg.includes('401')||msg.includes('Bad credentials')) showToast('Token inválido o sin permisos');
     else if(msg.includes('404')) showToast('Repositorio no encontrado');
-    else if(msg.includes('409')||msg.includes('conflict')) showToast('Conflicto de sincronización — reintenta');
+    else if(msg.includes('409')||msg.includes('conflict')){
+      // SHA stale — retry once with fresh read
+      setTimeout(()=>syncNow(), 2000);
+    }
     else if(msg.includes('422')) showToast('Error de escritura en GitHub');
     else showToast('Error al sincronizar');
     console.error('SYNC ERROR:', e.message);
