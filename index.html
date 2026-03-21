@@ -874,46 +874,52 @@ function perfStart(){
 // ── BOOT LOG ─────────────────────────────────────────────────
 let _bootLog = [];
 function bootLog(msg){
-  _bootLog.push(new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+' '+msg);
-  showBootLog();
+  const t = new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  _bootLog.push(t + ' ' + msg);
+  _renderBootLog();
 }
-function showBootLog(){
-  let ov = document.getElementById('bootLogOverlay');
+function _renderBootLog(){
+  let ov = document.getElementById('_bootOv');
   if(!ov){
     ov = document.createElement('div');
-    ov.id = 'bootLogOverlay';
+    ov.id = '_bootOv';
     ov.style.cssText = 'position:fixed;bottom:80px;left:10px;right:10px;z-index:9998;background:#0a0a0aee;border:1px solid #c9a96e;border-radius:10px;padding:12px;font-family:DM Mono,monospace;font-size:10px;color:#e8d5b0;max-height:40vh;overflow-y:auto;';
-    const row = document.createElement('div');
-    row.style.cssText = 'display:flex;justify-content:space-between;margin-bottom:8px;';
-    const title = document.createElement('span');
-    title.textContent = '🔍 Boot Log';
-    title.style.color='#c9a96e';
+    const hdr = document.createElement('div');
+    hdr.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;';
+    hdr.innerHTML = '<span style="color:#c9a96e;font-size:11px;">Boot Log</span>';
     const btns = document.createElement('div');
     btns.style.cssText = 'display:flex;gap:6px;';
-    const copyBtn = document.createElement('button');
-    copyBtn.textContent='Copiar';
-    copyBtn.style.cssText='background:#c9a96e;color:#0a0a0a;border:none;padding:2px 8px;border-radius:4px;font-family:DM Mono,monospace;font-size:9px;cursor:pointer;';
-    copyBtn.onclick=()=>{
-      try{const ta=document.createElement('textarea');ta.value=_bootLog.join('\n');ta.style.cssText='position:fixed;top:0;left:0;opacity:0;';document.body.appendChild(ta);ta.focus();ta.select();document.execCommand('copy');document.body.removeChild(ta);copyBtn.textContent='✓';}catch(e){}
+    const cpBtn = document.createElement('button');
+    cpBtn.textContent = 'Copiar';
+    cpBtn.style.cssText = 'background:#c9a96e;color:#0a0a0a;border:none;padding:2px 8px;border-radius:4px;font-family:DM Mono,monospace;font-size:9px;cursor:pointer;';
+    cpBtn.onclick = () => {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = _bootLog.join(String.fromCharCode(10));
+        ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;';
+        document.body.appendChild(ta);
+        ta.focus(); ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        cpBtn.textContent = '✓';
+        setTimeout(() => cpBtn.textContent = 'Copiar', 2000);
+      } catch(e) { cpBtn.textContent = 'Error'; }
     };
-    const closeBtn = document.createElement('button');
-    closeBtn.textContent='✕';
-    closeBtn.style.cssText='background:none;border:none;color:#666;font-size:14px;cursor:pointer;padding:0 4px;';
-    closeBtn.onclick=()=>ov.remove();
-    btns.appendChild(copyBtn);btns.appendChild(closeBtn);
-    row.appendChild(title);row.appendChild(btns);
-    ov.appendChild(row);
-    document.body.appendChild(ov);
-  }
-  let body = document.getElementById('bootLogBody');
-  if(!body){
-    body = document.createElement('div');
-    body.id = 'bootLogBody';
+    const clBtn = document.createElement('button');
+    clBtn.textContent = '✕';
+    clBtn.style.cssText = 'background:none;border:none;color:#666;font-size:14px;cursor:pointer;padding:0 4px;';
+    clBtn.onclick = () => ov.remove();
+    btns.appendChild(cpBtn); btns.appendChild(clBtn);
+    hdr.appendChild(btns);
+    ov.appendChild(hdr);
+    const body = document.createElement('div');
+    body.id = '_bootBody';
     body.style.cssText = 'white-space:pre-wrap;word-break:break-all;line-height:1.6;';
     ov.appendChild(body);
+    document.body.appendChild(ov);
   }
-  body.textContent = _bootLog.join('\n');
-  // Auto-scroll to bottom
+  const body = document.getElementById('_bootBody');
+  if(body) body.textContent = _bootLog.join(String.fromCharCode(10));
   ov.scrollTop = ov.scrollHeight;
 }
 // ─────────────────────────────────────────────────────────────
@@ -922,7 +928,7 @@ function perfShow(){
   if(!_perfLog.length) return;
   const t0 = _perfLog[0].t;
   const lines = _perfLog.map(e => `+${Math.round(e.t-t0)}ms  ${e.label}`);
-  const text = lines.join('\n');
+  const text = lines.join(String.fromCharCode(10));
   // Create overlay
   let ov = document.getElementById('perfOverlay');
   if(!ov){
@@ -998,9 +1004,8 @@ function setSS(st,lbl){
 let _syncInProgress = false;
 async function syncNow(){
   if(!GH.ok){ openModal('configModal'); return; }
-  if(_syncInProgress){ bootLog('syncNow: SKIPPED (in progress)'); return; }
+  if(_syncInProgress){ return; }
   _syncInProgress = true;
-  bootLog('syncNow: START');
   setSS('syncing','Sincronizando colección');
   try{
     const remCol = await GH.readFile('collection.json');
@@ -1026,7 +1031,6 @@ async function syncNow(){
     await GH.writeFile('plays.json', {plays:mergedPls.plays, deletedPlayIds:mergedPls.deletedIds, _sha:remPls?._sha});
 
     _syncInProgress = false;
-    bootLog('syncNow: OK vinyls='+DB.vinyls.length);
     setSS('ok','Colección sincronizada');
     renderAll();
     resolveNfcPlay();
@@ -3064,7 +3068,6 @@ document.getElementById('loginName').addEventListener('keydown', e => { if(e.key
 // ════════════════════════════════════════════════════════════
 async function boot(){
   checkNfcParam(); // read ?play= before any async work
-  bootLog('BOOT: GH.ok='+GH.ok+' nfcPending='+_nfcPendingId+' sessionNfc='+sessionStorage.getItem('nfc_pending_play')+' user='+USER.name);
   if(GH.ok){
     setSS('syncing','Sincronizando colección');
     await syncNow();
@@ -3077,16 +3080,14 @@ async function boot(){
 }
 
 // Si ya está autenticado (localStorage persiste), arranca directo
-const _hasAuth = localStorage.getItem(AUTH_KEY);
-const _hasName = USER.name;
-const _hasGH = GH.ok;
-bootLog('AUTH: key='+!!_hasAuth+' name='+JSON.stringify(_hasName)+' GH='+_hasGH+' hash='+window.location.hash+' q='+window.location.search);
-if (_hasAuth && _hasName) {
+// Si ya está autenticado (localStorage persiste), arranca directo
+bootLog("AUTH key="+!!localStorage.getItem(AUTH_KEY)+" name="+JSON.stringify(USER.name)+" GH="+GH.ok+" hash="+location.hash+" q="+location.search);
+if (localStorage.getItem(AUTH_KEY) && USER.name) {
   document.getElementById('loginScreen').style.display = 'none';
   boot();
 } else {
-  bootLog('AUTH: NOT booting - login screen shown');
-  if (_hasName) document.getElementById('loginName').value = _hasName;
+  bootLog("AUTH: no boot - login screen");
+  if (USER.name) document.getElementById('loginName').value = USER.name;
 }
 
 // Handle NFC tag when app is already running in background
@@ -3140,7 +3141,7 @@ function checkNfcParam() {
 
 // Called after data is ready (post-sync or post-boot)
 function resolveNfcPlay() {
-  bootLog('resolveNfcPlay: id='+_nfcPendingId+' vinyls='+DB.vinyls.length);
+  bootLog("resolveNfcPlay id="+_nfcPendingId+" vinyls="+DB.vinyls.length);
   if (_nfcPendingId === null) return;
   const id = _nfcPendingId;
   const v = DB.vinyls.find(x => x.id === id);
