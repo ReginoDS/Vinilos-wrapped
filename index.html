@@ -3053,10 +3053,12 @@ if ('serviceWorker' in navigator) {
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') {
     const params = new URLSearchParams(window.location.search);
-    const playParam = params.get('play');
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/,''));
+    const playParam = params.get('play') || hashParams.get('play');
     if (playParam) {
       _nfcPendingId = isNaN(playParam) ? playParam : parseInt(playParam);
-      window.history.replaceState({}, '', window.location.pathname + window.location.hash);
+      sessionStorage.setItem('nfc_pending_play', playParam);
+      window.history.replaceState({}, '', window.location.pathname);
       // Data already loaded — resolve immediately
       if (DB.vinyls.length) resolveNfcPlay();
     }
@@ -3070,14 +3072,15 @@ document.addEventListener('visibilitychange', () => {
 let _nfcPendingId = null;
 
 function checkNfcParam() {
+  // Check ?play= (query string) AND #play= (hash — never intercepted by SW)
   const params = new URLSearchParams(window.location.search);
-  const playParam = params.get('play') || sessionStorage.getItem('nfc_pending_play');
+  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+  const playParam = params.get('play') || hashParams.get('play') || sessionStorage.getItem('nfc_pending_play');
   if (!playParam) return;
   _nfcPendingId = isNaN(playParam) ? playParam : parseInt(playParam);
-  // Persist in sessionStorage in case data isn't ready yet when we check
   sessionStorage.setItem('nfc_pending_play', playParam);
-  // Clear param from URL immediately so reload doesn't re-trigger
-  window.history.replaceState({}, '', window.location.pathname + window.location.hash);
+  // Clear from URL
+  window.history.replaceState({}, '', window.location.pathname);
 }
 
 // Called after data is ready (post-sync or post-boot)
@@ -3131,7 +3134,7 @@ function openNfcTags() {
     list.innerHTML = '<div class="nodata">Sin vinilos en la coleccion.</div>';
   } else {
     list.innerHTML = vinyls.map(v => {
-      const url = base + '?play=' + v.id;
+      const url = base + '#play=' + v.id;
       const img = v.cover ? '<img src="' + h(v.cover) + '" alt="" onerror="this.style.display=\'none\'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">' : '';
       const eid = 'nfc_' + v.id;
       return '<div class="nfc-row">' +
