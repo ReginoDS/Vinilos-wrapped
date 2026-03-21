@@ -3029,12 +3029,36 @@ async function boot(){
 // Si ya está autenticado (localStorage persiste), arranca directo
 if (localStorage.getItem(AUTH_KEY) && USER.name) {
   document.getElementById('loginScreen').style.display = 'none';
-  // Pre-fill name in case they open login again (won't happen, but safe)
   boot();
 } else {
-  // Si tiene nombre guardado, pre-rellenarlo para comodidad
   if (USER.name) document.getElementById('loginName').value = USER.name;
 }
+
+// Handle NFC tag when app is already running in background
+// PWA on iOS/Android gets a visibilitychange + possible new URL when NFC tapped
+// Listen for NFC messages from service worker (app already open)
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('message', e => {
+    if (e.data?.type === 'NFC_PLAY') {
+      const playId = e.data.playId;
+      _nfcPendingId = isNaN(playId) ? playId : parseInt(playId);
+      if (DB.vinyls.length) resolveNfcPlay();
+    }
+  });
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    const params = new URLSearchParams(window.location.search);
+    const playParam = params.get('play');
+    if (playParam) {
+      _nfcPendingId = isNaN(playParam) ? playParam : parseInt(playParam);
+      window.history.replaceState({}, '', window.location.pathname + window.location.hash);
+      // Data already loaded — resolve immediately
+      if (DB.vinyls.length) resolveNfcPlay();
+    }
+  }
+});
 
 // ════════════════════════════════════════════════════════════
 //  NFC — URL parameter handling + tag management
