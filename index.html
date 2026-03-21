@@ -3042,7 +3042,10 @@ if ('serviceWorker' in navigator) {
     if (e.data?.type === 'NFC_PLAY') {
       const playId = e.data.playId;
       _nfcPendingId = isNaN(playId) ? playId : parseInt(playId);
+      sessionStorage.setItem('nfc_pending_play', playId);
+      // If data ready, show immediately; otherwise boot will pick it up
       if (DB.vinyls.length) resolveNfcPlay();
+      else if (!GH.ok) setTimeout(resolveNfcPlay, 1000);
     }
   });
 }
@@ -3068,9 +3071,11 @@ let _nfcPendingId = null;
 
 function checkNfcParam() {
   const params = new URLSearchParams(window.location.search);
-  const playParam = params.get('play');
+  const playParam = params.get('play') || sessionStorage.getItem('nfc_pending_play');
   if (!playParam) return;
   _nfcPendingId = isNaN(playParam) ? playParam : parseInt(playParam);
+  // Persist in sessionStorage in case data isn't ready yet when we check
+  sessionStorage.setItem('nfc_pending_play', playParam);
   // Clear param from URL immediately so reload doesn't re-trigger
   window.history.replaceState({}, '', window.location.pathname + window.location.hash);
 }
@@ -3081,11 +3086,13 @@ function resolveNfcPlay() {
   const id = _nfcPendingId;
   const v = DB.vinyls.find(x => x.id === id);
   if (!v) {
-    showToast('Tag NFC: vinilo no encontrado en la coleccion');
+    showToast('Tag NFC: vinilo no encontrado en la colección');
     _nfcPendingId = null;
+    sessionStorage.removeItem('nfc_pending_play');
     return;
   }
   _nfcPendingId = null;
+  sessionStorage.removeItem('nfc_pending_play');
   openNfcModal(v);
 }
 

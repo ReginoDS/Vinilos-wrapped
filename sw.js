@@ -1,6 +1,5 @@
 // Service Worker — Vinilos PWA
-// ─────────────────────────────────────────────────────────────
-const APP_VERSION = '3';
+const APP_VERSION = '4';
 const CACHE = 'vinilos-v' + APP_VERSION;
 const PRECACHE = ['./manifest.json'];
 
@@ -24,35 +23,36 @@ self.addEventListener('fetch', e => {
                  url.pathname === '/' ||
                  url.pathname.endsWith('/');
 
-  // NFC ?play= URL: send message to all clients, return cached index.html
-  if (isHTML && url.searchParams.has('play')) {
-    const playId = url.searchParams.get('play');
-    e.waitUntil(
-      self.clients.matchAll({type:'window'}).then(clients => {
-        clients.forEach(client => client.postMessage({type:'NFC_PLAY', playId}));
-      })
-    );
-    // Serve index.html (from cache or network) — strip ?play= so no loop
-    const cleanUrl = url.origin + url.pathname;
-    e.respondWith(
-      caches.match(cleanUrl) ||
-      fetch(cleanUrl).then(res => {
-        caches.open(CACHE).then(c => c.put(cleanUrl, res.clone()));
-        return res;
-      })
-    );
-    return;
-  }
-
   if (isHTML) {
+    // If app already has a client open, send it a message and serve from cache
+    if (url.searchParams.has('play')) {
+      const playId = url.searchParams.get('play');
+      e.waitUntil(
+        self.clients.matchAll({type: 'window', includeUncontrolled: true}).then(clients => {
+          if (clients.length > 0) {
+            // App already open — message it and serve cached page
+            clients.forEach(c => c.postMessage({type: 'NFC_PLAY', playId}));
+            return clients[0].focus().catch(() => {});
+          }
+        })
+      );
+    }
+    // Always serve index.html for HTML requests (with or without ?play=)
+    // Keep ?play= in URL so checkNfcParam() can read it on fresh load
     e.respondWith(
       fetch(e.request)
         .then(res => {
           const clone = res.clone();
-          caches.open(CACHE).then(c => c.put(e.request, clone));
+          // Cache without query string as canonical
+          const canonical = url.origin + url.pathname;
+          caches.open(CACHE).then(c => c.put(canonical, clone));
           return res;
         })
-        .catch(() => caches.match(e.request))
+        .catch(() => {
+          // Offline: serve cached index.html (without ?play=, that's fine — sessionStorage has it)
+          const canonical = url.origin + url.pathname;
+          return caches.match(canonical) || caches.match('./index.html');
+        })
     );
   } else {
     e.respondWith(
