@@ -871,59 +871,6 @@ function perfStart(){
   _perfLog = [];
   perfMark('tap');
 }
-// ── BOOT LOG ─────────────────────────────────────────────────
-let _bootLog = [];
-function bootLog(msg){
-  const t = new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-  _bootLog.push(t + ' ' + msg);
-  _renderBootLog();
-}
-function _renderBootLog(){
-  let ov = document.getElementById('_bootOv');
-  if(!ov){
-    ov = document.createElement('div');
-    ov.id = '_bootOv';
-    ov.style.cssText = 'position:fixed;bottom:80px;left:10px;right:10px;z-index:9998;background:#0a0a0aee;border:1px solid #c9a96e;border-radius:10px;padding:12px;font-family:DM Mono,monospace;font-size:10px;color:#e8d5b0;max-height:40vh;overflow-y:auto;';
-    const hdr = document.createElement('div');
-    hdr.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;';
-    hdr.innerHTML = '<span style="color:#c9a96e;font-size:11px;">Boot Log</span>';
-    const btns = document.createElement('div');
-    btns.style.cssText = 'display:flex;gap:6px;';
-    const cpBtn = document.createElement('button');
-    cpBtn.textContent = 'Copiar';
-    cpBtn.style.cssText = 'background:#c9a96e;color:#0a0a0a;border:none;padding:2px 8px;border-radius:4px;font-family:DM Mono,monospace;font-size:9px;cursor:pointer;';
-    cpBtn.onclick = () => {
-      try {
-        const ta = document.createElement('textarea');
-        ta.value = _bootLog.join(String.fromCharCode(10));
-        ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;';
-        document.body.appendChild(ta);
-        ta.focus(); ta.select();
-        document.execCommand('copy');
-        document.body.removeChild(ta);
-        cpBtn.textContent = '✓';
-        setTimeout(() => cpBtn.textContent = 'Copiar', 2000);
-      } catch(e) { cpBtn.textContent = 'Error'; }
-    };
-    const clBtn = document.createElement('button');
-    clBtn.textContent = '✕';
-    clBtn.style.cssText = 'background:none;border:none;color:#666;font-size:14px;cursor:pointer;padding:0 4px;';
-    clBtn.onclick = () => ov.remove();
-    btns.appendChild(cpBtn); btns.appendChild(clBtn);
-    hdr.appendChild(btns);
-    ov.appendChild(hdr);
-    const body = document.createElement('div');
-    body.id = '_bootBody';
-    body.style.cssText = 'white-space:pre-wrap;word-break:break-all;line-height:1.6;';
-    ov.appendChild(body);
-    document.body.appendChild(ov);
-  }
-  const body = document.getElementById('_bootBody');
-  if(body) body.textContent = _bootLog.join(String.fromCharCode(10));
-  ov.scrollTop = ov.scrollHeight;
-}
-// ─────────────────────────────────────────────────────────────
-
 function perfShow(){
   if(!_perfLog.length) return;
   const t0 = _perfLog[0].t;
@@ -3071,35 +3018,28 @@ let _nfcPendingId = null;
 async function boot(){
   try {
     checkNfcParam();
-    bootLog("BOOT GH="+GH.ok+" nfc="+_nfcPendingId+" session="+sessionStorage.getItem("nfc_pending_play"));
-    if(GH.ok){
+      if(GH.ok){
       setSS('syncing','Sincronizando colección');
       if(_nfcPendingId !== null && DB.vinyls.length > 0){
-        bootLog("BOOT NFC fast path vinyls="+DB.vinyls.length);
-        renderAll();
+          renderAll();
         resolveNfcPlay();
       }
       await syncNow();
-      bootLog("BOOT syncNow done vinyls="+DB.vinyls.length);
-    } else {
+      } else {
       await initData();
       renderAll();
       setSS('','Colección local');
       resolveNfcPlay();
     }
   } catch(e) {
-    bootLog("BOOT ERROR: "+e.message);
-  }
+    }
 }
 
 // Si ya está autenticado (localStorage persiste), arranca directo
-// Si ya está autenticado (localStorage persiste), arranca directo
-bootLog("AUTH key="+!!localStorage.getItem(AUTH_KEY)+" name="+JSON.stringify(USER.name)+" GH="+GH.ok+" hash="+location.hash+" q="+location.search);
 if (localStorage.getItem(AUTH_KEY) && USER.name) {
   document.getElementById('loginScreen').style.display = 'none';
   boot();
 } else {
-  bootLog("AUTH: no boot - login screen");
   if (USER.name) document.getElementById('loginName').value = USER.name;
 }
 
@@ -3153,7 +3093,6 @@ function checkNfcParam() {
 
 // Called after data is ready (post-sync or post-boot)
 function resolveNfcPlay() {
-  bootLog("resolveNfcPlay id="+_nfcPendingId+" vinyls="+DB.vinyls.length);
   if (_nfcPendingId === null) return;
   const id = _nfcPendingId;
   const v = DB.vinyls.find(x => x.id === id);
