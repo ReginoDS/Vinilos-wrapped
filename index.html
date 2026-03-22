@@ -3067,10 +3067,18 @@ document.getElementById('loginName').addEventListener('keydown', e => { if(e.key
 //  BOOT
 // ════════════════════════════════════════════════════════════
 async function boot(){
-  checkNfcParam(); // read ?play= before any async work
+  checkNfcParam();
+  bootLog("BOOT GH="+GH.ok+" nfc="+_nfcPendingId+" session="+sessionStorage.getItem("nfc_pending_play"));
   if(GH.ok){
     setSS('syncing','Sincronizando colección');
+    // NFC fast path: show modal immediately with local data, sync in background
+    if(_nfcPendingId !== null && DB.vinyls.length > 0){
+      bootLog("BOOT NFC fast path vinyls="+DB.vinyls.length);
+      renderAll();
+      resolveNfcPlay();
+    }
     await syncNow();
+    bootLog("BOOT syncNow done vinyls="+DB.vinyls.length);
   } else {
     await initData();
     renderAll();
