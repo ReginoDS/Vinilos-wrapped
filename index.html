@@ -1072,16 +1072,23 @@ async function syncNow(){
     // Purge events that all known users have already seen
     const prunedEvents = pruneEvents(mergedEvents, lastSeen, allUserIds);
 
-    // ── Step 4: Write to GitHub — if this throws, localStorage is untouched ──
-    await GH.writeFile('collection.json', {
-      _editedAt: remEditedAt || now,
-      vinyls: mergedVinyls,
-      vinylEvents: prunedEvents,
-      lastSeen,
-      users,
-      _sha: remCol?._sha
-    });
-    await GH.writeFile('plays.json', {plays:mergedPls.plays, deletedPlayIds:mergedPls.deletedIds, _sha:remPls?._sha});
+    // ── Step 4: Write to GitHub only if there are actual changes ──
+    // remCol._sha is defined only on 200 (real download), undefined on 304 (cache)
+    const needsColWrite = !!(remCol?._sha) || mergedEvents.length > 0 || DB.vinylEvents.length > 0;
+    const needsPlsWrite = !!(remPls?._sha) || DB.deletedPlayIds.length > 0;
+    if(needsColWrite){
+      await GH.writeFile('collection.json', {
+        _editedAt: remEditedAt || now,
+        vinyls: mergedVinyls,
+        vinylEvents: prunedEvents,
+        lastSeen,
+        users,
+        _sha: remCol?._sha
+      });
+    }
+    if(needsPlsWrite){
+      await GH.writeFile('plays.json', {plays:mergedPls.plays, deletedPlayIds:mergedPls.deletedIds, _sha:remPls?._sha});
+    }
 
     // ── Step 5: Only update localStorage after successful write ──
     DB.vinyls = mergedVinyls;

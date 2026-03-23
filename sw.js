@@ -1,5 +1,5 @@
 // Service Worker — Vinilos PWA
-const APP_VERSION = '5';
+const APP_VERSION = '6';
 const CACHE = 'vinilos-v' + APP_VERSION;
 const PRECACHE = ['./manifest.json'];
 
@@ -23,8 +23,29 @@ self.addEventListener('fetch', e => {
                  url.pathname === '/' ||
                  url.pathname.endsWith('/');
 
+  // NFC tag: #play= in hash
+  if (isHTML && url.hash && url.hash.startsWith('#play=')) {
+    const playId = url.hash.replace('#play=', '');
+    e.respondWith(
+      self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clients => {
+        const existing = clients.find(c => c.visibilityState === 'visible') || clients[0];
+        if (existing) {
+          // App already open — send message and focus it
+          existing.postMessage({ type: 'NFC_PLAY', playId });
+          existing.focus().catch(() => {});
+          // Return a redirect to the app without the hash so no reload happens
+          return Response.redirect(url.origin + url.pathname, 302);
+        }
+        // No open client — let it load normally, checkNfcParam will handle the hash
+        return fetch(e.request)
+          .then(res => { caches.open(CACHE).then(c => c.put(url.origin + url.pathname, res.clone())); return res; })
+          .catch(() => caches.match(url.origin + url.pathname) || caches.match('./index.html'));
+      })
+    );
+    return;
+  }
+
   if (isHTML) {
-    // Network-first for HTML — always fresh, offline fallback
     e.respondWith(
       fetch(e.request)
         .then(res => {
