@@ -960,19 +960,13 @@ async function syncNow(){
 
     // Vinyl log: remote is base, only local events newer than remote head are appended
     const remLog    = remCol?.vinylLog || [];
-    // ONE-TIME OVERRIDE: if remote has no bad IDs, take remote as authoritative
-    const _hasStaleId = remLog.some(e => e.id === 1773084071571);
-    const mergedLog = _hasStaleId ? mergeVinylLogs(remLog, DB.vinylLog) : remLog;
+    const mergedLog = mergeVinylLogs(remLog, DB.vinylLog);
     DB.vinylLog     = mergedLog;
 
     // Plays: union merge, respecting deletions from both sides
     const remPlays      = remPls?.plays || [];
     const remDeletedIds = remPls?.deletedPlayIds || [];
-    // ONE-TIME OVERRIDE: if remote has no bad IDs, take remote plays as authoritative
-    const _hasStalePlay = remPlays.some(p => p.vinylId === 1773084071571);
-    const mergedPls = _hasStalePlay
-      ? mergePlays(DB.plays, remPlays, DB.deletedPlayIds, remDeletedIds)
-      : {plays: remPlays, deletedIds: remDeletedIds};
+    const mergedPls     = mergePlays(DB.plays, remPlays, DB.deletedPlayIds, remDeletedIds);
     DB.plays          = mergedPls.plays;
     DB.deletedPlayIds = mergedPls.deletedIds;
 
