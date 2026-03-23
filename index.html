@@ -960,15 +960,26 @@ async function syncNow(){
 
     // Vinyl log: remote is base, only local events newer than remote head are appended
     const remLog    = remCol?.vinylLog || [];
-    const mergedLog = mergeVinylLogs(remLog, DB.vinylLog);
-    DB.vinylLog     = mergedLog;
+    // Option 3: if remote has a newer _editedAt than what we last saw, take remote as authoritative
+    const remEditedAt  = remCol?._editedAt || '';
+    const lastEditedAt = localStorage.getItem('lastRemoteEditedAt') || '';
+    const remoteWasManuallyEdited = remEditedAt && remEditedAt !== lastEditedAt;
+    const mergedLog = remoteWasManuallyEdited ? remLog : mergeVinylLogs(remLog, DB.vinylLog);
+    DB.vinylLog = mergedLog;
+    if(remEditedAt) localStorage.setItem('lastRemoteEditedAt', remEditedAt);
 
     // Plays: union merge, respecting deletions from both sides
-    const remPlays      = remPls?.plays || [];
-    const remDeletedIds = remPls?.deletedPlayIds || [];
-    const mergedPls     = mergePlays(DB.plays, remPlays, DB.deletedPlayIds, remDeletedIds);
+    const remPlays       = remPls?.plays || [];
+    const remDeletedIds  = remPls?.deletedPlayIds || [];
+    const plsEditedAt    = remPls?._editedAt || '';
+    const lastPlsEdited  = localStorage.getItem('lastRemotePlsEditedAt') || '';
+    const plsWasEdited   = plsEditedAt && plsEditedAt !== lastPlsEdited;
+    const mergedPls = plsWasEdited
+      ? {plays: remPlays, deletedIds: remDeletedIds}
+      : mergePlays(DB.plays, remPlays, DB.deletedPlayIds, remDeletedIds);
     DB.plays          = mergedPls.plays;
     DB.deletedPlayIds = mergedPls.deletedIds;
+    if(plsEditedAt) localStorage.setItem('lastRemotePlsEditedAt', plsEditedAt);
 
     const users = remCol?.users || DB.users || [];
     DB.users = users;
