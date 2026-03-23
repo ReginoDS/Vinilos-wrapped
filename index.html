@@ -747,19 +747,31 @@ const GH = {
   _headers(){ return {'Authorization':`token ${this.token}`,'Accept':'application/vnd.github.v3+json'}; },
 
   async readFile(file){
-    const r=await fetch(this._url(file),{headers:this._headers()});
+    const etagKey='gh_etag_'+file;
+    const cacheKey='gh_cache_'+file;
+    const storedEtag=localStorage.getItem(etagKey);
+    const headers={...this._headers()};
+    if(storedEtag) headers['If-None-Match']=storedEtag;
+    const r=await fetch(this._url(file),{headers});
+    if(r.status===304){
+      const cached=localStorage.getItem(cacheKey);
+      return cached?JSON.parse(cached):null;
+    }
     if(r.status===404) return null;
     if(!r.ok){
       let msg='GH read '+r.status;
       try{ const j=await r.json(); msg+=': '+(j.message||JSON.stringify(j)); }catch(_){}
       throw new Error(msg);
     }
+    const etag=r.headers.get('ETag');
+    if(etag) localStorage.setItem(etagKey,etag);
     const j=await r.json();
-    // Safe base64 → Unicode via TextDecoder
     const raw=atob(j.content.replace(/\n/g,''));
     const bytes=Uint8Array.from(raw,c=>c.charCodeAt(0));
     const d=JSON.parse(new TextDecoder().decode(bytes));
-    d._sha=j.sha; return d;
+    d._sha=j.sha;
+    localStorage.setItem(cacheKey,JSON.stringify(d));
+    return d;
   },
   async writeFile(file,data){
     const sha=data._sha; const body={...data}; delete body._sha;
@@ -995,10 +1007,16 @@ async function syncNow(){
   if(!GH.ok){ openModal('configModal'); return; }
   if(_syncInProgress){ return; }
   _syncInProgress = true;
-  setSS('syncing','Sincronizando colección');
+  const hasLocal = DB.vinyls.length > 0;
+  if(hasLocal) setSS('syncing','Local — sincronizando...');
+  else setSS('syncing','Sincronizando colección...');
   try{
-    const remCol = await GH.readFile('collection.json');
-    const remPls = await GH.readFile('plays.json');
+    // Parallel reads with ETag support
+    const [remCol, remPls] = await Promise.all([
+      GH.readFile('collection.json'),
+      GH.readFile('plays.json')
+    ]);
+
 
     // ── Vinyl merge ──────────────────────────────────────────
     const remEditedAt  = remCol?._editedAt || '';
@@ -1074,12 +1092,14 @@ async function syncNow(){
     if(remEditedAt) localStorage.setItem('lastRemoteEditedAt', remEditedAt);
     if(plsEditedAt) localStorage.setItem('lastRemotePlsEditedAt', plsEditedAt);
 
+
     _syncInProgress = false;
     localStorage.setItem('lastSyncOk', new Date().toISOString());
+    const hadChanges = !!(remCol?._sha || remPls?._sha);
     setSS('ok','Colección sincronizada');
     renderAll();
     resolveNfcPlay();
-    showToast('Sincronizado ✓');
+    if(hadChanges) showToast('Sincronizado ✓');
   } catch(e){
     _syncInProgress = false;
     const msg = e.message||'';
@@ -3151,21 +3171,22 @@ let _nfcPendingId = null;
 async function boot(){
   try {
     checkNfcParam();
-      if(GH.ok){
-      setSS('syncing','Sincronizando colección');
-      if(_nfcPendingId !== null && DB.vinyls.length > 0){
-          renderAll();
-        resolveNfcPlay();
+    if(GH.ok){
+      // Render local data immediately — sync happens in background
+      if(DB.vinyls.length > 0){
+        renderAll();
+        if(_nfcPendingId !== null) resolveNfcPlay();
       }
       await syncNow();
-      } else {
+    } else {
       await initData();
       renderAll();
       setSS('','Colección local');
       resolveNfcPlay();
     }
   } catch(e) {
-    }
+    console.error('BOOT ERROR:', e.message);
+  }
 }
 
 // Si ya está autenticado (localStorage persiste), arranca directo
