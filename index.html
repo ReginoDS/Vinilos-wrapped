@@ -61,7 +61,7 @@ header{padding:16px 18px 10px;flex-shrink:0;border-bottom:1px solid var(--border
 /* SYNC */
 .sync{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted);}
 .sdot{width:6px;height:6px;border-radius:50%;background:var(--dim);flex-shrink:0;}
-.sdot.ok{background:#52c87a;}.sdot.err{background:#e05252;}.sdot.syncing{background:var(--accent2);animation:blink 1s infinite;}
+.sdot.ok{background:#52c87a;}.sdot.err{background:#e05252;}.sdot.warn{background:#e0956a;}.sdot.syncing{background:var(--accent2);animation:blink 1s infinite;}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 
 /* ── TABS ── */
@@ -226,6 +226,8 @@ select.finput option{background:var(--s2);}
 .cfg-info{font-size:11px;color:var(--muted);line-height:1.9;margin-bottom:16px;background:var(--s2);border:1px solid var(--border);border-radius:var(--radius);padding:11px;}
 .cfg-info a{color:var(--accent2);text-decoration:none;}
 .cfg-note{font-size:10px;color:var(--muted);line-height:1.7;margin-top:8px;}
+.cfg-tab{flex:1;text-align:center;padding:8px 4px;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;font-family:'DM Mono',monospace;transition:all .15s;}
+.cfg-tab.active{color:var(--accent);border-bottom-color:var(--accent2);}
 
 /* ── STATS ── */
 .sscroll{flex:1;overflow-y:auto;padding:0 18px 38px;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
@@ -446,24 +448,33 @@ select.finput option{background:var(--s2);}
 <div class="moverlay" id="configModal">
 <div class="modal">
   <div class="mhandle"></div>
-  <div class="mtitle">Sincronización</div>
-  <div class="msub">Datos compartidos en GitHub</div>
-  <div class="cfg-info">
-    Los datos se guardan en un repositorio privado de tu elección en GitHub (<code>collection.json</code> y <code>plays.json</code>), sincronizando automáticamente entre dispositivos.<br><br>
-    Crea un <a href="https://github.com/settings/tokens" target="_blank">→ Fine-grained Personal Access Token</a> con acceso solo a ese repositorio, permiso <strong>Contents: Read and write</strong>.
-    <div class="cfg-note">
-      Tu token se guarda solo en este dispositivo (localStorage), nunca en el código fuente. El repositorio de datos es privado — nadie puede ver tu colección.
+  <div class="mtitle">Ajustes</div>
+  <div style="display:flex;border-bottom:1px solid var(--border);margin-bottom:14px;">
+    <button class="cfg-tab active" data-cfg="sync" onclick="showCfgTab('sync')">Sincronización</button>
+    <button class="cfg-tab" data-cfg="nfc" onclick="showCfgTab('nfc')">Tags NFC</button>
+  </div>
+  <div id="cfgTab-sync" class="cfg-tabpanel">
+    <div class="cfg-info">
+      Datos guardados en un repositorio privado de GitHub, sincronizando entre dispositivos.
+      Crea un <a href="https://github.com/settings/tokens" target="_blank">Fine-grained PAT</a> con permiso <strong>Contents: Read and write</strong>.
+      <div class="cfg-note">Tu token se guarda solo en este dispositivo, nunca en el código fuente.</div>
+    </div>
+    <div class="field"><label>Usuario de GitHub</label><input type="text" id="cfgUser" class="finput" placeholder="tu-usuario" autocomplete="off"></div>
+    <div class="field"><label>Repositorio de datos</label><input type="text" id="cfgDataRepo" class="finput" placeholder="tu-repositorio" autocomplete="off"></div>
+    <div class="field"><label>Personal Access Token</label><input type="password" id="cfgToken" class="finput" placeholder="ghp_xxxxxxxxxxxx" autocomplete="off"></div>
+    <div class="cfg-note" style="margin-bottom:12px;">Los cambios se guardan en GitHub hasta que todos los dispositivos los hayan recibido. Los eventos se purgan automáticamente una vez que todos los usuarios han sincronizado.</div>
+    <div class="macts" style="flex-direction:column;gap:8px;">
+      <div style="display:flex;gap:8px;width:100%">
+        <button class="btn btn-s" onclick="closeModal('configModal')" style="flex:.5">Cancelar</button>
+        <button class="btn btn-p" onclick="saveConfig()">Guardar y sincronizar</button>
+      </div>
     </div>
   </div>
-  <div class="field"><label>Usuario de GitHub</label><input type="text" id="cfgUser" class="finput" placeholder="tu-usuario" autocomplete="off"></div>
-  <div class="field"><label>Repositorio de datos</label><input type="text" id="cfgDataRepo" class="finput" placeholder="tu-repositorio" autocomplete="off"></div>
-  <div class="field"><label>Personal Access Token</label><input type="password" id="cfgToken" class="finput" placeholder="ghp_xxxxxxxxxxxx" autocomplete="off"></div>
-  <div class="macts" style="flex-direction:column;gap:8px;">
-    <div style="display:flex;gap:8px;width:100%">
-      <button class="btn btn-s" onclick="closeModal('configModal')" style="flex:.5">Cancelar</button>
-      <button class="btn btn-p" onclick="saveConfig()">Guardar y sincronizar</button>
+  <div id="cfgTab-nfc" class="cfg-tabpanel" style="display:none;">
+    <div class="cfg-info">
+      Cada vinilo tiene una URL única. Grábala en un tag NFC — al acercarlo registrará la escucha automáticamente.
     </div>
-    <button class="btn btn-s" onclick="openNfcTags()" style="width:100%">📡 Ver URLs para tags NFC</button>
+    <div id="nfcTagsList" class="rank-scroll" style="max-height:55vh;overflow-y:auto;"></div>
   </div>
 </div>
 </div>
@@ -773,67 +784,98 @@ const GH = {
 const DB = {
   // ── plays ──────────────────────────────────────────────────
   get plays(){ return JSON.parse(localStorage.getItem('plays')||'null')||[]; },
+  set plays(v){ localStorage.setItem('plays',JSON.stringify(v)); },
   get users(){ return JSON.parse(localStorage.getItem('users')||'null')||[]; },
   set users(v){ localStorage.setItem('users',JSON.stringify(v)); },
-  set plays(v){ localStorage.setItem('plays',JSON.stringify(v)); },
   addPlay(vinylId){
     const p=this.plays;
     p.push({id:Date.now()+'_'+Math.random().toString(36).slice(2,7),vinylId,ts:new Date().toISOString(),userId:USER.id});
     this.plays=p;
   },
-
-  // ── vinyl event log ─────────────────────────────────────────
-  // Each event: {op:'add'|'edit'|'delete', id, data?, ts}
-  // Current vinyl list derived by replaying the log in ts order.
-  get vinylLog(){ return JSON.parse(localStorage.getItem('vinylLog')||'null')||[]; },
-  set vinylLog(v){ localStorage.setItem('vinylLog',JSON.stringify(v)); },
-
-  get vinyls(){
-    const map=new Map();
-    this.vinylLog.forEach(e=>{
-      if(e.op==='add'||e.op==='edit') map.set(e.id,{...e.data,id:e.id});
-      if(e.op==='delete') map.delete(e.id);
-    });
-    return [...map.values()];
-  },
-
-  logEvent(ev){
-    const log=this.vinylLog; log.push(ev); this.vinylLog=log;
-  },
-
-  addVinyl(obj){
-    const id=Math.max(0,...this.vinyls.map(v=>v.id||0))+1;
-    this.logEvent({op:'add',id,data:{...obj},ts:new Date().toISOString()});
-  },
   get deletedPlayIds(){ return JSON.parse(localStorage.getItem('deletedPlayIds')||'null')||[]; },
   set deletedPlayIds(v){ localStorage.setItem('deletedPlayIds',JSON.stringify(v)); },
   deletePlay(playId){
-    // Remove from plays array
     this.plays=this.plays.filter(p=>p.id!==playId);
-    // Record deletion so it survives merge with remote
     const del=this.deletedPlayIds;
     if(!del.includes(playId)){ del.push(playId); this.deletedPlayIds=del; }
   },
+
+  // ── vinyls: flat list (authoritative state) ─────────────────
+  get vinyls(){ return JSON.parse(localStorage.getItem('vinyls')||'null')||[]; },
+  set vinyls(v){ localStorage.setItem('vinyls',JSON.stringify(v)); },
+
+  // ── vinylEvents: pending local events not yet in remote ──────
+  // Each event: {op:'add'|'edit'|'delete', id, data?, ts}
+  get vinylEvents(){ return JSON.parse(localStorage.getItem('vinylEvents')||'null')||[]; },
+  set vinylEvents(v){ localStorage.setItem('vinylEvents',JSON.stringify(v)); },
+
+  // Legacy: vinylLog kept for backward compat read during migration
+  get vinylLog(){ return JSON.parse(localStorage.getItem('vinylLog')||'null')||[]; },
+
+  addVinyl(obj){
+    const id=Math.max(0,...this.vinyls.map(v=>v.id||0),0)+1;
+    const vinyl={id,...obj};
+    // Add to vinyls list
+    const vs=this.vinyls; vs.push(vinyl); this.vinyls=vs;
+    // Record event for sync
+    const ev=this.vinylEvents;
+    ev.push({op:'add',id,data:{...obj},ts:new Date().toISOString()});
+    this.vinylEvents=ev;
+  },
   editVinyl(id,obj){
-    this.logEvent({op:'edit',id,data:{...obj},ts:new Date().toISOString()});
+    // Update vinyls list
+    this.vinyls=this.vinyls.map(v=>v.id===id?{...v,...obj,id}:v);
+    // Record event
+    const ev=this.vinylEvents;
+    ev.push({op:'edit',id,data:{...obj},ts:new Date().toISOString()});
+    this.vinylEvents=ev;
   },
   deleteVinyl(id){
-    this.logEvent({op:'delete',id,ts:new Date().toISOString()});
+    this.vinyls=this.vinyls.filter(v=>v.id!==id);
+    const ev=this.vinylEvents;
+    ev.push({op:'delete',id,ts:new Date().toISOString()});
+    this.vinylEvents=ev;
   }
 };
 
 // mergeVinylLogs: GitHub (remote) is the base. Local events newer than
 // the latest remote event are appended. This ensures direct GitHub edits
 // are never overwritten by stale local history.
+// Merge remote vinyls (flat list) with local pending events
+function mergeVinyls(remVinyls, localEvents){
+  const vinylMap = new Map((remVinyls||[]).map(v=>[v.id,{...v}]));
+  // Apply local events that aren't already reflected in remote
+  (localEvents||[]).forEach(e=>{
+    if(e.op==='add' && !vinylMap.has(e.id)){
+      vinylMap.set(e.id, {id:e.id,...e.data});
+    } else if(e.op==='edit' && vinylMap.has(e.id)){
+      vinylMap.set(e.id, {...vinylMap.get(e.id),...e.data,id:e.id});
+    } else if(e.op==='delete'){
+      vinylMap.delete(e.id);
+    }
+  });
+  return [...vinylMap.values()].sort((a,b)=>a.id-b.id);
+}
+
+// Prune events already seen by ALL known users
+// If any user has never synced (not in lastSeen), keep all events
+function pruneEvents(events, lastSeen, allUserIds){
+  if(!lastSeen || !allUserIds || !allUserIds.length) return events;
+  // If any user has never been seen, keep everything
+  if(allUserIds.some(id=>!lastSeen[id])) return events;
+  // Oldest lastSeen among all users
+  const oldestSeen = Object.values(lastSeen).reduce((min,ts)=>ts<min?ts:min, '9999');
+  // Keep events newer than oldest seen (those users might not have applied yet)
+  return events.filter(e=>e.ts>=oldestSeen);
+}
+
+// Legacy: kept for old collection.json with vinylLog format
 function mergeVinylLogs(remLog, localLog){
   const base = Array.isArray(remLog) ? remLog : [];
   const local = Array.isArray(localLog) ? localLog : [];
   if(!base.length && !local.length) return [];
-  // Find the latest timestamp in the remote log
   const remMaxTs = base.reduce((m,e)=>e.ts>m?e.ts:m,'');
-  // Only include local events strictly newer than the remote head
   const localNew = local.filter(e=>e.ts>remMaxTs);
-  // Merge: base + new local events, dedup by key
   const map=new Map();
   [...base,...localNew].forEach(e=>{
     const k=e.op+'|'+e.id+'|'+e.ts;
@@ -958,53 +1000,104 @@ async function syncNow(){
     const remCol = await GH.readFile('collection.json');
     const remPls = await GH.readFile('plays.json');
 
-    // Vinyl log: remote is base, only local events newer than remote head are appended
-    const remLog    = remCol?.vinylLog || [];
-    // Option 3: if remote has a newer _editedAt than what we last saw, take remote as authoritative
+    // ── Vinyl merge ──────────────────────────────────────────
     const remEditedAt  = remCol?._editedAt || '';
     const lastEditedAt = localStorage.getItem('lastRemoteEditedAt') || '';
-    const remoteWasManuallyEdited = remEditedAt && remEditedAt !== lastEditedAt;
-    const mergedLog = remoteWasManuallyEdited ? remLog : mergeVinylLogs(remLog, DB.vinylLog);
-    DB.vinylLog = mergedLog;
-    if(remEditedAt) localStorage.setItem('lastRemoteEditedAt', remEditedAt);
+    const manualEdit   = remEditedAt && remEditedAt !== lastEditedAt;
 
-    // Plays: union merge, respecting deletions from both sides
-    const remPlays       = remPls?.plays || [];
-    const remDeletedIds  = remPls?.deletedPlayIds || [];
-    const plsEditedAt    = remPls?._editedAt || '';
-    const lastPlsEdited  = localStorage.getItem('lastRemotePlsEditedAt') || '';
-    const plsWasEdited   = plsEditedAt && plsEditedAt !== lastPlsEdited;
-    const mergedPls = plsWasEdited
+    // ── Step 1: Compute merged state (no writes yet) ────────────
+    let mergedVinyls;
+    let mergedEvents;
+    if(remCol?.vinyls){
+      if(manualEdit){
+        mergedVinyls = remCol.vinyls;
+        mergedEvents = [];
+      } else {
+        mergedVinyls = mergeVinyls(remCol.vinyls, DB.vinylEvents);
+        // Carry forward all local events — purge happens after successful write
+        const remEventKeys = new Set((remCol.vinylEvents||[]).map(e=>e.op+'|'+e.id+'|'+e.ts));
+        mergedEvents = [
+          ...(remCol.vinylEvents||[]),
+          ...DB.vinylEvents.filter(e=>!remEventKeys.has(e.op+'|'+e.id+'|'+e.ts))
+        ];
+      }
+    } else {
+      // Legacy vinylLog format — migrate
+      const remLog = remCol?.vinylLog || [];
+      const legacyMap = new Map();
+      remLog.forEach(e=>{
+        if(e.op==='add'||e.op==='edit') legacyMap.set(e.id,{...e.data,id:e.id});
+        if(e.op==='delete') legacyMap.delete(e.id);
+      });
+      mergedVinyls = [...legacyMap.values()].sort((a,b)=>a.id-b.id);
+      mergedEvents = [];
+    }
+
+    // ── Step 2: Compute merged plays ─────────────────────────
+    const remPlays      = remPls?.plays || [];
+    const remDeletedIds = remPls?.deletedPlayIds || [];
+    const plsEditedAt   = remPls?._editedAt || '';
+    const lastPlsEdited = localStorage.getItem('lastRemotePlsEditedAt') || '';
+    const plsManualEdit = plsEditedAt && plsEditedAt !== lastPlsEdited;
+    const mergedPls = plsManualEdit
       ? {plays: remPlays, deletedIds: remDeletedIds}
       : mergePlays(DB.plays, remPlays, DB.deletedPlayIds, remDeletedIds);
-    DB.plays          = mergedPls.plays;
-    DB.deletedPlayIds = mergedPls.deletedIds;
-    if(plsEditedAt) localStorage.setItem('lastRemotePlsEditedAt', plsEditedAt);
 
     const users = remCol?.users || DB.users || [];
-    DB.users = users;
     USER.resolve(users);
 
-    await GH.writeFile('collection.json', {vinylLog:mergedLog, users, _sha:remCol?._sha});
+    // ── Step 3: Compute lastSeen + purge AFTER marking this sync ─
+    const now = new Date().toISOString();
+    const lastSeen = {...(remCol?.lastSeen||{})};
+    if(USER.id) lastSeen[String(USER.id)] = now;
+    const allUserIds = (users||[]).map(u=>String(u.id));
+    // Purge events that all known users have already seen
+    const prunedEvents = pruneEvents(mergedEvents, lastSeen, allUserIds);
+
+    // ── Step 4: Write to GitHub — if this throws, localStorage is untouched ──
+    await GH.writeFile('collection.json', {
+      _editedAt: remEditedAt || now,
+      vinyls: mergedVinyls,
+      vinylEvents: prunedEvents,
+      lastSeen,
+      users,
+      _sha: remCol?._sha
+    });
     await GH.writeFile('plays.json', {plays:mergedPls.plays, deletedPlayIds:mergedPls.deletedIds, _sha:remPls?._sha});
 
+    // ── Step 5: Only update localStorage after successful write ──
+    DB.vinyls = mergedVinyls;
+    DB.vinylEvents = prunedEvents;
+    DB.users = users;
+    DB.plays = mergedPls.plays;
+    DB.deletedPlayIds = mergedPls.deletedIds;
+    if(remEditedAt) localStorage.setItem('lastRemoteEditedAt', remEditedAt);
+    if(plsEditedAt) localStorage.setItem('lastRemotePlsEditedAt', plsEditedAt);
+
     _syncInProgress = false;
+    localStorage.setItem('lastSyncOk', new Date().toISOString());
     setSS('ok','Colección sincronizada');
     renderAll();
     resolveNfcPlay();
     showToast('Sincronizado ✓');
   } catch(e){
     _syncInProgress = false;
-    setSS('err','Error de sincronización');
     const msg = e.message||'';
-    if(msg.includes('401')||msg.includes('Bad credentials')) showToast('Token inválido o sin permisos');
-    else if(msg.includes('404')) showToast('Repositorio no encontrado');
-    else if(msg.includes('409')||msg.includes('conflict')){
-      // SHA stale — retry once with fresh read
+    const hasLocalData = DB.vinyls.length > 0;
+    if(msg.includes('409')||msg.includes('conflict')){
+      // SHA stale — retry silently
       setTimeout(()=>syncNow(), 2000);
+    } else {
+      if(hasLocalData){
+        setSS('warn','Local — sin sync con GitHub');
+      } else {
+        setSS('err','Error de sincronización');
+      }
+      if(msg.includes('401')||msg.includes('Bad credentials')) showToast('Token inválido o sin permisos');
+      else if(msg.includes('404')) showToast('Repositorio no encontrado');
+      else if(msg.includes('422')) showToast('Error de escritura en GitHub');
+      else showToast('Error al sincronizar');
     }
-    else if(msg.includes('422')) showToast('Error de escritura en GitHub');
-    else showToast('Error al sincronizar');
     console.error('SYNC ERROR:', e.message);
   }
 }
@@ -1860,6 +1953,36 @@ function confirmPlay(){
 // ════════════════════════════════════════════════════════════
 //  CONFIG
 // ════════════════════════════════════════════════════════════
+function showCfgTab(tab){
+  document.querySelectorAll('.cfg-tab').forEach(t=>t.classList.toggle('active',t.dataset.cfg===tab));
+  document.querySelectorAll('.cfg-tabpanel').forEach(p=>p.style.display='none');
+  const panel=document.getElementById('cfgTab-'+tab);
+  if(panel) panel.style.display='';
+  if(tab==='nfc') populateNfcList();
+}
+
+function populateNfcList(){
+  const vinyls=DB.vinyls;
+  const base=window.location.origin+window.location.pathname;
+  const list=document.getElementById('nfcTagsList');
+  if(!list) return;
+  if(!vinyls.length){ list.innerHTML='<div class="nodata">Sin vinilos en la colección.</div>'; return; }
+  list.innerHTML=vinyls.map(v=>{
+    const url=base+'#play='+v.id;
+    const eid='nfc_'+v.id;
+    const ed=v.edition?`<span style="color:var(--muted);font-style:italic"> ${h(v.edition)}</span>`:'';
+    const img=v.cover?`<img src="${h(v.cover)}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`:'';
+    return `<div class="nfc-row">
+      <div class="nfc-disc">${img}</div>
+      <div class="nfc-info">
+        <div class="nfc-name">${h(v.album)}${ed}</div>
+        <div class="nfc-url" id="${eid}">${h(url)}</div>
+      </div>
+      <button class="nfc-copy" onclick="copyNfcUrl(this,'${eid}')">Copiar</button>
+    </div>`;
+  }).join('');
+}
+
 function saveConfig(){
   const u=document.getElementById('cfgUser').value.trim();
   const dr=document.getElementById('cfgDataRepo').value.trim();
@@ -1875,7 +1998,6 @@ function saveConfig(){
 function openModal(id){
   if(id==='configModal'){
     document.getElementById('cfgUser').value=GH.user;
-    // Only show saved repo name if user actually set one (not the default fallback)
     const savedRepo=localStorage.getItem('gh_data_repo')||'';
     document.getElementById('cfgDataRepo').value=savedRepo;
     document.getElementById('cfgToken').value=GH.token;
@@ -3145,29 +3267,10 @@ function confirmNfcPlay() {
 }
 
 function openNfcTags() {
-  closeModal('configModal');
-  const vinyls = DB.vinyls;
-  const base = window.location.origin + window.location.pathname;
-  const list = document.getElementById('nfcTagsList');
-  if (!vinyls.length) {
-    list.innerHTML = '<div class="nodata">Sin vinilos en la coleccion.</div>';
-  } else {
-    list.innerHTML = vinyls.map(v => {
-      const url = base + '#play=' + v.id;
-      const img = v.cover ? '<img src="' + h(v.cover) + '" alt="" onerror="this.style.display=\'none\'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">' : '';
-      const eid = 'nfc_' + v.id;
-      return '<div class="nfc-row">' +
-        '<div class="nfc-disc">' + img + '</div>' +
-        '<div class="nfc-info">' +
-          '<div class="nfc-name">' + h(v.album) + (v.edition ? ' <span style="color:var(--muted);font-style:italic">' + h(v.edition) + '</span>' : '') + '</div>' +
-          '<div class="nfc-url" id="' + eid + '">' + h(url) + '</div>' +
-        '</div>' +
-        '<button class="nfc-copy" onclick="copyNfcUrl(this,\'' + eid + '\')">Copiar</button>' +
-      '</div>';
-    }).join('');
-  }
-  openModal('nfcTagsModal');
+  openModal('configModal');
+  showCfgTab('nfc');
 }
+
 
 function copyNfcUrl(btn, elemId) {
   const url = document.getElementById(elemId).textContent;
