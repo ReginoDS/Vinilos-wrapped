@@ -690,45 +690,6 @@ select.finput option{background:var(--s2);}
 <script>
 'use strict';
 
-// ── NFC BROADCAST: si la app ya está abierta, que ella maneje el tag ──
-(function(){
-  const hash = window.location.hash;
-  if(hash && hash.startsWith('#play=')){
-    const playId = hash.replace('#play=','');
-    const ch = new BroadcastChannel('vinilos_nfc');
-    // Announce to any existing instance
-    ch.postMessage({type:'NFC_PLAY', playId});
-    // Give existing instance 300ms to respond; if it does, close this one
-    let claimed = false;
-    ch.onmessage = e => {
-      if(e.data && e.data.type === 'NFC_ACK') {
-        claimed = true;
-        window.close(); // close this new instance
-      }
-    };
-    setTimeout(()=>{
-      ch.close();
-      // No existing instance responded — continue normal boot with playId
-    }, 300);
-  }
-  // Listen for NFC requests from new instances
-  const ch = new BroadcastChannel('vinilos_nfc');
-  ch.onmessage = e => {
-    if(e.data && e.data.type === 'NFC_PLAY'){
-      // Acknowledge so new instance closes itself
-      ch.postMessage({type:'NFC_ACK'});
-      // Handle the play
-      const playId = e.data.playId;
-      window._nfcPendingId = isNaN(playId) ? playId : parseInt(playId);
-      sessionStorage.setItem('nfc_pending_play', playId);
-      if(typeof DB !== 'undefined' && DB.vinyls && DB.vinyls.length)
-        resolveNfcPlay();
-    }
-  };
-  window._nfcChannel = ch;
-})();
-
-
 // ── VIEWPORT HEIGHT FIX ──────────────────────────────────────
 // dvh/svh can be wrong on first render in PWA standalone mode.
 // We set --app-h from window.innerHeight which is always correct.
