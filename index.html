@@ -690,6 +690,45 @@ select.finput option{background:var(--s2);}
 <script>
 'use strict';
 
+// ── NFC BROADCAST: si la app ya está abierta, que ella maneje el tag ──
+(function(){
+  const hash = window.location.hash;
+  if(hash && hash.startsWith('#play=')){
+    const playId = hash.replace('#play=','');
+    const ch = new BroadcastChannel('vinilos_nfc');
+    // Announce to any existing instance
+    ch.postMessage({type:'NFC_PLAY', playId});
+    // Give existing instance 300ms to respond; if it does, close this one
+    let claimed = false;
+    ch.onmessage = e => {
+      if(e.data && e.data.type === 'NFC_ACK') {
+        claimed = true;
+        window.close(); // close this new instance
+      }
+    };
+    setTimeout(()=>{
+      ch.close();
+      // No existing instance responded — continue normal boot with playId
+    }, 300);
+  }
+  // Listen for NFC requests from new instances
+  const ch = new BroadcastChannel('vinilos_nfc');
+  ch.onmessage = e => {
+    if(e.data && e.data.type === 'NFC_PLAY'){
+      // Acknowledge so new instance closes itself
+      ch.postMessage({type:'NFC_ACK'});
+      // Handle the play
+      const playId = e.data.playId;
+      window._nfcPendingId = isNaN(playId) ? playId : parseInt(playId);
+      sessionStorage.setItem('nfc_pending_play', playId);
+      if(typeof DB !== 'undefined' && DB.vinyls && DB.vinyls.length)
+        resolveNfcPlay();
+    }
+  };
+  window._nfcChannel = ch;
+})();
+
+
 // ── VIEWPORT HEIGHT FIX ──────────────────────────────────────
 // dvh/svh can be wrong on first render in PWA standalone mode.
 // We set --app-h from window.innerHeight which is always correct.
@@ -1072,23 +1111,18 @@ async function syncNow(){
     // Purge events that all known users have already seen
     const prunedEvents = pruneEvents(mergedEvents, lastSeen, allUserIds);
 
-    // ── Step 4: Write to GitHub only if there are actual changes ──
-    // remCol._sha is defined only on 200 (real download), undefined on 304 (cache)
-    const needsColWrite = !!(remCol?._sha) || mergedEvents.length > 0 || DB.vinylEvents.length > 0;
-    const needsPlsWrite = !!(remPls?._sha) || DB.deletedPlayIds.length > 0;
-    if(needsColWrite){
-      await GH.writeFile('collection.json', {
-        _editedAt: remEditedAt || now,
-        vinyls: mergedVinyls,
-        vinylEvents: prunedEvents,
-        lastSeen,
-        users,
-        _sha: remCol?._sha
-      });
-    }
-    if(needsPlsWrite){
-      await GH.writeFile('plays.json', {plays:mergedPls.plays, deletedPlayIds:mergedPls.deletedIds, _sha:remPls?._sha});
-    }
+    // ── Step 4: Write to GitHub ──────────────────────────────────
+    // Always write — ETag on read already saved us a round-trip if nothing changed.
+    // Skipping writes risks losing local data that hasn't reached GitHub yet.
+    await GH.writeFile('collection.json', {
+      _editedAt: remEditedAt || now,
+      vinyls: mergedVinyls,
+      vinylEvents: prunedEvents,
+      lastSeen,
+      users,
+      _sha: remCol?._sha
+    });
+    await GH.writeFile('plays.json', {plays:mergedPls.plays, deletedPlayIds:mergedPls.deletedIds, _sha:remPls?._sha});
 
     // ── Step 5: Only update localStorage after successful write ──
     DB.vinyls = mergedVinyls;
