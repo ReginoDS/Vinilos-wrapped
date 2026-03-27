@@ -468,6 +468,7 @@ select.finput option{background:var(--s2);}
         <button class="btn btn-s" onclick="closeModal('configModal')" style="flex:.5">Cancelar</button>
         <button class="btn btn-p" onclick="saveConfig()">Guardar y sincronizar</button>
       </div>
+      <button class="btn btn-s" onclick="clearCacheAndSync()" style="width:100%;color:var(--muted);">🗑 Limpiar caché y resincronizar</button>
     </div>
   </div>
   <div id="cfgTab-nfc" class="cfg-tabpanel" style="display:none;">
@@ -1128,7 +1129,10 @@ async function syncNow(){
     DB.vinyls = mergedVinyls;
     DB.vinylEvents = prunedEvents;
     DB.users = users;
-    DB.plays = mergedPls.plays;
+    // Clean plays: discard any play whose vinylId no longer exists in the collection
+    const validIds = new Set(mergedVinyls.map(v=>v.id));
+    const cleanPlays = mergedPls.plays.filter(p=>validIds.has(p.vinylId));
+    DB.plays = cleanPlays;
     DB.deletedPlayIds = mergedPls.deletedIds;
     if(remEditedAt) localStorage.setItem('lastRemoteEditedAt', remEditedAt);
     if(plsEditedAt) localStorage.setItem('lastRemotePlsEditedAt', plsEditedAt);
@@ -2014,6 +2018,19 @@ function confirmPlay(){
 // ════════════════════════════════════════════════════════════
 //  CONFIG
 // ════════════════════════════════════════════════════════════
+function clearCacheAndSync(){
+  if(!confirm('¿Limpiar datos locales y descargar todo de GitHub? Se perderán cambios locales no sincronizados.')) return;
+  // Clear all local data and caches
+  const keysToKeep=['username','userId','gh_user','gh_token','gh_data_repo','lastRemoteEditedAt','lastRemotePlsEditedAt','lastSyncOk','eventRetentionDays'];
+  const keep={};
+  keysToKeep.forEach(k=>{ const v=localStorage.getItem(k); if(v!==null) keep[k]=v; });
+  localStorage.clear();
+  Object.entries(keep).forEach(([k,v])=>localStorage.setItem(k,v));
+  closeModal('configModal');
+  showToast('Caché limpiada — resincronizando...');
+  syncNow();
+}
+
 function showCfgTab(tab){
   document.querySelectorAll('.cfg-tab').forEach(t=>t.classList.toggle('active',t.dataset.cfg===tab));
   document.querySelectorAll('.cfg-tabpanel').forEach(p=>p.style.display='none');
