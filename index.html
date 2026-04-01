@@ -926,56 +926,54 @@ function heatmapCard(plays, title, startDate, endDate, mode){
     return 'var(--accent2)';
   }
 
-  // Use data-attrs to avoid inline quote escaping issues
-  function dayCell(iso, count){
-    return '<div class="heatmap-day hm-cell" style="background:'+cellColor(count)+';" data-iso="'+iso+'" data-count="'+count+'"></div>';
+  const legendCells = ['var(--s2)','#3d3010','#6b520f','#c9a96e99','var(--accent2)']
+    .map(c=>'<div class="heatmap-day" style="background:'+c+';cursor:default;width:10px;height:10px;flex-shrink:0;border-radius:2px;"></div>').join('');
+  const legendHtml = '<div class="heatmap-legend"><span>Menos</span>'
+    +'<div class="heatmap-legend-cells">'+legendCells+'</div><span>Más</span></div>';
+
+  // Shared: build a cell div string
+  function cellDiv(iso, count, sz){
+    const bg = cellColor(count);
+    const s = 'width:'+sz+'px;height:'+sz+'px;flex-shrink:0;border-radius:2px;cursor:pointer;background:'+bg+';';
+    return '<div class="hm-cell" style="'+s+'" data-iso="'+iso+'" data-count="'+count+'"></div>';
+  }
+  function emptyDiv(sz){
+    return '<div style="width:'+sz+'px;height:'+sz+'px;flex-shrink:0;border-radius:2px;background:transparent;"></div>';
   }
 
-  function emptyCell(){ return '<div class="heatmap-day empty hm-cell"></div>'; }
-
-  const legendCells = ['var(--s2)','#3d3010','#6b520f','#c9a96e99','var(--accent2)']
-    .map(c=>'<div class="heatmap-day" style="background:'+c+';cursor:default;width:10px;height:10px;flex-shrink:0;"></div>').join('');
-  const legendHtml = '<div class="heatmap-legend"><span>Menos</span>'
-    +'<div class="heatmap-legend-cells">'+legendCells+'</div><span>Mas</span></div>';
-
-  const MCELL = 14; // month cell size px
-  const MGAP  = 4;  // month gap px
-
   if(mode === 'month'){
+    const CELL=14, GAP=4;
     const start = new Date(startDate+'T12:00:00');
     const daysInMonth = new Date(endDate+'T12:00:00').getDate();
-    const firstDow = (start.getDay()+6)%7; // 0=Mon
-    const numRows = Math.ceil((firstDow + daysInMonth) / 7);
-    const DOW_LABELS = ['L','M','X','J','V','S','D'];
+    const firstDow = (start.getDay()+6)%7;
+    const numRows = Math.ceil((firstDow+daysInMonth)/7);
+    const DOW = ['L','M','X','J','V','S','D'];
     const gid = 'hm_month_grid';
-    const cSz = MCELL+'px';
-    const spanStyle = 'style="width:'+cSz+';height:10px;text-align:center;font-size:7px;color:var(--muted);flex-shrink:0;"';
-    const cellStyle = 'width:'+cSz+';height:'+cSz+';flex-shrink:0;';
+    const sz = CELL+'px';
 
-    let colLabelsHtml = '<div class="hm-collabels" style="gap:'+MGAP+'px;margin-bottom:4px;">';
-    DOW_LABELS.forEach(d=>{ colLabelsHtml += '<span '+spanStyle+'>'+d+'</span>'; });
-    colLabelsHtml += '</div>';
+    // col labels
+    let html = '<div style="display:flex;gap:'+GAP+'px;margin-bottom:4px;">';
+    DOW.forEach(d=>{
+      html += '<span style="width:'+sz+';text-align:center;font-size:7px;color:var(--muted);flex-shrink:0;">'+d+'</span>';
+    });
+    html += '</div>';
 
-    let rowsHtml = '';
-    for(let row=0; row<numRows; row++){
-      rowsHtml += '<div class="hm-row" style="gap:'+MGAP+'px;">';
-      for(let col=0; col<7; col++){
-        const dayNum = row*7 + col - firstDow + 1;
-        if(dayNum < 1 || dayNum > daysInMonth){
-          rowsHtml += '<div class="heatmap-day empty hm-cell" style="'+cellStyle+'"></div>';
-        } else {
-          const iso = startDate.slice(0,7)+'-'+(dayNum<10?'0':'')+dayNum;
-          rowsHtml += '<div class="heatmap-day hm-cell" style="background:'+cellColor(counts[iso]||0)+';'+cellStyle+'" data-iso="'+iso+'" data-count="'+(counts[iso]||0)+'"></div>';
+    for(let row=0;row<numRows;row++){
+      html += '<div style="display:flex;gap:'+GAP+'px;">';
+      for(let col=0;col<7;col++){
+        const dn = row*7+col-firstDow+1;
+        if(dn<1||dn>daysInMonth){ html += emptyDiv(CELL); }
+        else {
+          const iso = startDate.slice(0,7)+'-'+(dn<10?'0':'')+dn;
+          html += cellDiv(iso, counts[iso]||0, CELL);
         }
       }
-      rowsHtml += '</div>';
+      html += '</div>';
     }
 
-    return '<div class="scard heatmap-wrap" id="'+gid+'" data-hm-mode="month">'
+    return '<div class="scard heatmap-wrap" id="'+gid+'">'
       +'<div class="heatmap-title">'+title+'</div>'
-      +'<div style="display:flex;flex-direction:column;align-items:center;">'
-      +'<div style="display:flex;flex-direction:column;gap:'+MGAP+'px;">'
-      +colLabelsHtml+rowsHtml+'</div></div>'
+      +'<div style="display:flex;flex-direction:column;align-items:center;gap:'+GAP+'px;">'+html+'</div>'
       +legendHtml+'<div class="hm-tooltip"></div></div>';
   }
 
@@ -985,34 +983,38 @@ function heatmapCard(plays, title, startDate, endDate, mode){
     const COLS = 31;
     const gid = 'hm_year_grid';
 
-    let colLabelsHtml = '<div class="hm-collabels">';
-    for(let i=1;i<=COLS;i++) colLabelsHtml += '<span class="hm-sized">'+i+'</span>';
-    colLabelsHtml += '</div>';
+    // Col labels row — cells sized by JS after render
+    let colLabels = '<div id="'+gid+'_cl" style="display:flex;gap:3px;margin-bottom:2px;">';
+    for(let i=1;i<=COLS;i++) colLabels += '<span class="hm-ysized" style="font-size:7px;color:var(--muted);text-align:center;flex-shrink:0;">'+i+'</span>';
+    colLabels += '</div>';
 
     let rowsHtml = '';
-    for(let m=0; m<12; m++){
-      const daysInM = new Date(YEAR, m+1, 0).getDate();
-      rowsHtml += '<div class="hm-row">';
-      for(let d=1; d<=COLS; d++){
-        if(d > daysInM){
-          rowsHtml += emptyCell();
-        } else {
-          const mm = (m+1)<10?'0'+(m+1):''+(m+1);
-          const dd = d<10?'0'+d:''+d;
-          const iso = YEAR+'-'+mm+'-'+dd;
-          rowsHtml += dayCell(iso, counts[iso]||0);
+    for(let m=0;m<12;m++){
+      const daysInM = new Date(YEAR,m+1,0).getDate();
+      rowsHtml += '<div class="hm-yrow" style="display:flex;gap:3px;">';
+      for(let d=1;d<=COLS;d++){
+        if(d>daysInM){ rowsHtml += '<div class="hm-ysized" style="flex-shrink:0;border-radius:2px;background:transparent;"></div>'; }
+        else {
+          const mm=(m+1)<10?'0'+(m+1):''+(m+1);
+          const dd=d<10?'0'+d:''+d;
+          const iso=YEAR+'-'+mm+'-'+dd;
+          rowsHtml += '<div class="hm-cell hm-ysized" style="flex-shrink:0;border-radius:2px;cursor:pointer;background:'+cellColor(counts[iso]||0)+';" data-iso="'+iso+'" data-count="'+(counts[iso]||0)+'"></div>';
         }
       }
       rowsHtml += '</div>';
     }
 
-    const rowLabels = '<div class="hm-rowlabels" style="padding-top:21px;">'
-      +MONTH_NAMES.map(n=>'<span class="hm-sized">'+n+'</span>').join('')+'</div>';
+    // Row labels — heights synced by JS
+    let rowLabels = '<div id="'+gid+'_rl" style="display:flex;flex-direction:column;gap:3px;flex-shrink:0;">';
+    MONTH_NAMES.forEach(n=>{
+      rowLabels += '<span class="hm-yrl" style="font-size:7px;color:var(--muted);white-space:nowrap;display:flex;align-items:center;justify-content:flex-end;">'+n+'</span>';
+    });
+    rowLabels += '</div>';
 
-    return '<div class="scard heatmap-wrap" id="'+gid+'" data-hm-mode="year" data-hm-cols="'+COLS+'">'
+    return '<div class="scard heatmap-wrap" id="'+gid+'" data-hm-cols="'+COLS+'">'
       +'<div class="heatmap-title">'+title+'</div>'
-      +'<div class="hm-outer">'+rowLabels
-      +'<div class="hm-inner" id="'+gid+'_inner">'+colLabelsHtml+rowsHtml+'</div></div>'
+      +'<div style="display:flex;gap:4px;width:100%;">'+rowLabels
+      +'<div id="'+gid+'_inner" style="display:flex;flex-direction:column;gap:3px;flex:1;min-width:0;">'+colLabels+rowsHtml+'</div></div>'
       +legendHtml+'<div class="hm-tooltip"></div></div>';
   }
 }
@@ -1020,51 +1022,51 @@ function heatmapCard(plays, title, startDate, endDate, mode){
 function initHeatmapGrid(gid){
   const wrap = document.getElementById(gid);
   if(!wrap) return;
-  const mode = wrap.dataset.hmMode;
-  if(mode === 'month') return; // month uses fixed cell size, no JS needed
+  // Year mode only — month uses fixed 14px cells
   const cols = parseInt(wrap.dataset.hmCols);
-  const inner = wrap.querySelector('.hm-inner');
+  if(!cols) return;
+  const inner = document.getElementById(gid+'_inner');
   if(!inner) return;
   const availW = inner.clientWidth;
   if(!availW){ requestAnimationFrame(()=>initHeatmapGrid(gid)); return; }
   const cellSize = Math.floor((availW - (cols-1)*3) / cols);
-  inner.querySelectorAll('.hm-sized').forEach(el=>{
-    el.style.width  = cellSize+'px';
-    el.style.height = cellSize+'px';
-    el.style.flexShrink = '0';
+  const sz = cellSize+'px';
+  // Size all cells and col-label spans
+  inner.querySelectorAll('.hm-ysized').forEach(el=>{
+    el.style.width = sz; el.style.height = sz;
   });
-  inner.querySelectorAll('.hm-cell').forEach(el=>{
-    el.style.width  = cellSize+'px';
-    el.style.height = cellSize+'px';
+  // Sync row labels: each label height = cellSize, gap already 3px via parent
+  const rl = document.getElementById(gid+'_rl');
+  if(rl) rl.querySelectorAll('.hm-yrl').forEach(el=>{
+    el.style.width  = '20px';
+    el.style.height = sz;
   });
+  // Add top offset to rowlabels to match col-label row height + gap
+  if(rl) rl.style.paddingTop = (cellSize+2+3)+'px'; // cellSize + margin-bottom:2px + gap:3px
 }
 
-// Tooltip delegation — attached to document, reads data-iso / data-count
-document.addEventListener('mouseover', _hmTipDelegate);
-document.addEventListener('touchstart', _hmTipDelegate, {passive:true});
-document.addEventListener('mouseout', _hmTipHide);
-document.addEventListener('touchend', _hmTipHide, {passive:true});
-function _hmTipDelegate(e){
+// Tooltip — event delegation on document
+document.addEventListener('mouseover', _hmTipOn);
+document.addEventListener('touchstart', _hmTipOn, {passive:true});
+document.addEventListener('mouseout',  _hmTipOff);
+document.addEventListener('touchend',  _hmTipOff, {passive:true});
+function _hmTipOn(e){
   const cell = e.target.closest('.hm-cell');
-  if(!cell || cell.classList.contains('empty')) return;
-  const iso = cell.dataset.iso;
-  const count = parseInt(cell.dataset.count)||0;
-  const wrap = cell.closest('.heatmap-wrap');
-  if(!wrap) return;
-  const tt = wrap.querySelector('.hm-tooltip');
-  if(!tt) return;
+  if(!cell) return;
+  const iso = cell.dataset.iso; const count = parseInt(cell.dataset.count)||0;
+  const wrap = cell.closest('.heatmap-wrap'); if(!wrap) return;
+  const tt = wrap.querySelector('.hm-tooltip'); if(!tt) return;
   const date = new Date(iso+'T12:00:00').toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'short'});
   tt.textContent = count ? count+' escucha'+(count>1?'s':'')+' \u00b7 '+date : 'Sin escuchas \u00b7 '+date;
   tt.style.display='block';
   const r = cell.getBoundingClientRect();
-  tt.style.left = Math.min(r.left, window.innerWidth-tt.offsetWidth-10)+'px';
-  tt.style.top  = (r.top-36)+'px';
+  tt.style.left=Math.min(r.left, window.innerWidth-tt.offsetWidth-10)+'px';
+  tt.style.top=(r.top-36)+'px';
 }
-function _hmTipHide(e){
+function _hmTipOff(e){
   if(e.target.closest && e.target.closest('.hm-cell')) return;
   document.querySelectorAll('.hm-tooltip').forEach(t=>t.style.display='none');
 }
-
 
 function showHmTip(e, tid, iso, count){
   const tt = document.getElementById(tid);
@@ -2813,8 +2815,13 @@ function renderMonth(forceKey){
   const months=getAvailableMonths();
   if(!months.length){c.innerHTML=`<div class="nodata">Sin escuchas registradas.</div>`;return;}
   if(forceKey!==undefined) selectedMonth=forceKey;
-  if(!selectedMonth||!months.find(x=>`${x.y}-${x.m}`===selectedMonth))
-    selectedMonth=`${months[0].y}-${months[0].m}`;
+  if(!selectedMonth||!months.find(x=>`${x.y}-${x.m}`===selectedMonth)){
+    // prefer current month, fall back to most recent with plays
+    const now=new Date();
+    const curKey=`${now.getFullYear()}-${now.getMonth()}`;
+    selectedMonth=months.find(x=>`${x.y}-${x.m}`===curKey)
+      ? curKey : `${months[0].y}-${months[0].m}`;
+  }
   const [MY,MM]=selectedMonth.split('-').map(Number);
   const p=enrichPlays(DB.plays.filter(x=>{const t=new Date(x.ts);return t.getMonth()===MM&&t.getFullYear()===MY;}));
   if(!p.length){c.innerHTML=`<div class="nodata">Sin escuchas en ${MF[MM]} ${MY}.</div>`;return;}
@@ -2923,7 +2930,10 @@ function renderYear(forceYear){
   const years=getAvailableYears();
   if(!years.length){c.innerHTML=`<div class="nodata">Sin escuchas registradas.</div>`;return;}
   if(forceYear!==undefined) selectedYear=forceYear;
-  if(!selectedYear||!years.includes(selectedYear)) selectedYear=years[0];
+  if(!selectedYear||!years.includes(selectedYear)){
+    const curY=new Date().getFullYear();
+    selectedYear=years.includes(curY)?curY:years[0];
+  }
   const YEAR=selectedYear;
 
   const p=enrichPlays(DB.plays.filter(x=>new Date(x.ts).getFullYear()===YEAR));
@@ -2995,7 +3005,7 @@ function renderYear(forceYear){
         </div>
         ${edadCard(p,'del año')}
       </div>
-      <div class="ssect">${heatmapCard(p,'Actividad del año','${YEAR}-01-01','${YEAR}-12-31','year')}</div>
+      <div class="ssect">${heatmapCard(p,'Actividad del año',YEAR+'-01-01',YEAR+'-12-31','year')}</div>
       <div class="ssect"><div class="slabel">Ranking álbumes del año</div><div class="scard">${rankBars(ta,true)}</div></div>
       <div class="ssect"><div class="slabel">Ranking artistas del año</div><div class="scard">${rankBars(tar)}</div></div>
     </div>`;
