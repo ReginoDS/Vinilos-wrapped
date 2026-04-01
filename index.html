@@ -317,6 +317,21 @@ select.finput option{background:var(--s2);}
 @keyframes pb{0%,100%{opacity:1}50%{opacity:.6}}
 
 .nodata{font-size:12px;color:var(--muted);padding:18px 0;text-align:center;}
+.heatmap-wrap{padding:10px 0 6px;}
+.heatmap-title{font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:8px;}
+.heatmap-day{border-radius:2px;background:var(--surface);cursor:pointer;flex-shrink:0;}
+.heatmap-day.empty{cursor:default;background:transparent!important;}
+.heatmap-legend{display:flex;align-items:center;gap:4px;margin-top:8px;font-size:8px;color:var(--muted);}
+.heatmap-legend-cells{display:flex;gap:2px;}
+/* Shared outer layout: label col + grid col */
+.hm-outer{display:flex;gap:4px;width:100%;}
+.hm-rowlabels{display:flex;flex-direction:column;gap:3px;flex-shrink:0;}
+.hm-rowlabels span{font-size:7px;color:var(--muted);line-height:1;display:flex;align-items:flex-end;justify-content:flex-end;white-space:nowrap;}
+.hm-inner{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0;}
+.hm-collabels{display:flex;gap:3px;margin-bottom:2px;}
+.hm-collabels span{font-size:7px;color:var(--muted);text-align:center;flex-shrink:0;}
+.hm-row{display:flex;gap:3px;}
+.hm-tooltip{position:fixed;background:#1a1a1a;border:1px solid var(--border);color:var(--text);font-size:10px;padding:5px 9px;border-radius:6px;pointer-events:none;z-index:200;white-space:nowrap;display:none;}
 ::-webkit-scrollbar{width:3px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
 
 /* LOADING */
@@ -894,6 +909,177 @@ const DB = {
 // the latest remote event are appended. This ensures direct GitHub edits
 // are never overwritten by stale local history.
 // Merge remote vinyls (flat list) with local pending events
+function heatmapCard(plays, title, startDate, endDate, mode){
+  const counts = {};
+  plays.forEach(p=>{
+    const d = p.ts.slice(0,10);
+    if(d >= startDate && d <= endDate) counts[d] = (counts[d]||0)+1;
+  });
+  const maxCount = Math.max(1, ...Object.values(counts));
+
+  function cellColor(n){
+    if(!n) return 'var(--s2)';
+    const t = n/maxCount;
+    if(t < 0.25) return '#3d3010';
+    if(t < 0.5)  return '#6b520f';
+    if(t < 0.75) return '#c9a96e99';
+    return 'var(--accent2)';
+  }
+
+  // Use data-attrs to avoid inline quote escaping issues
+  function dayCell(iso, count){
+    return '<div class="heatmap-day hm-cell" style="background:'+cellColor(count)+';" data-iso="'+iso+'" data-count="'+count+'"></div>';
+  }
+
+  function emptyCell(){ return '<div class="heatmap-day empty hm-cell"></div>'; }
+
+  const legendCells = ['var(--s2)','#3d3010','#6b520f','#c9a96e99','var(--accent2)']
+    .map(c=>'<div class="heatmap-day" style="background:'+c+';cursor:default;width:10px;height:10px;flex-shrink:0;"></div>').join('');
+  const legendHtml = '<div class="heatmap-legend"><span>Menos</span>'
+    +'<div class="heatmap-legend-cells">'+legendCells+'</div><span>Mas</span></div>';
+
+  const MCELL = 14; // month cell size px
+  const MGAP  = 4;  // month gap px
+
+  if(mode === 'month'){
+    const start = new Date(startDate+'T12:00:00');
+    const daysInMonth = new Date(endDate+'T12:00:00').getDate();
+    const firstDow = (start.getDay()+6)%7; // 0=Mon
+    const numRows = Math.ceil((firstDow + daysInMonth) / 7);
+    const DOW_LABELS = ['L','M','X','J','V','S','D'];
+    const gid = 'hm_month_grid';
+    const cSz = MCELL+'px';
+    const spanStyle = 'style="width:'+cSz+';height:10px;text-align:center;font-size:7px;color:var(--muted);flex-shrink:0;"';
+    const cellStyle = 'width:'+cSz+';height:'+cSz+';flex-shrink:0;';
+
+    let colLabelsHtml = '<div class="hm-collabels" style="gap:'+MGAP+'px;margin-bottom:4px;">';
+    DOW_LABELS.forEach(d=>{ colLabelsHtml += '<span '+spanStyle+'>'+d+'</span>'; });
+    colLabelsHtml += '</div>';
+
+    let rowsHtml = '';
+    for(let row=0; row<numRows; row++){
+      rowsHtml += '<div class="hm-row" style="gap:'+MGAP+'px;">';
+      for(let col=0; col<7; col++){
+        const dayNum = row*7 + col - firstDow + 1;
+        if(dayNum < 1 || dayNum > daysInMonth){
+          rowsHtml += '<div class="heatmap-day empty hm-cell" style="'+cellStyle+'"></div>';
+        } else {
+          const iso = startDate.slice(0,7)+'-'+(dayNum<10?'0':'')+dayNum;
+          rowsHtml += '<div class="heatmap-day hm-cell" style="background:'+cellColor(counts[iso]||0)+';'+cellStyle+'" data-iso="'+iso+'" data-count="'+(counts[iso]||0)+'"></div>';
+        }
+      }
+      rowsHtml += '</div>';
+    }
+
+    return '<div class="scard heatmap-wrap" id="'+gid+'" data-hm-mode="month">'
+      +'<div class="heatmap-title">'+title+'</div>'
+      +'<div style="display:flex;flex-direction:column;align-items:center;">'
+      +'<div style="display:flex;flex-direction:column;gap:'+MGAP+'px;">'
+      +colLabelsHtml+rowsHtml+'</div></div>'
+      +legendHtml+'<div class="hm-tooltip"></div></div>';
+  }
+
+  if(mode === 'year'){
+    const YEAR = parseInt(startDate.slice(0,4));
+    const MONTH_NAMES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    const COLS = 31;
+    const gid = 'hm_year_grid';
+
+    let colLabelsHtml = '<div class="hm-collabels">';
+    for(let i=1;i<=COLS;i++) colLabelsHtml += '<span class="hm-sized">'+i+'</span>';
+    colLabelsHtml += '</div>';
+
+    let rowsHtml = '';
+    for(let m=0; m<12; m++){
+      const daysInM = new Date(YEAR, m+1, 0).getDate();
+      rowsHtml += '<div class="hm-row">';
+      for(let d=1; d<=COLS; d++){
+        if(d > daysInM){
+          rowsHtml += emptyCell();
+        } else {
+          const mm = (m+1)<10?'0'+(m+1):''+(m+1);
+          const dd = d<10?'0'+d:''+d;
+          const iso = YEAR+'-'+mm+'-'+dd;
+          rowsHtml += dayCell(iso, counts[iso]||0);
+        }
+      }
+      rowsHtml += '</div>';
+    }
+
+    const rowLabels = '<div class="hm-rowlabels" style="padding-top:21px;">'
+      +MONTH_NAMES.map(n=>'<span class="hm-sized">'+n+'</span>').join('')+'</div>';
+
+    return '<div class="scard heatmap-wrap" id="'+gid+'" data-hm-mode="year" data-hm-cols="'+COLS+'">'
+      +'<div class="heatmap-title">'+title+'</div>'
+      +'<div class="hm-outer">'+rowLabels
+      +'<div class="hm-inner" id="'+gid+'_inner">'+colLabelsHtml+rowsHtml+'</div></div>'
+      +legendHtml+'<div class="hm-tooltip"></div></div>';
+  }
+}
+
+function initHeatmapGrid(gid){
+  const wrap = document.getElementById(gid);
+  if(!wrap) return;
+  const mode = wrap.dataset.hmMode;
+  if(mode === 'month') return; // month uses fixed cell size, no JS needed
+  const cols = parseInt(wrap.dataset.hmCols);
+  const inner = wrap.querySelector('.hm-inner');
+  if(!inner) return;
+  const availW = inner.clientWidth;
+  if(!availW){ requestAnimationFrame(()=>initHeatmapGrid(gid)); return; }
+  const cellSize = Math.floor((availW - (cols-1)*3) / cols);
+  inner.querySelectorAll('.hm-sized').forEach(el=>{
+    el.style.width  = cellSize+'px';
+    el.style.height = cellSize+'px';
+    el.style.flexShrink = '0';
+  });
+  inner.querySelectorAll('.hm-cell').forEach(el=>{
+    el.style.width  = cellSize+'px';
+    el.style.height = cellSize+'px';
+  });
+}
+
+// Tooltip delegation — attached to document, reads data-iso / data-count
+document.addEventListener('mouseover', _hmTipDelegate);
+document.addEventListener('touchstart', _hmTipDelegate, {passive:true});
+document.addEventListener('mouseout', _hmTipHide);
+document.addEventListener('touchend', _hmTipHide, {passive:true});
+function _hmTipDelegate(e){
+  const cell = e.target.closest('.hm-cell');
+  if(!cell || cell.classList.contains('empty')) return;
+  const iso = cell.dataset.iso;
+  const count = parseInt(cell.dataset.count)||0;
+  const wrap = cell.closest('.heatmap-wrap');
+  if(!wrap) return;
+  const tt = wrap.querySelector('.hm-tooltip');
+  if(!tt) return;
+  const date = new Date(iso+'T12:00:00').toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'short'});
+  tt.textContent = count ? count+' escucha'+(count>1?'s':'')+' \u00b7 '+date : 'Sin escuchas \u00b7 '+date;
+  tt.style.display='block';
+  const r = cell.getBoundingClientRect();
+  tt.style.left = Math.min(r.left, window.innerWidth-tt.offsetWidth-10)+'px';
+  tt.style.top  = (r.top-36)+'px';
+}
+function _hmTipHide(e){
+  if(e.target.closest && e.target.closest('.hm-cell')) return;
+  document.querySelectorAll('.hm-tooltip').forEach(t=>t.style.display='none');
+}
+
+
+function showHmTip(e, tid, iso, count){
+  const tt = document.getElementById(tid);
+  if(!tt) return;
+  const date = new Date(iso+'T12:00:00').toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'short'});
+  tt.textContent = count ? count+' escucha'+(count>1?'s':'')+' · '+date : 'Sin escuchas · '+date;
+  tt.style.display='block';
+  const r = e.target.getBoundingClientRect();
+  tt.style.left = Math.min(r.left, window.innerWidth-tt.offsetWidth-10)+'px';
+  tt.style.top  = (r.top-36)+'px';
+}
+function hideHmTip(tid){
+  const tt=document.getElementById(tid); if(tt) tt.style.display='none';
+}
+
 function mergeVinyls(remVinyls, localEvents){
   const vinylMap = new Map((remVinyls||[]).map(v=>[v.id,{...v}]));
   // Apply local events that aren't already reflected in remote
@@ -2658,6 +2844,7 @@ function renderMonth(forceKey){
       </div>
     </div>
     <div id="afterPodiumMonthSects" style="opacity:0;transition:opacity .8s;">
+      <div class="ssect">${heatmapCard(p,'Actividad del mes',new Date(MY,MM,1).toISOString().slice(0,10),new Date(MY,MM+1,0).toISOString().slice(0,10),'month')}</div>
       <div class="ssect"><div class="slabel">Ranking álbumes del mes</div><div class="scard">${rankBars(ta,true)}</div></div>
       <div class="ssect"><div class="slabel">Ranking artistas del mes</div><div class="scard">${rankBars(tar)}</div></div>
     </div>`;
@@ -2710,6 +2897,7 @@ function renderMonth(forceKey){
       if(as) as.style.opacity='1';
       const nc=ap?.querySelector('.himno-stars');
       if(nc) setTimeout(()=>initNocheStars(nc.id),50);
+      setTimeout(()=>initHeatmapGrid('hm_month_grid'),50);
     });
   }
   setTimeout(()=>animChart(monthArtists,dayLabels,dayTicks,daysInMonth,todayIdxM,true),50);
@@ -2807,6 +2995,7 @@ function renderYear(forceYear){
         </div>
         ${edadCard(p,'del año')}
       </div>
+      <div class="ssect">${heatmapCard(p,'Actividad del año','${YEAR}-01-01','${YEAR}-12-31','year')}</div>
       <div class="ssect"><div class="slabel">Ranking álbumes del año</div><div class="scard">${rankBars(ta,true)}</div></div>
       <div class="ssect"><div class="slabel">Ranking artistas del año</div><div class="scard">${rankBars(tar)}</div></div>
     </div>`;
@@ -2833,6 +3022,7 @@ function renderYear(forceYear){
         after.style.display='block'; after.style.opacity='0'; after.style.transition='opacity 1s';
         requestAnimationFrame(()=>{after.style.opacity='1';});
         setTimeout(()=>{const nc=after.querySelector('.himno-stars');if(nc)initNocheStars(nc.id);},50);
+        setTimeout(()=>initHeatmapGrid('hm_year_grid'),50);
       }
     });
   }
