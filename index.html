@@ -2864,7 +2864,7 @@ function renderMonth(forceKey){
       </div>
     </div>
     <div id="afterPodiumMonthSects" style="${sectStyle}">
-      <div class="ssect">${heatmapCard(p,'Actividad del mes',new Date(MY,MM,1).toISOString().slice(0,10),new Date(MY,MM+1,0).toISOString().slice(0,10),'month')}</div>
+      <div class="ssect">${heatmapCard(p,'Actividad del mes', `${MY}-${String(MM+1).padStart(2,'0')}-01`, `${MY}-${String(MM+1).padStart(2,'0')}-${String(new Date(MY,MM+1,0).getDate()).padStart(2,'0')}`, 'month')}</div>
       <div class="ssect"><div class="slabel">Ranking álbumes del mes</div><div class="scard">${rankBars(ta,true)}</div></div>
       <div class="ssect"><div class="slabel">Ranking artistas del mes</div><div class="scard">${rankBars(tar)}</div></div>
     </div>`;
