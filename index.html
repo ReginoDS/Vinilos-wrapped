@@ -2649,7 +2649,7 @@ function himnoCard(plays, label, albumRevealId){
     return {albumName,cnt,coverUrl:coverV?.cover||'',edition:coverV?.edition||'',artist:coverV?.artist||''};
   }
   const data={manana:topForFranja(franjas.manana),tarde:topForFranja(franjas.tarde),noche:topForFranja(franjas.noche)};
-  if(!data.manana&&!data.tarde&&!data.noche) return '';
+  // Render even if all franjas are empty — each sector will show "sin escuchas en esta franja"
   const cid='hc'+Date.now(); const starsId='hs'+Date.now();
 
   // Font sizes matching original SVG (scaled as % of container = 400px viewBox)
@@ -2801,9 +2801,11 @@ function cardMesActivo(tm){
 //  MONTH STATS
 // ════════════════════════════════════════════════════════════
 function getAvailableMonths(){
-  // Returns [{y,m}] sorted newest first, only months with plays
+  // Returns [{y,m}] sorted newest first; always includes the current month
   const seen=new Set();
   DB.plays.forEach(x=>{const d=new Date(x.ts);seen.add(`${d.getFullYear()}-${d.getMonth()}`);});
+  const now=new Date();
+  seen.add(`${now.getFullYear()}-${now.getMonth()}`); // always include current month
   return [...seen].map(s=>{const[y,m]=s.split('-');return{y:+y,m:+m};})
     .sort((a,b)=>b.y-a.y||b.m-a.m);
 }
@@ -2813,50 +2815,61 @@ function renderMonth(forceKey){
   const MF=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   const c=document.getElementById('monthContent');
   const months=getAvailableMonths();
-  if(!months.length){c.innerHTML=`<div class="nodata">Sin escuchas registradas.</div>`;return;}
   if(forceKey!==undefined) selectedMonth=forceKey;
+  // Default to current month (always present in list), else most recent
   if(!selectedMonth||!months.find(x=>`${x.y}-${x.m}`===selectedMonth)){
-    // prefer current month, fall back to most recent with plays
     const now=new Date();
-    const curKey=`${now.getFullYear()}-${now.getMonth()}`;
-    selectedMonth=months.find(x=>`${x.y}-${x.m}`===curKey)
-      ? curKey : `${months[0].y}-${months[0].m}`;
+    selectedMonth=`${now.getFullYear()}-${now.getMonth()}`;
   }
   const [MY,MM]=selectedMonth.split('-').map(Number);
   const p=enrichPlays(DB.plays.filter(x=>{const t=new Date(x.ts);return t.getMonth()===MM&&t.getFullYear()===MY;}));
-  if(!p.length){c.innerHTML=`<div class="nodata">Sin escuchas en ${MF[MM]} ${MY}.</div>`;return;}
-  const ta=enrichAlbums(p),tar=enrichArtists(p),bd=topDay(p);
+  const hasData=p.length>0;
+  const ta=hasData?enrichAlbums(p):[], tar=hasData?enrichArtists(p):[], bd=hasData?topDay(p):null;
   const monthOpts=months.map(({y,m})=>{const k=`${y}-${m}`;return`<option value="${k}"${k===selectedMonth?' selected':''}>${MF[m]} ${y}</option>`;}).join('');
+
+  // Sections below podium: visible immediately if no data, animated-in if data
+  const sectStyle = hasData ? 'opacity:0;transition:opacity .8s;' : 'opacity:1;';
+
+  // Placeholder data to force full layout when no real data
+  const tarDisp = hasData ? tar : [['—',0],['—',0],['—',0]];
+  // himnoCard needs at least one play per franja to render the circle; use fake plays at 8h, 14h, 22h
+  // Pass one fake play per franja so himnoCard renders all 3 sectors with "sin escuchas en esta franja"
+  const pHimno = hasData ? p : [];
+
   c.innerHTML=`
     <div class="ssect">
       <div class="year-header">
         <div class="slabel" style="margin-bottom:0;border:none;padding:0">Wrapped Mensual</div>
         <select class="year-select" onchange="renderMonth(this.value)">${monthOpts}</select>
       </div>
-      <div class="chart-c">
+      <div class="chart-c" style="position:relative;">
         <div class="chart-ttl">Escuchas acumuladas por artista</div>
         <canvas id="monthChart"></canvas>
         <div class="clegend" id="mclegend"></div>
+        ${!hasData?'<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--muted);">Sin escuchas este mes</div>':''}
       </div>
       <div id="monthPodiumWrap">
-        ${podiumCard(tar, `Top artistas de ${MF[MM]} ${MY}`)}
+        ${hasData ? podiumCard(tar, `Top artistas de ${MF[MM]} ${MY}`) : `<div class="rev-win" style="margin-bottom:10px;padding:14px 8px 1px;">
+          <div class="rev-lbl" style="margin-bottom:2px;">Top artistas de ${MF[MM]} ${MY}</div>
+          <div style="height:132px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--muted);">Sin escuchas este mes</div>
+        </div>`}
       </div>
       <div id="album-reveal-month" style="height:0;overflow:hidden;opacity:0;">${cardAlbum(ta[0]?.[0]||'—','Álbum del mes')}</div>
-      ${himnoCard(p,'del mes','album-reveal-month')}
-      <div id="afterPodiumMonth" style="opacity:0;transition:opacity .8s;">
+      ${himnoCard(pHimno,'del mes','album-reveal-month')}
+      <div id="afterPodiumMonth" style="${sectStyle}">
         <div class="two">
-          ${edadCard(p,'del mes')}
-          ${cardTopDay(bd)}
+          ${hasData ? edadCard(p,'del mes') : '<div class="edad-card"><div class="edad-num">—</div><div class="edad-info"><div class="edad-lbl">Edad musical del mes</div><div class="edad-sub">sin escuchas este mes</div></div></div>'}
+          ${hasData ? cardTopDay(bd) : '<div class="scard scard-center stats-pair-card"><div class="spc-lbl">Día con más escuchas</div><div class="spc-val sday-n">—</div><div class="spc-sub">sin datos</div></div>'}
         </div>
       </div>
     </div>
-    <div id="afterPodiumMonthSects" style="opacity:0;transition:opacity .8s;">
+    <div id="afterPodiumMonthSects" style="${sectStyle}">
       <div class="ssect">${heatmapCard(p,'Actividad del mes',new Date(MY,MM,1).toISOString().slice(0,10),new Date(MY,MM+1,0).toISOString().slice(0,10),'month')}</div>
       <div class="ssect"><div class="slabel">Ranking álbumes del mes</div><div class="scard">${rankBars(ta,true)}</div></div>
       <div class="ssect"><div class="slabel">Ranking artistas del mes</div><div class="scard">${rankBars(tar)}</div></div>
     </div>`;
 
-  // Build month chart data: day 1 to last day of month
+  // Build month chart data
   const COLS=['#e8d5b0','#c9a96e','#7faadc','#52c87a','#e0956a','#e05252','#b48eff'];
   const monthStart=new Date(MY,MM,1);
   const daysInMonth=new Date(MY,MM+1,0).getDate();
@@ -2877,24 +2890,35 @@ function renderMonth(forceKey){
     return{name:a,color:COLS[i],data,todayIdx:todayIdxM};
   }).filter(a=>a.data[a.data.length-1]>0);
 
-  // Day ticks: 1st of each week approx — show day numbers
   const dayTicks=[];
   const dayLabels=[];
   for(let d=0;d<daysInMonth;d+=7){dayTicks.push(d);dayLabels.push(String(d+1));}
   dayTicks.push(daysInMonth-1); dayLabels.push(String(daysInMonth));
 
+  setTimeout(()=>initHeatmapGrid('hm_month_grid'),50);
+
+  if(!hasData){
+    // Show himno circle immediately (no sweep animation)
+    const _hm=document.querySelector('#monthContent .himno-circle-wrap');
+    if(_hm){
+      const outer=_hm.closest('[id$="-outer"]') || _hm.parentElement;
+      if(outer) outer.style.display='';
+      const ov=document.getElementById(_hm.id+'-overlay');
+      if(ov) ov.style.background='transparent';
+    }
+    const mcv=document.getElementById('monthChart');
+    if(mcv){mcv.style.width='100%';mcv.style.display='block';}
+    return;
+  }
+
   document.getElementById('mclegend').innerHTML=monthArtists.map(a=>`<div class="cli"><div class="cldot" style="background:${a.color}"></div><span>${h(a.name)}</span></div>`).join('');
   const mcv=document.getElementById('monthChart');
   mcv.style.width='100%'; mcv.style.display='block';
-  // Start chart and podium simultaneously
   setTimeout(()=>{
     const _hm=document.querySelector('#monthContent .himno-circle-wrap');
     if(_hm && window['_himnoAnim_'+_hm.id]) window['_himnoAnim_'+_hm.id]();
   },50);
   const _mp=document.querySelector('#monthContent [data-podium]');
-  // Trigger himno circle animation at same time as podium/chart
-  setTimeout(()=>{
-  },50);
   if(_mp){
     _animPodiumBorder(_mp.dataset.podium);
     animatePodium(_mp.dataset.podium, ()=>{
@@ -2904,7 +2928,6 @@ function renderMonth(forceKey){
       if(as) as.style.opacity='1';
       const nc=ap?.querySelector('.himno-stars');
       if(nc) setTimeout(()=>initNocheStars(nc.id),50);
-      setTimeout(()=>initHeatmapGrid('hm_month_grid'),50);
     });
   }
   setTimeout(()=>animChart(monthArtists,dayLabels,dayTicks,daysInMonth,todayIdxM,true),50);
