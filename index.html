@@ -2929,6 +2929,12 @@ function renderMonth(forceKey){
       const nc=ap?.querySelector('.himno-stars');
       if(nc) setTimeout(()=>initNocheStars(nc.id),50);
     });
+  } else {
+    // fewer than 3 artists — no podium SVG, reveal immediately
+    const ap=document.getElementById('afterPodiumMonth');
+    const as=document.getElementById('afterPodiumMonthSects');
+    if(ap) ap.style.opacity='1';
+    if(as) as.style.opacity='1';
   }
   setTimeout(()=>animChart(monthArtists,dayLabels,dayTicks,daysInMonth,todayIdxM,true),50);
 }
