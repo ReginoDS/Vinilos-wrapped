@@ -1312,7 +1312,7 @@ async function syncNow(){
       users,
       _sha: remCol?._sha
     });
-    await GH.writeFile('plays.json', {plays:mergedPls.plays, deletedPlayIds:mergedPls.deletedIds, _sha:remPls?._sha});
+    await GH.writeFile('plays.json', {_editedAt: plsEditedAt || now, plays:mergedPls.plays, deletedPlayIds:mergedPls.deletedIds, _sha:remPls?._sha});
 
     // ── Step 5: Only update localStorage after successful write ──
     DB.vinyls = mergedVinyls;
