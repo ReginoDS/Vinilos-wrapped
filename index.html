@@ -860,12 +860,22 @@ const DB = {
     p.push({id:Date.now()+'_'+Math.random().toString(36).slice(2,7),vinylId,ts:new Date().toISOString(),userId:USER.id});
     this.plays=p;
   },
-  get deletedPlayIds(){ return JSON.parse(localStorage.getItem('deletedPlayIds')||'null')||[]; },
+  get deletedPlayIds(){
+    const raw=JSON.parse(localStorage.getItem('deletedPlayIds')||'null')||[];
+    if(raw.length===0||typeof raw[0]!=='string') return raw;
+    const fallbackTs=localStorage.getItem('lastRemotePlsEditedAt')||new Date().toISOString();
+    const migrated=raw.map(id=>({id,ts:fallbackTs}));
+    localStorage.setItem('deletedPlayIds',JSON.stringify(migrated));
+    return migrated;
+  },
   set deletedPlayIds(v){ localStorage.setItem('deletedPlayIds',JSON.stringify(v)); },
   deletePlay(playId){
     this.plays=this.plays.filter(p=>p.id!==playId);
     const del=this.deletedPlayIds;
-    if(!del.includes(playId)){ del.push(playId); this.deletedPlayIds=del; }
+    if(!del.some(t=>t.id===playId)){
+      del.push({id:playId,ts:new Date().toISOString()});
+      this.deletedPlayIds=del;
+    }
   },
 
   // ── vinyls: flat list (authoritative state) ─────────────────
@@ -1125,14 +1135,32 @@ function mergeVinylLogs(remLog, localLog){
   return [...map.values()].sort((a,b)=>a.ts.localeCompare(b.ts));
 }
 
-function mergePlays(a, b, delA=[], delB=[]){
-  // Union of all deleted ids from both sides
-  const deleted=new Set([...delA,...delB]);
-  const m=new Map();
-  [...a,...b].forEach(p=>{if(p.id&&!m.has(p.id)&&!deleted.has(p.id))m.set(p.id,p);});
+const TOMBSTONE_TTL_MS=30*24*60*60*1000;
+
+function mergePlays(a,b,delA=[],delB=[]){
+  // Dedupe tombstones by id, keep newest ts
+  const tombMap=new Map();
+  [...delA,...delB].forEach(t=>{
+    const cur=tombMap.get(t.id);
+    if(!cur||t.ts>cur.ts) tombMap.set(t.id,t);
+  });
+  // GC: drop tombstones older than 30 days
+  const cutoff=new Date(Date.now()-TOMBSTONE_TTL_MS).toISOString();
+  const liveTombs=[...tombMap.values()].filter(t=>t.ts>=cutoff);
+  const tombById=new Map(liveTombs.map(t=>[t.id,t]));
+
+  // Plays: dedupe by id; drop iff a tombstone with newer ts exists
+  const playMap=new Map();
+  [...a,...b].forEach(p=>{
+    if(!p.id||playMap.has(p.id)) return;
+    const tomb=tombById.get(p.id);
+    if(tomb&&tomb.ts>p.ts) return;
+    playMap.set(p.id,p);
+  });
+
   return{
-    plays:[...m.values()].sort((x,y)=>x.ts.localeCompare(y.ts)),
-    deletedIds:[...deleted]
+    plays:[...playMap.values()].sort((x,y)=>x.ts.localeCompare(y.ts)),
+    deletedIds:liveTombs
   };
 }
 
@@ -1221,14 +1249,16 @@ function setSS(st,lbl){
 // ════════════════════════════════════════════════════════════
 //  SYNC — event-sourced vinyls, GitHub is base of truth
 //
-//  collection.json → { vinylLog: [...], users: [...] }
-//  plays.json      → { plays: [...], deletedPlayIds: [...] }
+//  collection.json → { vinyls: [...], vinylEvents: [...], lastSeen, users: [...] }
+//  plays.json      → { plays: [...], deletedPlayIds: [{id, ts}, ...] }
 //
-//  Vinyl merge: remote log is the base; only local events
-//  newer than the remote head are appended. Direct GitHub
-//  edits therefore always win over stale local history.
+//  Vinyl merge: remote vinyls is the base; local events newer
+//  than the remote head are applied. Direct GitHub edits
+//  always win over stale local history.
 //
-//  Plays merge: union (local + remote), deletions respected.
+//  Plays merge: union (local + remote). Tombstones win only
+//  if ts > play.ts. Tombstones older than 30 days are GC'd.
+//  Legacy string tombstones are migrated on-read.
 // ════════════════════════════════════════════════════════════
 
 let _syncInProgress = false;
@@ -1281,11 +1311,16 @@ async function syncNow(){
     }
 
     // ── Step 2: Compute merged plays ─────────────────────────
-    const remPlays      = remPls?.plays || [];
-    const remDeletedIds = remPls?.deletedPlayIds || [];
-    const plsEditedAt   = remPls?._editedAt || '';
-    const lastPlsEdited = localStorage.getItem('lastRemotePlsEditedAt') || '';
-    const plsManualEdit = plsEditedAt && plsEditedAt !== lastPlsEdited;
+    const remPlays         = remPls?.plays || [];
+    const remDeletedRaw    = remPls?.deletedPlayIds || [];
+    const plsEditedAt      = remPls?._editedAt || '';
+    const lastPlsEdited    = localStorage.getItem('lastRemotePlsEditedAt') || '';
+    const plsManualEdit    = plsEditedAt && plsEditedAt !== lastPlsEdited;
+    // Migrate legacy string[] → {id, ts}[] using remote _editedAt as fallback ts
+    const remDeletedFallback = plsEditedAt || new Date().toISOString();
+    const remDeletedIds = remDeletedRaw.map(t =>
+      typeof t === 'string' ? {id: t, ts: remDeletedFallback} : t
+    );
     const mergedPls = plsManualEdit
       ? {plays: remPlays, deletedIds: remDeletedIds}
       : mergePlays(DB.plays, remPlays, DB.deletedPlayIds, remDeletedIds);
