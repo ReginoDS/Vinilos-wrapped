@@ -1501,12 +1501,35 @@ function updateCounters(){
   document.getElementById('cntMonth').textContent=p.filter(x=>{const d=new Date(x.ts);return d.getMonth()===m&&d.getFullYear()===y;}).length;
 }
 
+/* ── COLLECTION TOOLBAR ─────────────────────────────────────── */
+const COL_SORT_KEY='vinilos_colSort';
+function colSortMode(){
+  const m=localStorage.getItem(COL_SORT_KEY);
+  return (m==='artist'||m==='album')?m:'chrono';
+}
+function setColSort(mode){
+  localStorage.setItem(COL_SORT_KEY,mode);
+  renderCollection();
+}
+function sortedVinyls(){
+  const mode=colSortMode();
+  const v=DB.vinyls.slice();
+  const cmp=(a,b)=>String(a||'').localeCompare(String(b||''),'es',{sensitivity:'base'});
+  if(mode==='artist') v.sort((a,b)=>cmp(a.artist,b.artist)||cmp(a.album,b.album));
+  else if(mode==='album') v.sort((a,b)=>cmp(a.album,b.album));
+  return v; // 'chrono' = orden del array = orden de registro
+}
+function setColView(view){
+  document.querySelectorAll('#colViewPill button').forEach(b=>b.classList.toggle('active',b.dataset.cview===view));
+  // Solo visual por ahora: la vista Estantería se implementará más adelante
+}
+
 // ════════════════════════════════════════════════════════════
 //  COLLECTION GRID
 // ════════════════════════════════════════════════════════════
 let _collectionRenderKey = null;
 function renderCollection(){
-  const vinyls=DB.vinyls;
+  const vinyls=sortedVinyls();
   const grid=document.getElementById('vinylGrid');
   if(!vinyls.length){
     _collectionRenderKey = null;
@@ -1515,7 +1538,7 @@ function renderCollection(){
   }
   // Skip re-render if collection hasn't changed
   perfMark('renderCollection called');
-  const renderKey = vinyls.map(v=>v.id+':'+v.album+':'+(v.cover||'')+':'+(v.youtube||'')).join('|');
+  const renderKey = colSortMode()+'|'+vinyls.map(v=>v.id+':'+v.album+':'+(v.cover||'')+':'+(v.youtube||'')).join('|');
   if(renderKey === _collectionRenderKey && grid.children.length === vinyls.length){
     perfMark('renderCollection SKIP (no change)');
     // Just update selection state
@@ -2289,7 +2312,7 @@ function showCfgTab(tab){
 }
 
 function populateNfcList(){
-  const vinyls=DB.vinyls;
+  const vinyls=sortedVinyls();
   const base=window.location.origin+window.location.pathname;
   const list=document.getElementById('nfcTagsList');
   if(!list) return;
@@ -3532,6 +3555,7 @@ async function boot(){
   }
 }
 
+document.getElementById('colSortSelect').value=colSortMode();
 // Si ya está autenticado (localStorage persiste), arranca directo
 if (localStorage.getItem(AUTH_KEY) && USER.name) {
   document.getElementById('loginScreen').style.display = 'none';
