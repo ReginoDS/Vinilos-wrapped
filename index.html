@@ -85,7 +85,7 @@ header{padding:16px 18px 10px;flex-shrink:0;border-bottom:1px solid var(--border
   width:100%;
   aspect-ratio:1;
   isolation:isolate;
-  /* no overflow:hidden here — it would clip the corner badges (▶/✓)
+  /* no overflow:hidden here — it would clip the corner badge (▶)
      once the disc grows; the disc clips itself in .vcard-disc */
   contain:layout style;
 }
@@ -156,15 +156,6 @@ header{padding:16px 18px 10px;flex-shrink:0;border-bottom:1px solid var(--border
   font-size:8px;color:#e05252;text-decoration:none;z-index:20;transition:all .15s;
 }
 .yt-overlay:active{transform:scale(.85);}
-
-.sel-tick{
-  position:absolute;bottom:2px;right:0px;
-  width:20px;height:20px;border-radius:50%;
-  border:2px solid rgba(255,255,255,.1);background:var(--bg);
-  display:flex;align-items:center;justify-content:center;
-  font-size:9px;color:transparent;z-index:20;transition:all .15s;
-}
-.vcard.sel .sel-tick{background:var(--accent2);border-color:var(--accent2);color:var(--bg);}
 
 /* INFO BELOW DISC */
 .vcard-info{padding:7px 2px 2px;width:100%;text-align:center;}
@@ -1496,8 +1487,6 @@ function updateCounters(){
 // ════════════════════════════════════════════════════════════
 //  COLLECTION GRID
 // ════════════════════════════════════════════════════════════
-function ytUrl(v){ return v.youtube && v.youtube.trim() ? v.youtube : 'https://www.youtube.com/results?search_query='+encodeURIComponent(v.artist+' '+v.album+' full album'); }
-
 let _collectionRenderKey = null;
 function renderCollection(){
   const vinyls=DB.vinyls;
@@ -1509,15 +1498,13 @@ function renderCollection(){
   }
   // Skip re-render if collection hasn't changed
   perfMark('renderCollection called');
-  const renderKey = vinyls.map(v=>v.id+':'+v.album+':'+(v.cover||'')).join('|');
+  const renderKey = vinyls.map(v=>v.id+':'+v.album+':'+(v.cover||'')+':'+(v.youtube||'')).join('|');
   if(renderKey === _collectionRenderKey && grid.children.length === vinyls.length){
     perfMark('renderCollection SKIP (no change)');
     // Just update selection state
     Array.from(grid.children).forEach(c=>{
       const isS = selV && c.dataset.id == selV.id;
       c.classList.toggle('sel', isS);
-      const tick = c.querySelector('.sel-tick');
-      if(tick) tick.textContent = isS ? '✓' : '';
     });
     document.getElementById('playBtn').disabled=!selV;
     return;
@@ -1538,8 +1525,7 @@ function renderCollection(){
           ${cov}
           <div class="disc-hole"></div>
         </div>
-        <a class="yt-overlay" href="${ytUrl(v)}" target="_blank" onclick="event.stopPropagation()" title="Buscar en YouTube">▶</a>
-        <div class="sel-tick">${isSel?'✓':''}</div>
+        ${v.youtube&&v.youtube.trim()?`<a class="yt-overlay" href="${h(v.youtube)}" target="_blank" onclick="event.stopPropagation()" title="Abrir playlist en YouTube">▶</a>`:''}
       </div>
       <div class="vcard-info">
         <div class="vcard-title">${h(v.album)}</div>
@@ -1626,9 +1612,7 @@ function startPickerApp(){
   // Step 1: hide info so cards are square for FIRST snapshot
   cards.forEach(c=>{
     const info=c.querySelector('.vcard-info');
-    const tick=c.querySelector('.sel-tick');
     if(info) info.style.display='none';
-    if(tick) tick.style.display='none';
   });
   void grid.offsetWidth;
 
@@ -1703,10 +1687,8 @@ function _setPickGrid(grid,cols,gap,padding){
     c.style.aspectRatio='';
     const wrap=c.querySelector('.vcard-disc-wrap');
     const info=c.querySelector('.vcard-info');
-    const tick=c.querySelector('.sel-tick');
     if(wrap){wrap.style.width='100%';wrap.style.height='100%';wrap.style.flex='none';}
     if(info){info.style.display='none';}
-    if(tick){tick.style.display='none';}
   });
 }
 
@@ -1822,17 +1804,10 @@ function _pickerRestore(winIdx,grid,cards,vinyls,myRun){
     cards.forEach(c=>{
       c.classList.remove('picker-lit','picker-dim','picker-winner');
       c.style.transition='';c.style.transform='';c.style.transformOrigin='';
-      const tick=c.querySelector('.sel-tick');
-      if(tick) tick.style.display='';
       // info revealed via expand animation below
     });
     selV=vinyls[savedWinner];
     _pickerWinnerV=selV;
-    // .sel already on winner card — just update tick text
-    if(winCard){
-      const tickEl=winCard.querySelector('.sel-tick');
-      if(tickEl) tickEl.textContent='✓';
-    }
     updateBbar();
 
     // Step 3: reveal info with expand animation
