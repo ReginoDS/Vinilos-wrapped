@@ -74,7 +74,7 @@ header{padding:16px 18px 10px;flex-shrink:0;border-bottom:1px solid var(--border
 .view{display:none;flex-direction:column;flex:1;overflow:hidden;}.view.active{display:flex;}
 
 /* ── VINYL GRID (2-col) ── */
-.vgrid{flex:1;overflow-y:auto;padding:14px 14px 8px;display:grid;grid-template-columns:1fr 1fr;gap:16px 12px;align-content:start;scrollbar-width:thin;scrollbar-color:var(--border) transparent;box-sizing:border-box;}
+.vgrid{flex:1;overflow-y:auto;padding:14px 14px 8px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px 12px;align-content:start;scrollbar-width:thin;scrollbar-color:var(--border) transparent;box-sizing:border-box;}
 
 .vcard{cursor:pointer;transition:transform .15s;display:flex;flex-direction:column;align-items:center;}
 .vcard:active{transform:scale(.95);}
@@ -85,8 +85,8 @@ header{padding:16px 18px 10px;flex-shrink:0;border-bottom:1px solid var(--border
   width:100%;
   aspect-ratio:1;
   isolation:isolate;
-  overflow:hidden;
-  border-radius:50%;
+  /* no overflow:hidden here — it would clip the corner badges (▶/✓)
+     once the disc grows; the disc clips itself in .vcard-disc */
   contain:layout style;
 }
 
@@ -251,12 +251,12 @@ select.finput option{background:var(--s2);}
 .sday-n{font-family:'DM Serif Display',serif;font-size:30px;color:var(--accent);line-height:1;}
 .sday-u{font-size:11px;color:var(--muted);margin-top:2px;}
 .sday-date{font-size:11px;color:var(--muted);margin-top:5px;font-style:italic;}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:9px;align-items:stretch;}.two>.edad-card,.two>.scard{height:100%;box-sizing:border-box;margin:0;}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px;align-items:stretch;}.two>.edad-card,.two>.scard{height:100%;box-sizing:border-box;margin:0;}
 .two>.scard{margin-bottom:0;height:100%;box-sizing:border-box;justify-content:center;min-height:90px;}
 .two>.himno-card{margin-top:0;margin-bottom:0;}
-.two-6535{display:grid;grid-template-columns:65fr 35fr;gap:9px;align-items:stretch;margin-top:10px;}
+.two-6535{display:grid;grid-template-columns:minmax(0,65fr) minmax(0,35fr);gap:9px;align-items:stretch;margin-top:10px;}
 .two-6535>*{min-width:0;height:100%;box-sizing:border-box;}
-.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;}
+.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;}
 .rank-scroll{padding-right:6px;}
 .ri{display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid var(--border);}
 .ri:last-child{border-bottom:none;}
@@ -318,7 +318,7 @@ select.finput option{background:var(--s2);}
 @keyframes pb{0%,100%{opacity:1}50%{opacity:.6}}
 
 .nodata{font-size:12px;color:var(--muted);padding:18px 0;text-align:center;}
-.heatmap-wrap{padding:10px 0 6px;}
+.heatmap-wrap{padding:10px 13px 6px;}
 .heatmap-title{font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:8px;}
 .heatmap-day{border-radius:2px;background:var(--surface);cursor:pointer;flex-shrink:0;}
 .heatmap-day.empty{cursor:default;background:transparent!important;}
@@ -1062,6 +1062,22 @@ function initHeatmapGrid(gid){
   });
   // Add top offset to rowlabels to match col-label row height + gap
   if(rl) rl.style.paddingTop = (cellSize+2+3)+'px'; // cellSize + margin-bottom:2px + gap:3px
+}
+
+// Heatmap cells and the wrapped chart canvas are sized in px at render
+// time — recompute them on resize.
+let _hmResizeT;
+window.addEventListener('resize', ()=>{
+  clearTimeout(_hmResizeT);
+  _hmResizeT=setTimeout(()=>{
+    initHeatmapGrid('hm_year_grid');
+    _redrawChartForResize();
+  },100);
+});
+function _redrawChartForResize(){
+  if(!_lastChartArgs) return;
+  const cv=document.getElementById(_lastChartArgs[5]?'monthChart':'yearChart');
+  if(cv && cv.offsetWidth) animChart(..._lastChartArgs, true);
 }
 
 // Tooltip — event delegation on document
@@ -2506,6 +2522,14 @@ function _animPodiumBorder(pid){
   setTimeout(()=>{
     const inner=document.getElementById(pid+'-inner');
     if(inner) inner.style.background='var(--surface)';
+    // Draw animation done — switch the rect to CSS geometry so the border
+    // tracks the card through any later layout shift (scrollbar appearing,
+    // window resize, font swap). Px were only needed for the dash effect.
+    borderRect.style.transition='none';
+    borderRect.style.strokeDasharray='none';
+    borderRect.style.strokeDashoffset='0';
+    borderRect.style.width='calc(100% - 2px)';
+    borderRect.style.height='calc(100% - 2px)';
   }, 620);
 }
 
@@ -2972,6 +2996,7 @@ function renderMonth(forceKey){
 //  YEAR STATS
 // ════════════════════════════════════════════════════════════
 let chartAnimId=null;
+let _lastChartArgs=null;
 let selectedYear=null; // null = auto (latest year with data)
 let selectedMonth=null; // null = auto (current month)
 
@@ -3094,11 +3119,20 @@ function renderYear(forceYear){
   setTimeout(()=>animChart(artists,MS,monthTicks,chartDays,todayIdx,false,YEAR),50);
 }
 
-function animChart(artists,months,monthTicks,totalDays,todayIdx,noConfetti,confettiYear){
+function animChart(artists,months,monthTicks,totalDays,todayIdx,noConfetti,confettiYear,instant){
+  _lastChartArgs=[artists,months,monthTicks,totalDays,todayIdx,noConfetti,confettiYear];
   const cvId=noConfetti?'monthChart':'yearChart';
   const cv=document.getElementById(cvId); if(!cv) return;
+  // Virtual 0-point at the left edge so cumulative lines always rise from 0;
+  // axis ticks now mark the START of each day/month (value before that day).
+  artists=artists.map(a=>({...a,data:[0,...a.data]}));
+  totalDays+=1;
+  if(todayIdx!==undefined) todayIdx+=1;
   const ctx=cv.getContext('2d');
   const dpr=window.devicePixelRatio||1;
+  // Re-measure from the container: a previous run left a fixed px width
+  // on the canvas, which would otherwise be read back on resize.
+  cv.style.width='100%';
   const W=cv.offsetWidth||cv.parentElement?.offsetWidth||340;
   const H=Math.round(W*0.40);
   cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr);
@@ -3215,7 +3249,8 @@ function animChart(artists,months,monthTicks,totalDays,todayIdx,noConfetti,confe
 
   let start=null;
   function draw(ts){
-    if(!start) start=ts;
+    // instant: jump straight to the final frame (used on window resize)
+    if(!start) start=instant?ts-DUR:ts;
     const elapsed=ts-start;
     const prog=Math.min(elapsed/DUR,1);
     const animDone=prog>=1;
@@ -3313,21 +3348,12 @@ function renderHist(){
 
   let html='';
   // years is sorted desc: [2026, 2025, 2024, ...]
-  // Desired output: months(2026) | Resumen(2025) | months(2025) | Resumen(2024) | months(2024) | ...
-  // i.e. Resumen(Y) appears after months of Y+1, before months of Y.
-  // So: emit months for years[i], then emit Resumen for years[i+1] (the next older year).
-  // After the last year's months, emit that year's own summary.
-  // years = [2026, 2025, 2024, ...] (desc)
-  // Desired sequence:
-  //   months(2026)  ← newest year, no resumen above it
-  //   Resumen 2025
-  //   months(2025)
-  //   Resumen 2024
-  //   months(2024)
-  //   Resumen 2024  ← oldest year always ends with its own resumen
-  years.forEach((yr, yi)=>{
-    // Every year except the newest gets its Resumen BEFORE its months.
-    if(yi > 0) html += yearSummaryCard(yr);
+  // Rule: every year's Resumen goes ABOVE its own months, except the current
+  // (in-progress) year, which never shows a Resumen.
+  // e.g. in 2026 with [2026, 2025]: months(2026) | Resumen 2025 | months(2025)
+  const nowYear=new Date().getFullYear();
+  years.forEach(yr=>{
+    if(+yr !== nowYear) html += yearSummaryCard(yr);
 
     const yearKeys=Object.keys(g).filter(k=>k.startsWith(yr+'-')).sort().reverse();
     yearKeys.forEach(k=>{
@@ -3345,9 +3371,6 @@ function renderHist(){
         </div>
       </div>`;
     });
-
-    // Single-year edge case: if there is only one year, add its resumen at the end
-    if(years.length === 1) html += yearSummaryCard(yr);
   });
 
   c.innerHTML=html;
