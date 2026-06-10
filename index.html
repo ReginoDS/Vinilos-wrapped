@@ -1625,7 +1625,7 @@ function startPickerApp(){
   _pickerWinnerV=null;
   // randBtn stays enabled — _pickerRunning guards against re-entry
 
-  const vinyls=DB.vinyls;
+  const vinyls=sortedVinyls();
   const n=vinyls.length;
   const grid=document.getElementById('vinylGrid');
   const cards=Array.from(grid.children);
