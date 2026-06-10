@@ -617,6 +617,17 @@ select.finput option{background:var(--s2);}
 
   <!-- COLECCIÓN -->
   <div class="view active" id="view-col">
+    <div class="col-toolbar">
+      <div class="seg-pill" id="colViewPill">
+        <button type="button" class="active" data-cview="list" onclick="setColView('list')">Lista</button>
+        <button type="button" data-cview="shelf" onclick="setColView('shelf')">Estantería</button>
+      </div>
+      <select id="colSortSelect" class="col-sort" onchange="setColSort(this.value)">
+        <option value="chrono">Cronológico</option>
+        <option value="artist">Por artista</option>
+        <option value="album">Alfabéticamente</option>
+      </select>
+    </div>
     <div class="vgrid" id="vinylGrid"></div>
     <div class="winner-banner" id="winnerBanner">
       <div class="wb-label">Tu próxima escucha</div>
