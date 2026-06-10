@@ -793,6 +793,10 @@ function saveUsername(){
 // Dev preview (localhost): read real data but never write back,
 // so half-built code can't corrupt production plays/collection.
 const DEV_READONLY = ['localhost','127.0.0.1'].includes(location.hostname);
+// Dev-only test data (plays of removed users user1/user2), loaded from
+// dev-fixtures.json into memory only — never touches DB/localStorage/sync.
+let DEV_FIXTURES = { plays: [] };
+function viewPlays(){ return DEV_READONLY && DEV_FIXTURES.plays.length ? DB.plays.concat(DEV_FIXTURES.plays) : DB.plays; }
 const GH = {
   get user(){  return localStorage.getItem('gh_user')||''; },
   get token(){ return localStorage.getItem('gh_token')||''; },
@@ -1280,6 +1284,12 @@ async function syncNow(){
       GH.readFile('plays.json')
     ]);
 
+    if(DEV_READONLY){
+      try{
+        const fx = await GH.readFile('dev-fixtures.json');
+        DEV_FIXTURES.plays = fx?.plays || [];
+      }catch(_){ DEV_FIXTURES.plays = []; }
+    }
 
     // ── Vinyl merge ──────────────────────────────────────────
     const remEditedAt  = remCol?._editedAt || '';
@@ -1461,7 +1471,7 @@ function showSubTab(stab, rerender=true) {
 // ════════════════════════════════════════════════════════════
 function updateCounters(){
   const now=new Date(), m=now.getMonth(), y=now.getFullYear();
-  const p=DB.plays;
+  const p=viewPlays();
   document.getElementById('cntTotal').textContent=p.length;
   document.getElementById('cntYear').textContent=p.filter(x=>new Date(x.ts).getFullYear()===y).length;
   document.getElementById('cntMonth').textContent=p.filter(x=>{const d=new Date(x.ts);return d.getMonth()===m&&d.getFullYear()===y;}).length;
@@ -2113,7 +2123,7 @@ function deleteVinyl(){
 function renderLog(){
   const c=document.getElementById('logContent');
   // Keep original indices (chronological) for deletion; display in reverse
-  const rawPlays=DB.plays;
+  const rawPlays=viewPlays();
   const enriched=enrichPlays([...rawPlays]).reverse();
   if(!enriched.length){c.innerHTML='<div class="nodata">Sin reproducciones aún.</div>';return;}
   const vinyls=DB.vinyls;
@@ -2331,7 +2341,7 @@ _nfcModalObs.observe(_nfcModalEl, {attributes:true, attributeFilter:['class']});
 //  BADGES
 // ════════════════════════════════════════════════════════════
 function updateBadges(){
-  const n=new Date(),d=n.getDate(),m=n.getMonth(),y=n.getFullYear(),p=DB.plays;
+  const n=new Date(),d=n.getDate(),m=n.getMonth(),y=n.getFullYear(),p=viewPlays();
   const hasMonthData=p.some(x=>{const t=new Date(x.ts);return t.getMonth()===m&&t.getFullYear()===y;});
   document.getElementById('mBadge').style.display=(d>=25&&hasMonthData)?'inline-block':'none';
   const hasYearData=p.some(x=>new Date(x.ts).getFullYear()===y);
@@ -2855,7 +2865,7 @@ function cardMesActivo(tm){
 function getAvailableMonths(){
   // Returns [{y,m}] sorted newest first, only months with plays
   const seen=new Set();
-  DB.plays.forEach(x=>{const d=new Date(x.ts);seen.add(`${d.getFullYear()}-${d.getMonth()}`);});
+  viewPlays().forEach(x=>{const d=new Date(x.ts);seen.add(`${d.getFullYear()}-${d.getMonth()}`);});
   return [...seen].map(s=>{const[y,m]=s.split('-');return{y:+y,m:+m};})
     .sort((a,b)=>b.y-a.y||b.m-a.m);
 }
@@ -2870,7 +2880,7 @@ function renderMonth(forceKey){
   if(!selectedMonth||!months.find(x=>`${x.y}-${x.m}`===selectedMonth))
     selectedMonth=`${months[0].y}-${months[0].m}`;
   const [MY,MM]=selectedMonth.split('-').map(Number);
-  const p=enrichPlays(DB.plays.filter(x=>{const t=new Date(x.ts);return t.getMonth()===MM&&t.getFullYear()===MY;}));
+  const p=enrichPlays(viewPlays().filter(x=>{const t=new Date(x.ts);return t.getMonth()===MM&&t.getFullYear()===MY;}));
   if(!p.length){c.innerHTML=`<div class="nodata">Sin escuchas en ${MF[MM]} ${MY}.</div>`;return;}
   const ta=enrichAlbums(p),tar=enrichArtists(p),bd=topDay(p);
   const monthOpts=months.map(({y,m})=>{const k=`${y}-${m}`;return`<option value="${k}"${k===selectedMonth?' selected':''}>${MF[m]} ${y}</option>`;}).join('');
@@ -2966,7 +2976,7 @@ let selectedYear=null; // null = auto (latest year with data)
 let selectedMonth=null; // null = auto (current month)
 
 function getAvailableYears(){
-  const ys=[...new Set(DB.plays.map(p=>new Date(p.ts).getFullYear()))].sort((a,b)=>b-a);
+  const ys=[...new Set(viewPlays().map(p=>new Date(p.ts).getFullYear()))].sort((a,b)=>b-a);
   return ys;
 }
 
@@ -2981,7 +2991,7 @@ function renderYear(forceYear){
   if(!selectedYear||!years.includes(selectedYear)) selectedYear=years[0];
   const YEAR=selectedYear;
 
-  const p=enrichPlays(DB.plays.filter(x=>new Date(x.ts).getFullYear()===YEAR));
+  const p=enrichPlays(viewPlays().filter(x=>new Date(x.ts).getFullYear()===YEAR));
   if(!p.length){c.innerHTML=`<div class="nodata">Sin escuchas en ${YEAR}.</div>`;return;}
   const ta=enrichAlbums(p),tar=enrichArtists(p),bd=topDay(p);
   const mc={};for(let m=0;m<12;m++){const cnt=p.filter(x=>new Date(x.ts).getMonth()===m).length;if(cnt)mc[MF[m]]=cnt;}
@@ -3276,7 +3286,7 @@ function goToYearWrapped(y){
 }
 
 function renderHist(){
-  const c=document.getElementById('histContent'); const p=enrichPlays(DB.plays);
+  const c=document.getElementById('histContent'); const p=enrichPlays(viewPlays());
   if(!p.length){c.innerHTML=`<div class="nodata">Sin historial aún.</div>`;return;}
   const MF=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   const g={};
