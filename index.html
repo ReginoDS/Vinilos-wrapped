@@ -790,6 +790,9 @@ function saveUsername(){
 //  - PAT needs Contents read+write on vinilos-datos only
 //  - PAT stored only in localStorage — never in source code
 // ════════════════════════════════════════════════════════════
+// Dev preview (localhost): read real data but never write back,
+// so half-built code can't corrupt production plays/collection.
+const DEV_READONLY = ['localhost','127.0.0.1'].includes(location.hostname);
 const GH = {
   get user(){  return localStorage.getItem('gh_user')||''; },
   get token(){ return localStorage.getItem('gh_token')||''; },
@@ -1340,15 +1343,18 @@ async function syncNow(){
     // ── Step 4: Write to GitHub ──────────────────────────────────
     // Always write — ETag on read already saved us a round-trip if nothing changed.
     // Skipping writes risks losing local data that hasn't reached GitHub yet.
-    await GH.writeFile('collection.json', {
-      _editedAt: remEditedAt || now,
-      vinyls: mergedVinyls,
-      vinylEvents: prunedEvents,
-      lastSeen,
-      users,
-      _sha: remCol?._sha
-    });
-    await GH.writeFile('plays.json', {_editedAt: plsEditedAt || now, plays:mergedPls.plays, deletedPlayIds:mergedPls.deletedIds, _sha:remPls?._sha});
+    // Exception: DEV_READONLY (localhost preview) never writes.
+    if(!DEV_READONLY){
+      await GH.writeFile('collection.json', {
+        _editedAt: remEditedAt || now,
+        vinyls: mergedVinyls,
+        vinylEvents: prunedEvents,
+        lastSeen,
+        users,
+        _sha: remCol?._sha
+      });
+      await GH.writeFile('plays.json', {_editedAt: plsEditedAt || now, plays:mergedPls.plays, deletedPlayIds:mergedPls.deletedIds, _sha:remPls?._sha});
+    }
 
     // ── Step 5: Only update localStorage after successful write ──
     DB.vinyls = mergedVinyls;
@@ -1366,7 +1372,7 @@ async function syncNow(){
     _syncInProgress = false;
     localStorage.setItem('lastSyncOk', new Date().toISOString());
     const hadChanges = !!(remCol?._sha || remPls?._sha);
-    setSS('ok','Colección sincronizada');
+    setSS('ok', DEV_READONLY ? 'Sincronizado (DEV · solo lectura)' : 'Colección sincronizada');
     renderAll();
     resolveNfcPlay();
     if(hadChanges) showToast('Sincronizado ✓');
