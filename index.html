@@ -796,7 +796,7 @@ const DEV_READONLY = ['localhost','127.0.0.1'].includes(location.hostname);
 // Dev-only test data (plays of removed users user1/user2), loaded from
 // dev-fixtures.json into memory only — never touches DB/localStorage/sync.
 let DEV_FIXTURES = { plays: [] };
-function viewPlays(){ return DEV_READONLY && DEV_FIXTURES.plays.length ? DB.plays.concat(DEV_FIXTURES.plays) : DB.plays; }
+function viewPlays(){ return DEV_READONLY && DEV_FIXTURES.plays.length ? DB.plays.concat(DEV_FIXTURES.plays).sort((x,y)=>x.ts.localeCompare(y.ts)) : DB.plays; }
 const GH = {
   get user(){  return localStorage.getItem('gh_user')||''; },
   get token(){ return localStorage.getItem('gh_token')||''; },
@@ -1287,7 +1287,7 @@ async function syncNow(){
     if(DEV_READONLY){
       try{
         const fx = await GH.readFile('dev-fixtures.json');
-        DEV_FIXTURES.plays = fx?.plays || [];
+        DEV_FIXTURES.plays = Array.isArray(fx?.plays) ? fx.plays : [];
       }catch(_){ DEV_FIXTURES.plays = []; }
     }
 
