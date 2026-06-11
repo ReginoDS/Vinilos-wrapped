@@ -501,26 +501,49 @@ select.finput option{background:var(--s2);}
   background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.30);
   border-bottom:none;border-radius:2px 2px 0 0;}
 #shelfView .hg1{left:46px}#shelfView .hg2{right:46px}
-#shelfView .lid{position:relative;height:134px;margin:0 5px;
-  background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.03) 26%,rgba(255,255,255,.01));
-  overflow:hidden;
-  clip-path:polygon(2.2% 0,97.8% 0,100% 100%,0 100%);}
+/* cámara 3D compartida: la perspectiva vive en .lid, no en transforms locales */
+#shelfView .lid{position:relative;height:134px;margin:0 5px;perspective:520px;}
 #shelfView .ledge{position:absolute;top:0;bottom:0;width:1.5px;z-index:4;
   background:linear-gradient(180deg,rgba(255,255,255,.55),rgba(255,255,255,.30));}
 #shelfView .le{left:2px;transform:rotate(2.4deg);transform-origin:50% 100%;}
 #shelfView .re{right:2px;transform:rotate(-2.4deg);transform-origin:50% 100%;}
-#shelfView .lidFront{position:absolute;left:0;right:0;bottom:0;height:24px;z-index:3;
-  background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.06) 78%,rgba(255,255,255,.20));
-  border-top:1px solid rgba(255,255,255,.42);
-  box-shadow:inset 0 -2px 2px rgba(255,255,255,.32);}
-#shelfView .lid::before{content:'';position:absolute;top:0;left:0;right:0;height:12px;z-index:4;
+/* .glass = bisagra 3D. Sin background, clip-path ni opacity aquí: cualquiera
+   de ellos fuerza transform-style:flat y aplana los paneles hijos */
+#shelfView .glass{position:absolute;inset:0;z-index:6;pointer-events:none;
+  transform-style:preserve-3d;
+  transform-origin:50% 0;transition:transform .75s cubic-bezier(.45,.05,.3,1);}
+#shelfView .tt.open .glass{transform:rotateX(112deg);}
+/* panel superior: tinte, trapecio y brillos del antiguo .lid */
+#shelfView .gTop{position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.03) 26%,rgba(255,255,255,.01));
+  clip-path:polygon(2.2% 0,97.8% 0,100% 100%,0 100%);
+  transition:opacity .75s;}
+#shelfView .tt.open .gTop{opacity:.6;}
+#shelfView .gTop::before{content:'';position:absolute;top:0;left:0;right:0;height:12px;z-index:4;
   background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.05));
   border-bottom:1px solid rgba(255,255,255,.28);}
-#shelfView .lid::after{content:'';position:absolute;top:-25%;left:-14%;width:44%;height:165%;z-index:5;
+#shelfView .gTop::after{content:'';position:absolute;top:-25%;left:-14%;width:44%;height:165%;z-index:5;
   background:linear-gradient(80deg,transparent,rgba(255,255,255,.10) 46%,rgba(255,255,255,.02) 58%,transparent);
   transform:rotate(6deg);pointer-events:none;}
+/* frontal: bisagra en el borde delantero; plano cerrado (fachada pintada),
+   se pliega a 90° reales al abrir, se despliega al final del cierre */
+#shelfView .lidFront{position:absolute;left:0;right:0;bottom:0;height:24px;
+  background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.06) 78%,rgba(255,255,255,.20));
+  border-top:1px solid rgba(255,255,255,.42);
+  box-shadow:inset 0 -2px 2px rgba(255,255,255,.32);
+  transform:none;transform-origin:50% 100%;
+  transition:transform .22s ease-out .5s;}
+#shelfView .tt.open .lidFront{transform:rotateX(90deg);transition:transform .2s ease-in;}
+/* paredes laterales: fijas a 90° hacia el deck; eje de plegado inclinado ±2.4°
+   para seguir el borde trapezoidal (mismo ángulo que los ledges) */
+#shelfView .gSideL,#shelfView .gSideR{position:absolute;top:0;bottom:0;width:24px;
+  background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.04));
+  border-top:1px solid rgba(255,255,255,.35);}
+#shelfView .gSideL{left:0;transform-origin:0 100%;transform:rotateZ(2.4deg) rotateY(90deg);}
+#shelfView .gSideR{right:0;transform-origin:100% 100%;transform:rotateZ(-2.4deg) rotateY(-90deg);}
 #shelfView .deckTop{position:absolute;top:12px;left:0;right:0;bottom:0;
-  background:linear-gradient(180deg,#161616,#0a0a0a);}
+  background:linear-gradient(180deg,#161616,#0a0a0a);
+  clip-path:polygon(2% 0,98% 0,100% 100%,0 100%);}
 #shelfView .rim{position:absolute;left:48%;top:52%;transform:translate(-50%,-50%);
   width:180px;height:107px;border-radius:50%;
   background:linear-gradient(180deg,#666 0%,#9a9a9a 60%,#f1f1f1 90%,#c4c4c4 100%);
@@ -546,8 +569,6 @@ select.finput option{background:var(--s2);}
 #shelfView .armT .head{position:absolute;bottom:-3px;left:-6px;width:11px;height:8px;border-radius:1.5px;
   background:linear-gradient(180deg,#f2f2f2,#cdcdcd);box-shadow:0 1px 2px rgba(0,0,0,.5);
   transform:rotate(14deg);}
-#shelfView .armT .clip{position:absolute;bottom:-15px;left:-4px;width:8px;height:7px;border-radius:1px;
-  background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.28);}
 #shelfView .front{position:relative;height:44px;background:linear-gradient(180deg,#1d1d1d,#0b0b0b 45%,#050505);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.08);
   clip-path:polygon(2% 0,98% 0,100% 12%,100% 92%,98.5% 100%,1.5% 100%,0 92%,0 12%);}
@@ -804,7 +825,7 @@ select.finput option{background:var(--s2);}
       <div class="spot"></div>
       <div id="shelfGrid"></div>
       <div class="player" aria-hidden="true">
-        <div class="tt">
+        <div class="tt" id="shelfTT">
           <div class="hinge hg1"></div><div class="hinge hg2"></div>
           <div class="lid">
             <div class="deckTop">
@@ -816,10 +837,15 @@ select.finput option{background:var(--s2);}
               <div class="spindle"></div>
               <div class="szlbl">12&quot; SIZE<br>7&quot;</div>
               <div class="btdot"></div>
-              <div class="armT"><div class="head"></div><div class="clip"></div></div>
+              <div class="armT"><div class="head"></div></div>
             </div>
-            <div class="lidFront"></div>
-            <div class="ledge le"></div><div class="ledge re"></div>
+            <div class="glass">
+              <div class="gTop">
+                <div class="ledge le"></div><div class="ledge re"></div>
+              </div>
+              <div class="lidFront"></div>
+              <div class="gSideL"></div><div class="gSideR"></div>
+            </div>
           </div>
           <div class="front">
             <div class="ftop">
