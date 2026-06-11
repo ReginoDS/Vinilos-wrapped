@@ -483,6 +483,13 @@ select.finput option{background:var(--s2);}
   0%,100%{box-shadow:0 0 8px 1px rgba(201,169,110,.18), 1px 2px 5px rgba(0,0,0,.6), -6px 3px 10px rgba(0,0,0,.5);}
   50%{box-shadow:0 0 13px 2px rgba(201,169,110,.32), 1px 2px 5px rgba(0,0,0,.6), -6px 3px 10px rgba(0,0,0,.5);}
 }
+/* estado sonando */
+#shelfView .unit.nowplaying .scover{box-shadow:0 0 0 2px #d4af5e, 0 0 10px 1px rgba(212,175,94,.35),
+  3px 5px 10px rgba(0,0,0,.65);}
+#shelfView .unit.nowplaying .sdisc{opacity:0;} /* el disco "está" en el tocadiscos */
+#shelfView .unit.nowplaying .stack::after{content:'♪ SONANDO';position:absolute;left:50%;bottom:-2px;
+  transform:translateX(-50%);font-size:clamp(6px,calc(var(--cell,60px)*.12),9px);letter-spacing:.12em;
+  color:#d4af5e;background:rgba(20,14,8,.85);padding:2px 6px;border-radius:3px;white-space:nowrap;z-index:4;}
 /* restauración sin transiciones */
 #shelfView.instant *{transition:none!important;}
 
@@ -1782,6 +1789,14 @@ function setColView(view){
 
 /* ── ESTANTERÍA ─────────────────────────────────────────────── */
 const COL_VIEW_KEY='vinilos_colView';
+const NOWPLAYING_WINDOW_MS=3*3600*1000; // ventana "sonando" tras la última escucha (ajustable)
+function nowPlayingVinylId(){
+  let last=null;
+  for(const p of DB.plays) if(!last||p.ts>last.ts) last=p; // ts ISO: comparable como string
+  if(!last) return null;
+  if(Date.now()-new Date(last.ts).getTime()>NOWPLAYING_WINDOW_MS) return null;
+  return last.vinylId;
+}
 const SHELF_TONE_KEY='vinilos_shelfTone';
 const SHELF_ROUGH_KEY='vinilos_shelfRough';
 function colView(){return localStorage.getItem(COL_VIEW_KEY)==='shelf'?'shelf':'list';}
@@ -1933,12 +1948,20 @@ function applyShelfState(instant){
   const grid=document.getElementById('shelfGrid');
   if(instant) view.classList.add('instant');
   const cols=_shelfCols||1;
+  const npId=nowPlayingVinylId();
+  let playing=false;
   Array.from(grid.children).forEach((u,i)=>{
     const isSel=!!selV&&String(selV.id)===u.dataset.id;
     u.classList.toggle('sel',isSel);
     u.classList.toggle('edgeL',isSel&&i%cols===0);
     u.classList.toggle('edgeR',isSel&&i%cols===cols-1);
+    const isNp=npId!=null&&String(npId)===u.dataset.id;
+    u.classList.toggle('nowplaying',isNp);
+    if(isNp) playing=true;
   });
+  const tt=document.getElementById('shelfTT');
+  tt.classList.toggle('playing',playing);
+  document.getElementById('shelfPdisc').classList.toggle('on',playing);
   if(instant){void view.offsetWidth;view.classList.remove('instant');}
 }
 window.addEventListener('resize',()=>{if(colView()==='shelf')fitShelfGrid();});
