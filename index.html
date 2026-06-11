@@ -1916,7 +1916,7 @@ function syncShelfCfgUI(){
 // ════════════════════════════════════════════════════════════
 let _collectionRenderKey = null;
 function renderCollection(){
-  renderShelf(); // no-op si la vista activa es Lista
+  renderShelf(); // no-op si la vista activa es Lista; en estantería es la vía de re-render del tap (selectV no llama a renderShelf directamente)
   const vinyls=sortedVinyls();
   const grid=document.getElementById('vinylGrid');
   if(!vinyls.length){
