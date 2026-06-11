@@ -1732,7 +1732,7 @@ function setColView(view){
   const shelf=(view==='shelf');
   document.getElementById('vinylGrid').style.display=shelf?'none':'';
   document.getElementById('shelfView').style.display=shelf?'flex':'none';
-  if(shelf) renderShelf();
+  if(shelf) renderShelf(true);
 }
 
 /* ── ESTANTERÍA ─────────────────────────────────────────────── */
@@ -1851,6 +1851,7 @@ function fitShelfGrid(){
   grid.style.padding=PAD+'px';
   grid.style.gridTemplateColumns=`repeat(${bestCols},${bestCell.toFixed(1)}px)`;
   grid.style.setProperty('--cell',bestCell.toFixed(1)+'px');
+  _shelfCols=bestCols;
 }
 
 const SHELF_BALDA=`<svg class="balda" viewBox="0 0 100 8" preserveAspectRatio="none">
@@ -1859,13 +1860,15 @@ const SHELF_BALDA=`<svg class="balda" viewBox="0 0 100 8" preserveAspectRatio="n
 function _shelfUnitHTML(v,i){
   const initials=String(v.album||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase()||'?';
   const cov=v.cover?`<img src="${h(v.cover)}" alt="" loading="lazy" onerror="this.style.display='none'">`:'';
-  return `<div class="unit" style="animation-delay:${(0.05+i*0.022).toFixed(3)}s">
+  return `<div class="unit" data-id="${v.id}" onclick="selectV(${v.id})" style="animation-delay:${(0.05+i*0.022).toFixed(3)}s">
     <div class="stack"><div class="sdisc"></div><div class="scover"><div class="sfall">${h(initials)}</div>${cov}</div></div>
     ${SHELF_BALDA}</div>`;
 }
 
 let _shelfRenderKey=null;
-function renderShelf(){
+let _shelfCols=1;
+let _shelfAnimating=false;
+function renderShelf(instant){
   if(colView()!=='shelf'){_shelfRenderKey=null;return;}
   applyShelfWall();
   const vinyls=sortedVinyls();
@@ -1874,8 +1877,24 @@ function renderShelf(){
   if(key!==_shelfRenderKey||grid.children.length!==vinyls.length){
     _shelfRenderKey=key;
     grid.innerHTML=vinyls.map((v,i)=>_shelfUnitHTML(v,i)).join('');
+    instant=true; // DOM recién construido: aplicar estado sin transiciones
   }
   fitShelfGrid();
+  applyShelfState(instant);
+}
+function applyShelfState(instant){
+  if(_shelfAnimating) return; // la secuencia de reproducción manda mientras corre
+  const view=document.getElementById('shelfView');
+  const grid=document.getElementById('shelfGrid');
+  if(instant) view.classList.add('instant');
+  const cols=_shelfCols||1;
+  Array.from(grid.children).forEach((u,i)=>{
+    const isSel=!!selV&&String(selV.id)===u.dataset.id;
+    u.classList.toggle('sel',isSel);
+    u.classList.toggle('edgeL',isSel&&i%cols===0);
+    u.classList.toggle('edgeR',isSel&&i%cols===cols-1);
+  });
+  if(instant){void view.offsetWidth;view.classList.remove('instant');}
 }
 window.addEventListener('resize',()=>{if(colView()==='shelf')fitShelfGrid();});
 function setShelfTone(t){
