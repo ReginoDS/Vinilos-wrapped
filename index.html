@@ -1937,7 +1937,9 @@ function renderShelf(instant){
   const vinyls=sortedVinyls();
   const grid=document.getElementById('shelfGrid');
   const key=colSortMode()+'|'+vinyls.map(v=>v.id+':'+v.album+':'+(v.cover||'')).join('|');
-  if(key!==_shelfRenderKey||grid.children.length!==vinyls.length){
+  // durante la coreografía no se reconstruye la cuadrícula (desancla los nodos del
+  // vuelo); al no actualizar _shelfRenderKey, el rebuild queda aplazado al siguiente render
+  if((key!==_shelfRenderKey||grid.children.length!==vinyls.length)&&!_shelfAnimating){
     _shelfRenderKey=key;
     grid.innerHTML=vinyls.map((v,i)=>_shelfUnitHTML(v,i)).join('');
     instant=true; // DOM recién construido: aplicar estado sin transiciones
@@ -1974,7 +1976,7 @@ function shelfPlaySequence(vinylId){
   const unit=grid.querySelector(`.unit[data-id="${vinylId}"]`);
   const tt=document.getElementById('shelfTT');
   const pdisc=document.getElementById('shelfPdisc');
-  if(!unit||matchMedia('(prefers-reduced-motion: reduce)').matches){
+  if(!unit){
     _shelfAnimating=false;renderShelf(true);return;
   }
   grid.querySelectorAll('.unit.nowplaying').forEach(u=>u.classList.remove('nowplaying'));
