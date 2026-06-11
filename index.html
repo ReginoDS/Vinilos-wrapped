@@ -436,6 +436,121 @@ select.finput option{background:var(--s2);}
 .nfc-url{font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;}
 .nfc-copy{background:var(--s2);border:1px solid var(--border);color:var(--accent);font-size:10px;padding:5px 10px;border-radius:6px;cursor:pointer;flex-shrink:0;font-family:'DM Mono',monospace;}
 .nfc-copy.copied{background:var(--accent2);color:var(--bg);border-color:var(--accent2);}
+
+/* ══════════════ ESTANTERÍA (vista shelf de la colección) ══════════════ */
+#shelfView{flex:1;min-height:0;position:relative;overflow:hidden;display:none;
+  flex-direction:column;background-size:320px 200px;margin-top:10px;}
+#shelfView .gr{position:absolute;inset:0;pointer-events:none;z-index:1;}
+#shG1{mix-blend-mode:screen;background-size:140px 140px;}
+#shG2{mix-blend-mode:multiply;background-size:170px 170px;}
+#shG3{mix-blend-mode:soft-light;background-size:420px 420px;}
+#shelfView .spot{position:absolute;top:0;left:0;right:0;height:220px;z-index:2;pointer-events:none;
+  background:radial-gradient(60% 130% at 50% -30%,rgba(232,213,176,.10),transparent 70%);}
+
+/* cuadrícula sin scroll */
+#shelfGrid{position:relative;z-index:2;flex:1;min-height:0;display:grid;
+  justify-content:space-evenly;align-content:space-evenly;}
+#shelfView .unit{width:var(--cell);display:flex;flex-direction:column;align-items:center;
+  animation:shFadeUp .5s ease both;}
+#shelfView .stack{position:relative;width:100%;aspect-ratio:1;}
+#shelfView .sdisc{position:absolute;top:4%;right:-7%;width:92%;height:92%;border-radius:50%;
+  background:radial-gradient(circle,#3a3024 0 13%,#0d0d0d 13.5% 100%),
+             repeating-radial-gradient(circle,#0b0b0b 0 1.5px,#161616 1.5px 3px);
+  box-shadow:1px 2px 5px rgba(0,0,0,.6);}
+#shelfView .scover{position:absolute;inset:0;overflow:hidden;
+  box-shadow:3px 5px 10px rgba(0,0,0,.65), inset 0 0 0 1px rgba(255,255,255,.04);}
+#shelfView .scover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+#shelfView .sfall{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(160deg,#1a1611,#0d0b08);color:var(--accent2);
+  font-family:'DM Serif Display',serif;font-size:calc(var(--cell,40px)*.3);letter-spacing:1px;}
+
+/* balda: línea recta con extremos curvados hacia abajo (lado superior de un squircle) */
+#shelfView .balda{width:100%;height:8px;margin-top:1px;position:relative;z-index:3;overflow:visible;
+  filter:drop-shadow(0 4px 4px rgba(0,0,0,.55)) drop-shadow(0 1px 1px rgba(0,0,0,.4));}
+#shelfView .balda path{fill:none;stroke:url(#baldaGrad);stroke-width:2.4;stroke-linecap:round;}
+
+/* tocadiscos AT-LP60XBT (clon decorativo, mockup v14) */
+#shelfView .player{position:relative;z-index:2;height:200px;display:flex;justify-content:center;
+  align-items:flex-end;padding-bottom:12px;animation:shFadeUp .6s .5s ease both;}
+#shelfView .tt{position:relative;width:264px;filter:drop-shadow(0 12px 16px rgba(0,0,0,.65));
+  font-family:system-ui,-apple-system,sans-serif;}
+#shelfView .hinge{position:absolute;top:-6px;width:20px;height:8px;z-index:1;
+  background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.30);
+  border-bottom:none;border-radius:2px 2px 0 0;}
+#shelfView .hg1{left:46px}#shelfView .hg2{right:46px}
+#shelfView .lid{position:relative;height:134px;margin:0 5px;
+  background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.03) 26%,rgba(255,255,255,.01));
+  overflow:hidden;
+  clip-path:polygon(2.2% 0,97.8% 0,100% 100%,0 100%);}
+#shelfView .ledge{position:absolute;top:0;bottom:0;width:1.5px;z-index:4;
+  background:linear-gradient(180deg,rgba(255,255,255,.55),rgba(255,255,255,.30));}
+#shelfView .le{left:2px;transform:rotate(2.4deg);transform-origin:50% 100%;}
+#shelfView .re{right:2px;transform:rotate(-2.4deg);transform-origin:50% 100%;}
+#shelfView .lidFront{position:absolute;left:0;right:0;bottom:0;height:24px;z-index:3;
+  background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.06) 78%,rgba(255,255,255,.20));
+  border-top:1px solid rgba(255,255,255,.42);
+  box-shadow:inset 0 -2px 2px rgba(255,255,255,.32);}
+#shelfView .lid::before{content:'';position:absolute;top:0;left:0;right:0;height:12px;z-index:4;
+  background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.05));
+  border-bottom:1px solid rgba(255,255,255,.28);}
+#shelfView .lid::after{content:'';position:absolute;top:-25%;left:-14%;width:44%;height:165%;z-index:5;
+  background:linear-gradient(80deg,transparent,rgba(255,255,255,.10) 46%,rgba(255,255,255,.02) 58%,transparent);
+  transform:rotate(6deg);pointer-events:none;}
+#shelfView .deckTop{position:absolute;top:12px;left:0;right:0;bottom:0;
+  background:linear-gradient(180deg,#161616,#0a0a0a);}
+#shelfView .rim{position:absolute;left:48%;top:52%;transform:translate(-50%,-50%);
+  width:180px;height:107px;border-radius:50%;
+  background:linear-gradient(180deg,#666 0%,#9a9a9a 60%,#f1f1f1 90%,#c4c4c4 100%);
+  box-shadow:0 2px 6px rgba(0,0,0,.6);}
+#shelfView .mat{position:absolute;left:48%;top:52%;transform:translate(-50%,calc(-50% - 2px));
+  width:176px;height:103px;border-radius:50%;
+  background:radial-gradient(ellipse at 50% 42%,#1d1d1d,#0c0c0c 75%);}
+#shelfView .mat .mtxt{position:absolute;left:53%;top:32%;transform:translate(-50%,-50%) rotate(-13deg);
+  font-size:7px;letter-spacing:.04em;color:rgba(255,255,255,.40);white-space:nowrap;}
+#shelfView .mat .mlogo{position:absolute;left:50%;bottom:13%;transform:translateX(-50%);
+  font-size:5.5px;letter-spacing:.03em;color:rgba(255,255,255,.36);white-space:nowrap;}
+#shelfView .spindle{position:absolute;left:48%;top:52%;transform:translate(-50%,calc(-50% - 2px));
+  width:6px;height:5px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#fff,#9a9a9a 60%,#555);}
+#shelfView .szlbl{position:absolute;right:6px;top:36%;font-size:4.5px;line-height:2.1;
+  color:rgba(255,255,255,.32);text-align:right;letter-spacing:.06em;}
+#shelfView .btdot{position:absolute;left:9px;bottom:12px;width:5px;height:5px;border-radius:50%;
+  border:1px solid rgba(130,175,255,.45);}
+#shelfView .armT{position:absolute;right:12px;top:6px;width:3px;height:80px;border-radius:2px;
+  background:linear-gradient(90deg,#303030,#101010);}
+#shelfView .armT::before{content:'';position:absolute;top:-2px;left:-4.5px;width:12px;height:11px;border-radius:2px;
+  background:#1c1c1c;box-shadow:inset 0 1px 0 rgba(255,255,255,.14);}
+#shelfView .armT .head{position:absolute;bottom:-3px;left:-6px;width:11px;height:8px;border-radius:1.5px;
+  background:linear-gradient(180deg,#f2f2f2,#cdcdcd);box-shadow:0 1px 2px rgba(0,0,0,.5);
+  transform:rotate(14deg);}
+#shelfView .armT .clip{position:absolute;bottom:-15px;left:-4px;width:8px;height:7px;border-radius:1px;
+  background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.28);}
+#shelfView .front{position:relative;height:44px;background:linear-gradient(180deg,#1d1d1d,#0b0b0b 45%,#050505);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08);
+  clip-path:polygon(2% 0,98% 0,100% 12%,100% 92%,98.5% 100%,1.5% 100%,0 92%,0 12%);}
+#shelfView .ftop{position:absolute;top:4px;left:0;right:0;height:13px;
+  font-size:4.6px;color:rgba(255,255,255,.58);letter-spacing:.1em;}
+#shelfView .ftop .fl{position:absolute;left:22px;top:0;text-align:center;line-height:1.6;}
+#shelfView .ftop .fr{position:absolute;right:18px;top:2px;}
+#shelfView .fbot{position:absolute;bottom:5px;left:0;right:0;height:24px;}
+#shelfView .fknob{position:absolute;border-radius:50%;
+  background:radial-gradient(circle at 35% 28%,#3a3a3a,#0a0a0a 70%);
+  box-shadow:0 1px 2px rgba(0,0,0,.7), inset 0 1px 1px rgba(255,255,255,.12);}
+#shelfView .fk0{left:16px;top:4px;width:15px;height:15px;}
+#shelfView .fk1{right:66px;top:6px;width:11px;height:11px;}
+#shelfView .fk2{right:43px;top:6px;width:11px;height:11px;}
+#shelfView .fk3{right:20px;top:6px;width:11px;height:11px;}
+#shelfView .brand{position:absolute;left:50%;top:2px;transform:translateX(-50%);text-align:center;
+  color:rgba(255,255,255,.85);font-size:8px;letter-spacing:.03em;white-space:nowrap;}
+#shelfView .brand small{display:block;font-size:4.6px;color:rgba(255,255,255,.48);letter-spacing:.14em;margin-top:1px;}
+#shelfView .tt::before,#shelfView .tt::after{content:'';position:absolute;bottom:-7px;width:17px;height:7px;
+  border-radius:0 0 5px 5px;background:#070707;}
+#shelfView .tt::before{left:20px}#shelfView .tt::after{right:20px}
+
+@keyframes shFadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){
+  #shelfView .unit,#shelfView .player{animation:none;}
+}
 </style>
 </head>
 <body>
