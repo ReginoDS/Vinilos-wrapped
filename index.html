@@ -1686,6 +1686,150 @@ function setColView(view){
   // Solo visual por ahora: la vista Estantería se implementará más adelante
 }
 
+/* ── ESTANTERÍA ─────────────────────────────────────────────── */
+const COL_VIEW_KEY='vinilos_colView';
+const SHELF_TONE_KEY='vinilos_shelfTone';
+const SHELF_ROUGH_KEY='vinilos_shelfRough';
+function colView(){return localStorage.getItem(COL_VIEW_KEY)==='shelf'?'shelf':'list';}
+function shelfTone(){const t=localStorage.getItem(SHELF_TONE_KEY);return (t==='b'||t==='c')?t:'a';}
+function shelfRough(){const r=+localStorage.getItem(SHELF_ROUGH_KEY);return (r===1||r===2)?r:3;}
+
+// Pared de ladrillo: SVG data-URI con PRNG de semilla fija (idéntico entre tonos y sesiones)
+function _shelfRng(seed){let s=seed>>>0;return()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296;};}
+const SHELF_W=320,SHELF_H=200,SHELF_RH=40;
+const _shelfLayout=(()=>{
+  const r=_shelfRng(1972);
+  const rows=[];
+  for(let i=0;i<5;i++){
+    const segs=[];let x=-(15+r()*40);
+    while(x<SHELF_W){const w=58+r()*46;segs.push({x0:x,w,sh:Math.floor(r()*5)});x+=w;}
+    rows.push(segs);
+  }
+  const hjoints=[];
+  for(let j=0;j<5;j++){
+    const y=20+j*40,pts=[];
+    for(let x=0;x<=SHELF_W;x+=40){
+      const edge=(x===0||x===SHELF_W);
+      pts.push({x,u:edge?0:(r()-.5)*2});
+    }
+    hjoints.push({y,pts});
+  }
+  const speckles=[];
+  for(let i=0;i<90;i++){speckles.push({x:r()*SHELF_W,y:r()*SHELF_H,rad:.4+r()*1.1,light:r()>.5,o:.05+r()*.09});}
+  return {rows,hjoints,speckles};
+})();
+const SHELF_TONES={
+  a:{base:'#161007',shades:['#1a1309','#150f08','#1c150b','#130d05','#181107'],jop:.34},
+  b:{base:'#2a1410',shades:['#311a13','#241010','#362016','#200d0b','#2e1712'],jop:.38},
+  c:{base:'#0a0a0a',shades:['#0e0e0e','#080808','#111111','#0a0a0a','#0c0c0c'],jop:.30},
+};
+const SHELF_WOB={amp:.8,disp:1.1}; // juntas "leves", fijo por diseño
+const SHELF_ROUGH_OPS={1:[.04,.18,.45],2:[.08,.32,.75],3:[.13,.48,1]};
+const _shelfWallCache={};
+function shelfWallSVG(tone){
+  if(_shelfWallCache[tone]) return _shelfWallCache[tone];
+  const t=SHELF_TONES[tone],wob=SHELF_WOB;
+  let s=`<svg xmlns='http://www.w3.org/2000/svg' width='${SHELF_W}' height='${SHELF_H}'>`;
+  s+=`<defs><filter id='rg' x='-10%' y='-10%' width='120%' height='120%'>`+
+     `<feTurbulence type='turbulence' baseFrequency='0.11' numOctaves='2' seed='7' result='n'/>`+
+     `<feDisplacementMap in='SourceGraphic' in2='n' scale='${wob.disp}'/></filter></defs>`;
+  s+=`<rect width='${SHELF_W}' height='${SHELF_H}' fill='${t.base}'/>`;
+  const rowYs=[-20,20,60,100,140,180];
+  rowYs.forEach((y,i)=>{
+    const segs=_shelfLayout.rows[i%5];
+    segs.forEach(g=>{s+=`<rect x='${g.x0.toFixed(1)}' y='${y}' width='${g.w.toFixed(1)}' height='${SHELF_RH}' fill='${t.shades[g.sh]}'/>`;});
+  });
+  _shelfLayout.speckles.forEach(p=>{
+    s+=`<circle cx='${p.x.toFixed(1)}' cy='${p.y.toFixed(1)}' r='${p.rad.toFixed(1)}' fill='${p.light?'#fff':'#000'}' fill-opacity='${p.o.toFixed(2)}'/>`;
+  });
+  const hpath=j=>{let d=`M0,${(j.y+j.pts[0].u*wob.amp).toFixed(1)}`;j.pts.slice(1).forEach(p=>{d+=` L${p.x},${(j.y+p.u*wob.amp).toFixed(1)}`;});return d;};
+  let dark='',gold='';
+  _shelfLayout.hjoints.forEach(j=>{
+    dark+=`<path d='${hpath(j)}' transform='translate(0,1.6)'/>`;
+    gold+=`<path d='${hpath(j)}'/>`;
+  });
+  rowYs.forEach((y,i)=>{
+    const segs=_shelfLayout.rows[i%5];
+    segs.forEach((g,k)=>{
+      if(k===0)return;
+      const bx=g.x0;if(bx<2||bx>SHELF_W-2)return;
+      const mid=(k%2?1:-1)*.5*wob.amp;
+      const d=`M${bx.toFixed(1)},${y} Q${(bx+mid).toFixed(1)},${y+SHELF_RH/2} ${bx.toFixed(1)},${y+SHELF_RH}`;
+      dark+=`<path d='${d}' transform='translate(1.2,0)'/>`;
+      gold+=`<path d='${d}'/>`;
+    });
+  });
+  s+=`<g filter='url(#rg)' fill='none' stroke='#000' stroke-opacity='.38' stroke-width='3.4'>${dark}</g>`;
+  s+=`<g filter='url(#rg)' fill='none' stroke='#c9a96e' stroke-opacity='${t.jop}' stroke-width='2.4'>${gold}</g>`;
+  s+='</svg>';
+  const url="url(\"data:image/svg+xml,"+s.replace(/#/g,'%23')+"\")";
+  _shelfWallCache[tone]=url;
+  return url;
+}
+const SHELF_NOISE_FINE="url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' seed='3'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E\")";
+const SHELF_NOISE_COARSE="url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='420'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.012 .02' numOctaves='4' seed='11'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='420' height='420' filter='url(%23n)'/%3E%3C/svg%3E\")";
+
+function applyShelfWall(){
+  const sv=document.getElementById('shelfView');
+  const t=SHELF_TONES[shelfTone()];
+  sv.style.backgroundColor=t.base;
+  sv.style.backgroundImage=shelfWallSVG(shelfTone());
+  const g1=document.getElementById('shG1'),g2=document.getElementById('shG2'),g3=document.getElementById('shG3');
+  if(!g1.style.backgroundImage){
+    g1.style.backgroundImage=SHELF_NOISE_FINE;
+    g2.style.backgroundImage=SHELF_NOISE_FINE;
+    g3.style.backgroundImage=SHELF_NOISE_COARSE;
+  }
+  const[o1,o2,o3]=SHELF_ROUGH_OPS[shelfRough()];
+  g1.style.opacity=o1;g2.style.opacity=o2;g3.style.opacity=o3;
+}
+
+// Cuadrícula sin scroll: réplica de _getPickLayout con reserva de altura para la balda
+function fitShelfGrid(){
+  const grid=document.getElementById('shelfGrid');
+  const n=DB.vinyls.length;
+  if(!n){grid.style.gridTemplateColumns='';return;}
+  const SHELF=12,GAPX=8,GAPY=26,PAD=12;
+  const gw=grid.clientWidth,gh=grid.clientHeight;
+  let bestCols=1,bestCell=0;
+  for(let c=1;c<=n;c++){
+    const rows=Math.ceil(n/c);
+    const cellW=(gw-PAD*2-GAPX*(c-1))/c;
+    const cellH=(gh-PAD*2-GAPY*(rows-1))/rows-SHELF;
+    const cell=Math.min(cellW,cellH);
+    if(cell>bestCell){bestCell=cell;bestCols=c;}
+  }
+  grid.style.padding=PAD+'px';
+  grid.style.gridTemplateColumns=`repeat(${bestCols},${bestCell.toFixed(1)}px)`;
+  grid.style.setProperty('--cell',bestCell.toFixed(1)+'px');
+}
+
+const SHELF_BALDA=`<svg class="balda" viewBox="0 0 100 8" preserveAspectRatio="none">
+  <path d="M2,5 Q2,2 8,2 L92,2 Q98,2 98,5" vector-effect="non-scaling-stroke"/>
+</svg>`;
+function _shelfUnitHTML(v,i){
+  const initials=String(v.album||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase()||'?';
+  const cov=v.cover?`<img src="${h(v.cover)}" alt="" loading="lazy" onerror="this.style.display='none'">`:'';
+  return `<div class="unit" style="animation-delay:${(0.05+i*0.022).toFixed(3)}s">
+    <div class="stack"><div class="sdisc"></div><div class="scover"><div class="sfall">${h(initials)}</div>${cov}</div></div>
+    ${SHELF_BALDA}</div>`;
+}
+
+let _shelfRenderKey=null;
+function renderShelf(){
+  if(colView()!=='shelf'){_shelfRenderKey=null;return;}
+  applyShelfWall();
+  const vinyls=sortedVinyls();
+  const grid=document.getElementById('shelfGrid');
+  const key=colSortMode()+'|'+vinyls.map(v=>v.id+':'+v.album+':'+(v.cover||'')).join('|');
+  if(key!==_shelfRenderKey){
+    _shelfRenderKey=key;
+    grid.innerHTML=vinyls.map((v,i)=>_shelfUnitHTML(v,i)).join('');
+  }
+  fitShelfGrid();
+}
+window.addEventListener('resize',()=>{if(colView()==='shelf')fitShelfGrid();});
+
 // ════════════════════════════════════════════════════════════
 //  COLLECTION GRID
 // ════════════════════════════════════════════════════════════
