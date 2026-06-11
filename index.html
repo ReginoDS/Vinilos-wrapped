@@ -1682,8 +1682,13 @@ function sortedVinyls(){
   return v; // 'chrono' = orden del array = orden de registro
 }
 function setColView(view){
+  if(view!=='shelf') view='list';
+  localStorage.setItem(COL_VIEW_KEY,view);
   document.querySelectorAll('#colViewPill button').forEach(b=>b.classList.toggle('active',b.dataset.cview===view));
-  // Solo visual por ahora: la vista Estantería se implementará más adelante
+  const shelf=(view==='shelf');
+  document.getElementById('vinylGrid').style.display=shelf?'none':'';
+  document.getElementById('shelfView').style.display=shelf?'flex':'none';
+  if(shelf) renderShelf();
 }
 
 /* ── ESTANTERÍA ─────────────────────────────────────────────── */
@@ -1835,6 +1840,7 @@ window.addEventListener('resize',()=>{if(colView()==='shelf')fitShelfGrid();});
 // ════════════════════════════════════════════════════════════
 let _collectionRenderKey = null;
 function renderCollection(){
+  renderShelf(); // no-op si la vista activa es Lista
   const vinyls=sortedVinyls();
   const grid=document.getElementById('vinylGrid');
   if(!vinyls.length){
@@ -3862,6 +3868,7 @@ async function boot(){
 }
 
 document.getElementById('colSortSelect').value=colSortMode();
+setColView(colView());
 // Si ya está autenticado (localStorage persiste), arranca directo
 if (localStorage.getItem(AUTH_KEY) && USER.name) {
   document.getElementById('loginScreen').style.display = 'none';
