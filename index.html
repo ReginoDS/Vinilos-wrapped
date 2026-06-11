@@ -1911,6 +1911,7 @@ function precacheCardRects(){
 
 function startPickerApp(){
   if(!DB.vinyls.length) return;
+  if(colView()==='shelf') setColView('list');
   perfStart();
   // Cancel any running picker and start fresh
   if(_pickerAbort!==null) _pickerAbort++;
