@@ -555,6 +555,22 @@ select.finput option{background:var(--s2);}
   font-size:7px;letter-spacing:.04em;color:rgba(255,255,255,.40);white-space:nowrap;}
 #shelfView .mat .mlogo{position:absolute;left:50%;bottom:13%;transform:translateX(-50%);
   font-size:5.5px;letter-spacing:.03em;color:rgba(255,255,255,.36);white-space:nowrap;}
+/* disco girando en el plato: contenedor aplastado (elipse) + circulo interior rotando */
+#shelfView .platterDisc{position:absolute;left:48%;top:52%;
+  transform:translate(-50%,calc(-50% - 2px)) scaleY(.585);
+  width:156px;height:156px;opacity:0;transition:opacity .2s;}
+#shelfView .platterDisc.on{opacity:1;}
+#shelfView .platterDisc .spin{width:100%;height:100%;border-radius:50%;
+  background:radial-gradient(circle,#7a4a2b 0 13%,#0d0d0d 13.5% 100%),
+             repeating-radial-gradient(circle,#0b0b0b 0 1.5px,#161616 1.5px 3px);
+  position:relative;animation:ttRev 1.8s linear infinite paused;}
+#shelfView .platterDisc.on .spin{animation-play-state:running;}
+#shelfView .platterDisc .spin::before{content:'';position:absolute;left:50%;top:50%;width:5px;height:5px;
+  margin:-14px 0 0 6px;border-radius:50%;background:rgba(232,198,106,.85);}
+#shelfView .platterDisc .spin::after{content:'';position:absolute;inset:0;border-radius:50%;
+  background:conic-gradient(transparent 0 40deg,rgba(255,255,255,.07) 55deg,transparent 75deg,
+    transparent 215deg,rgba(255,255,255,.05) 235deg,transparent 255deg);}
+@keyframes ttRev{to{transform:rotate(360deg)}}
 #shelfView .spindle{position:absolute;left:48%;top:52%;transform:translate(-50%,calc(-50% - 2px));
   width:6px;height:5px;border-radius:50%;
   background:radial-gradient(circle at 35% 30%,#fff,#9a9a9a 60%,#555);}
@@ -563,7 +579,9 @@ select.finput option{background:var(--s2);}
 #shelfView .btdot{position:absolute;left:9px;bottom:12px;width:5px;height:5px;border-radius:50%;
   border:1px solid rgba(130,175,255,.45);}
 #shelfView .armT{position:absolute;right:12px;top:6px;width:3px;height:80px;border-radius:2px;
-  background:linear-gradient(90deg,#303030,#101010);}
+  background:linear-gradient(90deg,#303030,#101010);
+  transform-origin:50% 4px;transition:transform .9s cubic-bezier(.5,.05,.3,1);}
+#shelfView .tt.playing .armT{transform:rotate(29deg);}
 #shelfView .armT::before{content:'';position:absolute;top:-2px;left:-4.5px;width:12px;height:11px;border-radius:2px;
   background:#1c1c1c;box-shadow:inset 0 1px 0 rgba(255,255,255,.14);}
 #shelfView .armT .head{position:absolute;bottom:-3px;left:-6px;width:11px;height:8px;border-radius:1.5px;
@@ -834,6 +852,7 @@ select.finput option{background:var(--s2);}
                 <span class="mtxt">audio-technica</span>
                 <span class="mlogo">&#9398; audio-technica</span>
               </div>
+              <div class="platterDisc" id="shelfPdisc"><div class="spin"></div></div>
               <div class="spindle"></div>
               <div class="szlbl">12&quot; SIZE<br>7&quot;</div>
               <div class="btdot"></div>
