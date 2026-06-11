@@ -1930,6 +1930,7 @@ function _shelfUnitHTML(v,i){
 let _shelfRenderKey=null;
 let _shelfCols=1;
 let _shelfAnimating=false;
+let _shelfFailsafe=null;
 function renderShelf(instant){
   if(colView()!=='shelf'){_shelfRenderKey=null;return;}
   applyShelfWall();
@@ -1979,6 +1980,16 @@ function shelfPlaySequence(vinylId){
   grid.querySelectorAll('.unit.nowplaying').forEach(u=>u.classList.remove('nowplaying'));
   tt.classList.remove('playing');pdisc.classList.remove('on');
   tt.classList.add('open');
+  // failsafe: si onfinish del vuelo nunca dispara (app a segundo plano en Android,
+  // WAAPI throttled), el flag quedaría en true y applyShelfState muerto para siempre
+  clearTimeout(_shelfFailsafe);
+  _shelfFailsafe=setTimeout(()=>{
+    if(!_shelfAnimating) return;
+    document.querySelectorAll('.flyDisc').forEach(c=>c.remove());
+    tt.classList.remove('open');
+    _shelfAnimating=false;
+    renderShelf(true);
+  },4500);
   setTimeout(()=>_shelfFlight(unit,tt,pdisc),650);
 }
 function _shelfFlight(unit,tt,pdisc){
@@ -2009,6 +2020,7 @@ function _shelfFlight(unit,tt,pdisc){
     setTimeout(()=>tt.classList.add('playing'),250);
     setTimeout(()=>{
       tt.classList.remove('open');
+      clearTimeout(_shelfFailsafe);
       _shelfAnimating=false;
       applyShelfState(); // reconcilia con el estado derivado de datos
     },1150);
