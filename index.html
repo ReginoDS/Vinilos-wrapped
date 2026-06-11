@@ -580,6 +580,7 @@ select.finput option{background:var(--s2);}
   <div style="display:flex;border-bottom:1px solid var(--border);margin-bottom:14px;">
     <button class="cfg-tab active" data-cfg="sync" onclick="showCfgTab('sync')">Sincronización</button>
     <button class="cfg-tab" data-cfg="nfc" onclick="showCfgTab('nfc')">Tags NFC</button>
+    <button class="cfg-tab" data-cfg="shelf" onclick="showCfgTab('shelf')">Estantería</button>
   </div>
   <div id="cfgTab-sync" class="cfg-tabpanel">
     <div class="cfg-info">
@@ -604,6 +605,26 @@ select.finput option{background:var(--s2);}
       Cada vinilo tiene una URL única. Grábala en un tag NFC — al acercarlo registrará la escucha automáticamente.
     </div>
     <div id="nfcTagsList" class="rank-scroll" style="max-height:55vh;overflow-y:auto;"></div>
+  </div>
+  <div id="cfgTab-shelf" class="cfg-tabpanel" style="display:none;">
+    <div class="cfg-info">
+      Apariencia de la pared de la vista Estantería.
+      <div class="cfg-note">Preferencia de este dispositivo, no se sincroniza.</div>
+    </div>
+    <div class="field"><label>Tono de ladrillo</label>
+      <div class="seg-pill" id="shelfTonePill" style="margin-top:6px;">
+        <button type="button" data-tone="a" onclick="setShelfTone('a')">Carbón</button>
+        <button type="button" data-tone="b" onclick="setShelfTone('b')">Rojizo</button>
+        <button type="button" data-tone="c" onclick="setShelfTone('c')">Negro</button>
+      </div>
+    </div>
+    <div class="field"><label>Rugosidad</label>
+      <div class="seg-pill" id="shelfRoughPill" style="margin-top:6px;">
+        <button type="button" data-rough="1" onclick="setShelfRough(1)">Suave</button>
+        <button type="button" data-rough="2" onclick="setShelfRough(2)">Media</button>
+        <button type="button" data-rough="3" onclick="setShelfRough(3)">Fuerte</button>
+      </div>
+    </div>
   </div>
   <div id="appVersion" style="text-align:center;margin-top:14px;opacity:.5;font-size:11px;color:var(--muted);">v?</div>
 </div>
@@ -1834,6 +1855,19 @@ function renderShelf(){
   fitShelfGrid();
 }
 window.addEventListener('resize',()=>{if(colView()==='shelf')fitShelfGrid();});
+function setShelfTone(t){
+  localStorage.setItem(SHELF_TONE_KEY,t);
+  syncShelfCfgUI();applyShelfWall();
+}
+function setShelfRough(r){
+  localStorage.setItem(SHELF_ROUGH_KEY,String(r));
+  syncShelfCfgUI();applyShelfWall();
+}
+function syncShelfCfgUI(){
+  const t=shelfTone(),r=shelfRough();
+  document.querySelectorAll('#shelfTonePill button').forEach(b=>b.classList.toggle('active',b.dataset.tone===t));
+  document.querySelectorAll('#shelfRoughPill button').forEach(b=>b.classList.toggle('active',+b.dataset.rough===r));
+}
 
 // ════════════════════════════════════════════════════════════
 //  COLLECTION GRID
@@ -2622,6 +2656,7 @@ function showCfgTab(tab){
   const panel=document.getElementById('cfgTab-'+tab);
   if(panel) panel.style.display='';
   if(tab==='nfc') populateNfcList();
+  if(tab==='shelf') syncShelfCfgUI();
 }
 
 function populateNfcList(){
