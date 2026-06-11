@@ -616,6 +616,8 @@ select.finput option{background:var(--s2);}
   border-radius:0 0 5px 5px;background:#070707;}
 #shelfView .tt::before{left:20px}#shelfView .tt::after{right:20px}
 
+.flyDisc{position:fixed;z-index:99;border-radius:50%;pointer-events:none;
+  box-shadow:1px 2px 5px rgba(0,0,0,.6);}
 @keyframes shFadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){
   #shelfView .unit,#shelfView .player{animation:none;}
@@ -1964,6 +1966,54 @@ function applyShelfState(instant){
   document.getElementById('shelfPdisc').classList.toggle('on',playing);
   if(instant){void view.offsetWidth;view.classList.remove('instant');}
 }
+/* coreografía: tapa abre (.75s) → +650ms vuelo FLIP (950ms) → disco gira +
+   aguja (+250ms) → tapa cierra (+1150ms) → estado nowplaying */
+function shelfPlaySequence(vinylId){
+  const grid=document.getElementById('shelfGrid');
+  const unit=grid.querySelector(`.unit[data-id="${vinylId}"]`);
+  const tt=document.getElementById('shelfTT');
+  const pdisc=document.getElementById('shelfPdisc');
+  if(!unit||matchMedia('(prefers-reduced-motion: reduce)').matches){
+    _shelfAnimating=false;renderShelf(true);return;
+  }
+  grid.querySelectorAll('.unit.nowplaying').forEach(u=>u.classList.remove('nowplaying'));
+  tt.classList.remove('playing');pdisc.classList.remove('on');
+  tt.classList.add('open');
+  setTimeout(()=>_shelfFlight(unit,tt,pdisc),650);
+}
+function _shelfFlight(unit,tt,pdisc){
+  const disc=unit.querySelector('.sdisc');
+  const mat=tt.querySelector('.mat');
+  const d=disc.getBoundingClientRect(),m=mat.getBoundingClientRect();
+  const clone=document.createElement('div');
+  clone.className='flyDisc';
+  clone.style.background=getComputedStyle(disc).background;
+  clone.style.left=d.left+'px';clone.style.top=d.top+'px';
+  clone.style.width=d.width+'px';clone.style.height=d.height+'px';
+  document.body.appendChild(clone);
+  disc.style.opacity=0;
+  const tw=m.width*.886,th=m.height*.886;
+  const dx=(m.left+m.width/2)-(d.left+d.width/2);
+  const dy=(m.top+m.height/2-1.3)-(d.top+d.height/2);
+  const sx=tw/d.width,sy=th/d.height;
+  clone.animate([
+    {transform:'translate(0,0) scale(1,1)'},
+    {transform:`translate(${dx*.45}px,${dy*.30-26}px) scale(${(1+sx)/2},${(1+sx)/2})`,offset:.45},
+    {transform:`translate(${dx}px,${dy}px) scale(${sx},${sy})`}
+  ],{duration:950,easing:'cubic-bezier(.45,.05,.35,1)',fill:'forwards'}).onfinish=()=>{
+    clone.remove();
+    disc.style.opacity='';
+    unit.classList.remove('sel','edgeL','edgeR');
+    unit.classList.add('nowplaying'); // mantiene el sdisc oculto vía clase
+    pdisc.classList.add('on');
+    setTimeout(()=>tt.classList.add('playing'),250);
+    setTimeout(()=>{
+      tt.classList.remove('open');
+      _shelfAnimating=false;
+      applyShelfState(); // reconcilia con el estado derivado de datos
+    },1150);
+  };
+}
 window.addEventListener('resize',()=>{if(colView()==='shelf')fitShelfGrid();});
 function setShelfTone(t){
   localStorage.setItem(SHELF_TONE_KEY,t);
@@ -2737,10 +2787,15 @@ function openPlayModal(){
 }
 function confirmPlay(){
   if(!selV) return;
-  DB.addPlay(selV.id);
+  const vid=selV.id;
+  DB.addPlay(vid);
   closeModal('playModal'); selV=null;
+  // animar solo en estantería y si no hay otra secuencia en marcha
+  const animateShelf=currentTab==='col'&&colView()==='shelf'&&!_shelfAnimating;
+  if(animateShelf) _shelfAnimating=true; // renderAll no debe pisar la coreografía
   renderAll(); showToast('Escucha registrada ◎');
   updateBadges();
+  if(animateShelf) shelfPlaySequence(vid);
   if(GH.ok) syncNow();
 }
 
