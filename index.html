@@ -1771,9 +1771,9 @@ const SHELF_NOISE_COARSE="url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 
 function applyShelfWall(){
   const sv=document.getElementById('shelfView');
-  const t=SHELF_TONES[shelfTone()];
+  const tone=shelfTone(),t=SHELF_TONES[tone];
   sv.style.backgroundColor=t.base;
-  sv.style.backgroundImage=shelfWallSVG(shelfTone());
+  sv.style.backgroundImage=shelfWallSVG(tone);
   const g1=document.getElementById('shG1'),g2=document.getElementById('shG2'),g3=document.getElementById('shG3');
   if(!g1.style.backgroundImage){
     g1.style.backgroundImage=SHELF_NOISE_FINE;
@@ -1822,7 +1822,7 @@ function renderShelf(){
   const vinyls=sortedVinyls();
   const grid=document.getElementById('shelfGrid');
   const key=colSortMode()+'|'+vinyls.map(v=>v.id+':'+v.album+':'+(v.cover||'')).join('|');
-  if(key!==_shelfRenderKey){
+  if(key!==_shelfRenderKey||grid.children.length!==vinyls.length){
     _shelfRenderKey=key;
     grid.innerHTML=vinyls.map((v,i)=>_shelfUnitHTML(v,i)).join('');
   }
