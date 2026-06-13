@@ -185,13 +185,15 @@ header{padding:16px 18px 10px;flex-shrink:0;border-bottom:1px solid var(--border
 
 /* ── MODALS ── */
 .moverlay{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:100;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;}
-.moverlay.nfc-overlay{background:rgba(0,0,0,.35);}
 .moverlay.open{opacity:1;pointer-events:all;}
 .modal{background:var(--surface);border:1px solid var(--border);border-bottom:none;border-radius:12px 12px 0 0;padding:20px 20px 36px;width:100%;max-width:480px;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);max-height:90dvh;overflow-y:auto;}
 .moverlay.open .modal{transform:translateY(0);}
 .mhandle{width:36px;height:3px;background:var(--border);border-radius:2px;margin:0 auto 16px;}
 .mtitle{font-family:'DM Serif Display',serif;font-size:20px;color:var(--accent);margin-bottom:3px;}
 .msub{font-size:11px;color:var(--muted);margin-bottom:18px;text-transform:uppercase;letter-spacing:1px;}
+.mhead{display:flex;justify-content:space-between;align-items:baseline;gap:14px;margin-bottom:14px;}
+.mhead .mtitle{margin-bottom:0;}
+.mdate{flex-shrink:0;text-align:right;font-size:11px;color:var(--muted);line-height:1.35;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;}
 .field{margin-bottom:13px;}
 .field label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:6px;}
 .finput{width:100%;background:var(--s2);border:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:14px;padding:10px 12px;border-radius:var(--radius);outline:none;transition:border-color .15s;}
@@ -218,7 +220,14 @@ select.finput option{background:var(--s2);}
 .conf-disc::after{content:'';width:7px;height:7px;border-radius:50%;background:var(--bg);border:1.5px solid #444;position:absolute;z-index:3;}
 .conf-album{font-family:'DM Serif Display',serif;font-size:17px;color:var(--text);}
 .conf-artist{font-size:11px;color:var(--muted);margin-top:2px;}
-.conf-now{font-size:10px;color:var(--accent2);margin-top:5px;text-transform:uppercase;letter-spacing:1px;}
+.conf-edition{font-size:11px;color:var(--muted);margin-top:2px;}
+
+/* MODAL DE REGISTRAR ESCUCHA — más compacto */
+#playModal .modal{padding-top:16px;padding-bottom:22px;}
+#playModal .mhandle{margin-bottom:10px;}
+#playModal .mhead{margin-bottom:12px;}
+#playModal .conf-info{margin-bottom:12px;padding:11px;}
+#playModal .macts{margin-top:14px;}
 
 /* CONFIG */
 .cfg-info{font-size:11px;color:var(--muted);line-height:1.9;margin-bottom:16px;background:var(--s2);border:1px solid var(--border);border-radius:var(--radius);padding:11px;}
@@ -779,19 +788,21 @@ select.finput option{background:var(--s2);}
 <div class="moverlay" id="playModal">
 <div class="modal">
   <div class="mhandle"></div>
-  <div class="mtitle">Registrar escucha</div>
-  <div class="msub">¿Confirmas que estás poniendo este disco?</div>
+  <div class="mhead">
+    <div class="mtitle">📀 Registrar escucha</div>
+    <div class="mdate" id="confTime"></div>
+  </div>
   <div class="conf-info">
     <div class="conf-disc"><img id="confCoverImg" src="" alt="" style="display:none"></div>
     <div>
       <div class="conf-album" id="confAlbum"></div>
+      <div class="conf-edition" id="confEdition"></div>
       <div class="conf-artist" id="confArtist"></div>
-      <div class="conf-now">Ahora · <span id="confTime"></span></div>
     </div>
   </div>
   <div class="macts">
     <button class="btn btn-s" onclick="closeModal('playModal')" style="flex:.5">Cancelar</button>
-    <button class="btn btn-p" onclick="confirmPlay()">¡Ponerlo!</button>
+    <button class="btn btn-p" onclick="confirmPlay()">◎ Registrar</button>
   </div>
 </div>
 </div>
@@ -807,6 +818,7 @@ select.finput option{background:var(--s2);}
         <span class="user-chip" id="userChip">—</span>
         <div class="icon-btn" onclick="window.location.reload()" title="Actualizar app">⟳</div>
         <div class="icon-btn" onclick="openModal('configModal')" title="Config">⚙</div>
+        <div class="icon-btn" id="nfcTestBtn" onclick="devSimulateNfc()" title="Simular NFC (dev)" style="display:none;font-size:9px;font-weight:700;letter-spacing:.5px;">NFC</div>
       </div>
     </div>
     <div class="stats-row">
@@ -931,29 +943,6 @@ select.finput option{background:var(--s2);}
 
 <div class="toast" id="toast"></div>
 
-
-<!-- ══════════════════════════════════════════
-     NFC PLAY MODAL
-══════════════════════════════════════════ -->
-<div class="moverlay nfc-overlay" id="nfcModal">
-<div class="modal">
-  <div class="mhandle"></div>
-  <div class="mtitle" style="font-size:22px">📀 Vinilo detectado</div>
-  <div class="msub" id="nfcSub">Confirma la reproducción</div>
-  <div id="nfcDisc" style="display:flex;align-items:center;gap:16px;margin:18px 0;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);">
-    <div id="nfcDiscImg" style="width:56px;height:56px;border-radius:50%;flex-shrink:0;overflow:hidden;background:conic-gradient(from 0deg,#0d0d0d 0,#1a1a1a 18deg,#0d0d0d 36deg,#1a1a1a 54deg,#0d0d0d 72deg,#1a1a1a 90deg,#0d0d0d 108deg,#1a1a1a 126deg,#0d0d0d 144deg,#1a1a1a 162deg,#0d0d0d 180deg,#1a1a1a 198deg,#0d0d0d 216deg,#1a1a1a 234deg,#0d0d0d 252deg,#1a1a1a 270deg,#0d0d0d 288deg,#1a1a1a 306deg,#0d0d0d 324deg,#1a1a1a 342deg,#0d0d0d 360deg);border:1px solid #222;"></div>
-    <div style="flex:1;min-width:0;">
-      <div id="nfcAlbum" style="font-family:'DM Serif Display',serif;font-size:16px;color:var(--text)"></div>
-      <div id="nfcEdition" style="font-style:italic;font-size:11px;color:var(--muted);margin-top:2px"></div>
-      <div id="nfcArtist" style="font-size:11px;color:var(--muted);margin-top:4px"></div>
-    </div>
-  </div>
-  <div class="macts">
-    <button class="btn btn-s" onclick="closeModal('nfcModal')" style="flex:.5">Cancelar</button>
-    <button class="btn btn-p" id="nfcConfirmBtn" onclick="confirmNfcPlay()">◎ Registrar</button>
-  </div>
-</div>
-</div>
 
 <!-- ══════════════════════════════════════════
      NFC TAGS MODAL
@@ -2790,29 +2779,41 @@ function initLogSwipe(){
 // ════════════════════════════════════════════════════════════
 //  PLAY
 // ════════════════════════════════════════════════════════════
-function openPlayModal(){
-  if(!selV) return;
-  document.getElementById('confAlbum').textContent=selV.album+(selV.edition?` (${selV.edition})`:'');
-  document.getElementById('confArtist').textContent=selV.artist;
-  document.getElementById('confTime').textContent=new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+// Vinilo del modal de registrar escucha. Único modal para los dos flujos
+// (toque manual y NFC); el sync al cerrar lo dispara el observer de #playModal.
+let _playV=null;
+function openPlayModal(v){
+  v=v||selV;
+  if(!v) return;
+  _playV=v;
+  document.getElementById('confAlbum').textContent=v.album;
+  const confEd=document.getElementById('confEdition');
+  confEd.textContent=v.edition||'';
+  confEd.style.display=v.edition?'':'none';
+  document.getElementById('confArtist').textContent=v.artist;
+  const _now=new Date();
+  document.getElementById('confTime').textContent=
+    _now.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})+' · '+
+    _now.toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'short'});
   const img=document.getElementById('confCoverImg');
-  if(selV.cover){img.src=selV.cover;img.style.display='block';}else img.style.display='none';
+  if(v.cover){img.src=v.cover;img.style.display='block';}else img.style.display='none';
   openModal('playModal');
 }
 function confirmPlay(){
-  if(!selV) return;
-  const vid=selV.id;
+  const v=_playV;
+  if(!v) return;
+  const vid=v.id;
   DB.addPlay(vid);
-  closeModal('playModal'); selV=null;
+  closeModal('playModal'); _playV=null; selV=null;
   // animar solo en estantería y si no hay otra secuencia en marcha
   const animateShelf=currentTab==='col'&&colView()==='shelf'&&!_shelfAnimating;
   if(animateShelf) _shelfAnimating=true; // renderAll no debe pisar la coreografía
-  renderAll(); showToast('Escucha registrada ◎');
+  renderAll(); showToast('◎ '+v.album+' registrado');
   updateBadges();
   // esperar a que el overlay del modal termine de desvanecerse (.25s) para que
   // la coreografía se vea desde el principio
   if(animateShelf) setTimeout(()=>shelfPlaySequence(vid),350);
-  if(GH.ok) syncNow();
+  // el sync lo dispara el observer de #playModal al cerrarse
 }
 
 // ════════════════════════════════════════════════════════════
@@ -2884,18 +2885,20 @@ function openModal(id){
   document.getElementById(id).classList.add('open');
 }
 function closeModal(id){ document.getElementById(id).classList.remove('open'); }
-['addModal','editModal','playModal','configModal','nfcModal','nfcTagsModal'].forEach(id=>{
+['addModal','editModal','playModal','configModal','nfcTagsModal'].forEach(id=>{
   document.getElementById(id).addEventListener('click',function(e){if(e.target===this)closeModal(id);});
 });
-// After nfcModal closes (any path: confirm, cancel, backdrop tap), force sync
-const _nfcModalEl = document.getElementById('nfcModal');
-const _nfcModalObs = new MutationObserver(()=>{
-  if(!_nfcModalEl.classList.contains('open') && GH.ok){
-    // Small delay so confirmNfcPlay's DB.addPlay has already run
+// Al cerrar el modal de registrar escucha (confirmar, cancelar o tap fuera),
+// forzar sync. Sirve para los dos flujos (manual y NFC), incluido el arranque
+// por NFC, donde boot aplaza el sync hasta que el usuario cierra el modal.
+const _playModalEl = document.getElementById('playModal');
+const _playModalObs = new MutationObserver(()=>{
+  if(!_playModalEl.classList.contains('open') && GH.ok){
+    // pequeño delay para que el DB.addPlay de confirmPlay ya se haya ejecutado
     setTimeout(()=>syncNow(), 100);
   }
 });
-_nfcModalObs.observe(_nfcModalEl, {attributes:true, attributeFilter:['class']});
+_playModalObs.observe(_playModalEl, {attributes:true, attributeFilter:['class']});
 
 // ════════════════════════════════════════════════════════════
 //  BADGES
@@ -4065,7 +4068,7 @@ async function boot(){
         if(_nfcPendingId !== null){
           // NFC entry: show modal immediately, defer sync until modal closes
           resolveNfcPlay();
-          return; // syncNow will be triggered by the nfcModal MutationObserver
+          return; // syncNow lo dispara el observer de #playModal al cerrarse
         }
       } else if(_nfcPendingId !== null){
         // No local data yet — must sync first to find the vinyl, then show modal
@@ -4092,6 +4095,12 @@ if (localStorage.getItem(AUTH_KEY) && USER.name) {
   boot();
 } else {
   if (USER.name) document.getElementById('loginName').value = USER.name;
+}
+
+// Botón de test NFC: solo en localhost (DEV_READONLY)
+if (DEV_READONLY) {
+  const _nfcTestBtn = document.getElementById('nfcTestBtn');
+  if (_nfcTestBtn) _nfcTestBtn.style.display = 'flex';
 }
 
 // Handle NFC tag when app is already running in background
@@ -4155,33 +4164,14 @@ function resolveNfcPlay() {
   }
   _nfcPendingId = null;
   sessionStorage.removeItem('nfc_pending_play');
-  openNfcModal(v);
+  // mismo modal que el flujo manual
+  openPlayModal(v);
 }
 
-function openNfcModal(v) {
-  const discEl = document.getElementById('nfcDiscImg');
-  discEl.innerHTML = v.cover
-    ? '<img src="' + h(v.cover) + '" alt="" onerror="this.style.display=\'none\'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">'
-    : '';
-  document.getElementById('nfcAlbum').textContent = v.album;
-  document.getElementById('nfcEdition').textContent = v.edition || '';
-  document.getElementById('nfcArtist').textContent = v.artist;
-  document.getElementById('nfcSub').textContent =
-    new Date().toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'}) + ' · ' +
-    new Date().toLocaleDateString('es-ES', {weekday:'long', day:'numeric', month:'long'});
-  document.getElementById('nfcConfirmBtn').dataset.vinylId = v.id;
-  openModal('nfcModal');
-}
-
-function confirmNfcPlay() {
-  const id = parseInt(document.getElementById('nfcConfirmBtn').dataset.vinylId);
-  const v = DB.vinyls.find(x => x.id === id);
-  if (!v) { closeModal('nfcModal'); return; }
-  DB.addPlay(id);
-  closeModal('nfcModal');
-  renderAll();
-  showToast('◎ ' + v.album + ' registrado');
-  // syncNow is triggered by the nfcModal MutationObserver when the modal closes
+// Dev-only: simula un tap NFC del vinilo id 1 (mismo camino que un tag real)
+function devSimulateNfc() {
+  _nfcPendingId = 1;
+  resolveNfcPlay();
 }
 
 function openNfcTags() {
