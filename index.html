@@ -495,11 +495,20 @@ select.finput option{background:var(--s2);}
 /* estado sonando */
 #shelfView .unit.nowplaying .scover{opacity:0;} /* la carátula "está" en el atril */
 #shelfView .unit.nowplaying .sdisc{opacity:0;} /* el disco "está" en el tocadiscos */
-#shelfView .unit.nowplaying .stack::after{content:'♪ SONANDO';position:absolute;left:50%;bottom:-2px;
-  transform:translateX(-50%);font-size:clamp(6px,calc(var(--cell,60px)*.12),9px);letter-spacing:.12em;
-  color:#d4af5e;background:rgba(20,14,8,.85);padding:2px 6px;border-radius:3px;white-space:nowrap;z-index:4;}
 /* restauración sin transiciones */
 #shelfView.instant *{transition:none!important;}
+
+/* "Elige por mí" en estantería: apagón + iluminación uno a uno (mismo estilo que la
+   lista, pero sólo sobre las carátulas/discos — el fondo, balda y atril no se tocan).
+   Todo va por filter sobre .stack para que el estrobo sea nítido sin smear de box-shadow */
+#shelfView .unit.picker-dim .stack,
+#shelfView .unit.picker-lit .stack,
+#shelfView .unit.picker-winner .stack{transition:filter .15s ease;}
+#shelfView .unit.picker-dim .stack{filter:brightness(.24) saturate(.7);}
+#shelfView .unit.picker-lit .stack{filter:brightness(1.12)
+  drop-shadow(0 0 9px rgba(201,169,110,.7)) drop-shadow(0 0 3px rgba(201,169,110,.9));}
+#shelfView .unit.picker-winner .stack{filter:brightness(1.15)
+  drop-shadow(0 0 14px rgba(201,169,110,.85)) drop-shadow(0 0 5px rgba(201,169,110,1));}
 
 /* balda: línea recta con extremos curvados hacia abajo (lado superior de un squircle) */
 #shelfView .balda{width:100%;height:8px;margin-top:1px;position:relative;z-index:3;overflow:visible;
@@ -693,6 +702,8 @@ select.finput option{background:var(--s2);}
 
 .flyDisc{position:fixed;z-index:99;border-radius:50%;pointer-events:none;
   box-shadow:1px 2px 5px rgba(0,0,0,.6);}
+.flyCover{position:fixed;z-index:98;overflow:hidden;border-radius:2px;pointer-events:none;
+  box-shadow:3px 5px 12px rgba(0,0,0,.6), inset 0 0 0 1px rgba(255,255,255,.06);}
 @keyframes shFadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){
   #shelfView .unit,#shelfView .player{animation:none;}
@@ -2070,8 +2081,10 @@ function setEaselCover(vinylId){
   if(v&&v.cover){img.src=v.cover;img.style.display='';}
   else{img.removeAttribute('src');img.style.display='none';}
 }
-/* coreografía: tapa abre (.75s) → +650ms vuelo FLIP (950ms) → disco gira +
-   aguja (+250ms) → tapa cierra (+1150ms) → estado nowplaying */
+/* coreografía: tapa abre (.75s) → +650ms vuelo FLIP del disco al plato (950ms) y
+   en paralelo vuelo de la carátula al atril con rebote (1050ms) → disco gira +
+   aguja (+250ms) → tapa cierra (+1150ms) → estado nowplaying.
+   El disco es el dueño de la línea temporal; el vuelo de la carátula es cosmético. */
 function shelfPlaySequence(vinylId){
   const grid=document.getElementById('shelfGrid');
   const unit=grid.querySelector(`.unit[data-id="${vinylId}"]`);
@@ -2089,14 +2102,51 @@ function shelfPlaySequence(vinylId){
   clearTimeout(_shelfFailsafe);
   _shelfFailsafe=setTimeout(()=>{
     if(!_shelfAnimating) return;
-    document.querySelectorAll('.flyDisc').forEach(c=>c.remove());
+    document.querySelectorAll('.flyDisc,.flyCover').forEach(c=>c.remove());
     tt.classList.remove('open');
     _shelfAnimating=false;
+    _shelfRenderKey=null; // fuerza rebuild limpio: descarta overrides en línea de opacity
     renderShelf(true);
   },4500);
-  setTimeout(()=>_shelfFlight(unit,tt,pdisc),650);
+  setTimeout(()=>_shelfFlight(unit,tt,pdisc),650);          // disco: sale de la funda y vuela
+  setTimeout(()=>_shelfCoverFlight(unit),970);              // carátula: despega cuando el disco ya salió
 }
 function _shelfFlight(unit,tt,pdisc){
+  // Fase 1: el disco REAL se desliza hacia el lado y sale de DETRÁS de la carátula.
+  // La .scover va después que la .sdisc en el DOM, así que la tapa hasta que asoma por
+  // la derecha → da el efecto de extraerlo de la funda en vez de atravesarla de frente.
+  const disc=unit.querySelector('.sdisc');
+  const cover=unit.querySelector('.scover');
+  const d=disc.getBoundingClientRect();
+  // el recorte real lo impone #shelfView (overflow:hidden), no el viewport: en pantallas anchas
+  // #app va centrado a 480px y entre la pared y el borde de pantalla queda una franja que recorta
+  const vr=document.getElementById('shelfView').getBoundingClientRect();
+  const margin=8;
+  const want=d.width*.72;                            // separación deseada disco↔funda
+  const discEx=Math.min(want,Math.max(0,(vr.right-margin)-d.right)); // clamp contra el borde derecho de la pared
+  let coverShift=want-discEx;                         // el resto lo aporta la funda yéndose a la izquierda
+  if(coverShift>0&&cover){
+    const c=cover.getBoundingClientRect();
+    coverShift=Math.min(coverShift,Math.max(0,c.left-(vr.left+margin))); // y la funda no rebasa la pared por la izquierda
+  }
+  const ease='cubic-bezier(.45,0,.25,1)';
+  const slide=disc.animate([
+    {transform:'translateX(0)'},
+    {transform:`translateX(${discEx}px)`}
+  ],{duration:320,easing:ease,fill:'forwards'});
+  if(coverShift>0&&cover){
+    // la funda ya lleva un translateX(%) por .sel; partimos de su valor actual para no dar un salto
+    const tf=getComputedStyle(cover).transform;
+    const baseX=tf&&tf!=='none'?new DOMMatrixReadOnly(tf).m41:0;
+    cover.__shift=cover.animate([
+      {transform:`translateX(${baseX}px)`},
+      {transform:`translateX(${baseX-coverShift}px)`}
+    ],{duration:320,easing:ease,fill:'forwards'});
+  }
+  slide.onfinish=()=>_shelfDiscToDeck(unit,tt,pdisc,slide);
+}
+function _shelfDiscToDeck(unit,tt,pdisc,slide){
+  // Fase 2: ya despejado de la carátula, el disco arca y gira hasta el plato
   const disc=unit.querySelector('.sdisc');
   const mat=tt.querySelector('.mat');
   const d=disc.getBoundingClientRect(),m=mat.getBoundingClientRect();
@@ -2106,16 +2156,17 @@ function _shelfFlight(unit,tt,pdisc){
   clone.style.left=d.left+'px';clone.style.top=d.top+'px';
   clone.style.width=d.width+'px';clone.style.height=d.height+'px';
   document.body.appendChild(clone);
+  slide.cancel(); // descarta el fill de la fase 1: el disco real vuelve a su sitio, ya oculto
   disc.style.opacity=0;
   const tw=m.width*.886,th=m.height*.886;
   const dx=(m.left+m.width/2)-(d.left+d.width/2);
   const dy=(m.top+m.height/2-1.3)-(d.top+d.height/2);
   const sx=tw/d.width,sy=th/d.height;
   clone.animate([
-    {transform:'translate(0,0) scale(1,1)'},
-    {transform:`translate(${dx*.45}px,${dy*.30-26}px) scale(${(1+sx)/2},${(1+sx)/2})`,offset:.45},
-    {transform:`translate(${dx}px,${dy}px) scale(${sx},${sy})`}
-  ],{duration:950,easing:'cubic-bezier(.45,.05,.35,1)',fill:'forwards'}).onfinish=()=>{
+    {transform:'translate(0,0) scale(1,1) rotate(0deg)',easing:'cubic-bezier(.4,0,.5,1)'},
+    {transform:`translate(${dx*.45}px,${dy*.30-32}px) scale(${(1+sx)/2},${(1+sx)/2}) rotate(190deg)`,offset:.45,easing:'cubic-bezier(.45,0,.4,1)'},
+    {transform:`translate(${dx}px,${dy}px) scale(${sx},${sy}) rotate(360deg)`}
+  ],{duration:820,fill:'forwards'}).onfinish=()=>{
     clone.remove();
     disc.style.opacity='';
     unit.classList.remove('sel','edgeL','edgeR');
@@ -2128,6 +2179,62 @@ function _shelfFlight(unit,tt,pdisc){
       _shelfAnimating=false;
       applyShelfState(); // reconcilia con el estado derivado de datos
     },1150);
+  };
+}
+function _shelfCoverFlight(unit){
+  const easel=document.querySelector('#shelfView .easel-deco');
+  const cover=unit&&unit.querySelector('.scover');
+  if(!easel||!cover) return;
+  // revela el destino real del atril para poder medirlo, pero lo oculta durante el vuelo
+  setEaselCover(unit.dataset.id);
+  const target=easel.querySelector('.cover');
+  if(!target) return;
+  target.style.opacity='0';
+  const c=cover.getBoundingClientRect(),m=target.getBoundingClientRect();
+  if(!c.width||!m.width){target.style.opacity='';return;}
+  // clon flotante: las reglas #shelfView no aplican fuera del contenedor, estilos en línea
+  const clone=cover.cloneNode(true);
+  clone.className='flyCover';
+  clone.style.left=c.left+'px';clone.style.top=c.top+'px';
+  clone.style.width=c.width+'px';clone.style.height=c.height+'px';
+  const cimg=clone.querySelector('img');
+  if(cimg)cimg.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;';
+  const cfall=clone.querySelector('.sfall');
+  if(cfall)cfall.style.cssText="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;"+
+    "background:linear-gradient(160deg,#1a1611,#0d0b08);color:#c9a96e;font-family:'DM Serif Display',serif;";
+  document.body.appendChild(clone);
+  // sin transición CSS: ocultar + revertir el shift de fase 1 deben ser instantáneos,
+  // si no la transición .scover anima el revert/opacity y produce parpadeo (solo col. derecha)
+  cover.style.transition='none';
+  cover.style.opacity='0';
+  // descarta el desplazamiento a la izquierda de la fase 1 (clamp anti-clipping): ya medido en c,
+  // el clon vuela desde ahí; la funda real vuelve a su sitio, oculta por opacity/nowplaying
+  if(cover.__shift){cover.__shift.cancel();cover.__shift=null;}
+  const dx=(m.left+m.width/2)-(c.left+c.width/2);
+  const dy=(m.top+m.height/2)-(c.top+c.height/2);
+  const s=m.width/c.width;
+  // El clon (fixed, z alto) viaja el arco por encima de todo y ATERRIZA LIMPIO en el atril
+  // (sin rebote): anticipación → arco alto ladeado → enderezado. La sombra crece al elevarse.
+  clone.animate([
+    {transform:'translate(0,0) scale(1) rotate(0deg)',boxShadow:'3px 5px 10px rgba(0,0,0,.5)',easing:'cubic-bezier(.5,0,.75,0)'},
+    {transform:'translate(2px,6px) scale(.965) rotate(-3deg)',offset:.09,boxShadow:'2px 4px 9px rgba(0,0,0,.5)',easing:'cubic-bezier(.2,.7,.3,1)'},
+    {transform:`translate(${dx*.4}px,${dy*.2-54}px) scale(${(1+s)/2}) rotate(-9deg)`,offset:.5,boxShadow:'0 28px 44px rgba(0,0,0,.5)',easing:'cubic-bezier(.5,0,.5,1)'},
+    {transform:`translate(${dx*.94}px,${dy*.95}px) scale(${s*1.01}) rotate(-2deg)`,offset:.82,boxShadow:'0 14px 28px rgba(0,0,0,.5)',easing:'cubic-bezier(.3,0,.25,1)'},
+    {transform:`translate(${dx}px,${dy}px) scale(${s}) rotate(0deg)`,boxShadow:'3px 6px 14px rgba(0,0,0,.55)'}
+  ],{duration:1000,fill:'forwards'}).onfinish=()=>{
+    target.style.opacity=''; // revela la carátula real ya posada en el atril (en 3D, tras las bolas)
+    clone.remove();
+    // la clase .nowplaying (añadida por el vuelo del disco a +1600ms) mantiene oculta
+    // la .scover; quitamos el override en línea para no dejarla invisible tras dejar de sonar
+    cover.style.opacity='';cover.style.transition='';
+    // EL REBOTE va sobre la carátula REAL → ocurre detrás de las bolas del atril, que quedan
+    // por delante (transform-origin 50% 100%: se asienta apoyada en la base donde la sujetan).
+    // Arranca en scale 1.2 (= tamaño del clon al aterrizar) para que el relevo sea invisible.
+    target.animate([
+      {transform:'translateZ(3px) scale(1.2)'},
+      {transform:'translateZ(3px) scale(1.232)',offset:.42,easing:'cubic-bezier(.3,1.2,.6,1)'},
+      {transform:'translateZ(3px) scale(1.2)'}
+    ],{duration:300,easing:'ease-out'});
   };
 }
 window.addEventListener('resize',()=>{if(colView()==='shelf')fitShelfGrid();});
@@ -2221,7 +2328,9 @@ function precacheCardRects(){
 
 function startPickerApp(){
   if(!DB.vinyls.length) return;
-  if(colView()==='shelf') setColView('list');
+  // En estantería ya hay cuadrícula: sólo iluminamos uno a uno, sin pasar a lista
+  // ni hacer el desfile de recolocación.
+  if(colView()==='shelf'){ startPickerShelf(); return; }
   perfStart();
   // Cancel any running picker and start fresh
   if(_pickerAbort!==null) _pickerAbort++;
@@ -2313,6 +2422,99 @@ function rerollRandom(){
   updateBbar();
   renderCollection();
   startPickerApp();
+}
+
+/* ── PICKER EN ESTANTERÍA ───────────────────────────────────────
+   Reutiliza el temporizado del picker de lista (_buildPickTimings) pero opera
+   directamente sobre las .unit de la cuadrícula: no cambia de vista, no recoloca
+   nada, no toca el fondo. Sólo apaga y va iluminando hasta el ganador. */
+function startPickerShelf(){
+  const grid=document.getElementById('shelfGrid');
+  if(!grid) return;
+  const vinyls=sortedVinyls();
+  const n=vinyls.length;
+  if(!n) return;
+  // la cuadrícula se construye desde sortedVinyls: el orden de .unit coincide con vinyls
+  if(grid.children.length!==n) renderShelf(true);
+  const units=Array.from(grid.children);
+  if(units.length!==n) return;
+
+  // cancela cualquier picker en curso y arranca limpio
+  if(_pickerAbort!==null) _pickerAbort++;
+  const myRun=(_pickerAbort===null?0:_pickerAbort);
+  _pickerAbort=myRun;
+  const wb=document.getElementById('winnerBanner');
+  if(wb) wb.classList.remove('show');
+  units.forEach(u=>u.classList.remove('picker-dim','picker-lit','picker-winner'));
+  _pickerRunning=true;
+  ['randBtn','rerollBtn'].forEach(id=>{const b=document.getElementById(id);if(b)b.disabled=true;});
+
+  // limpia selección previa sin tocar layout ni fondo
+  selV=null;_pickerWinnerV=null;
+  applyShelfState(true);
+  updateBbar();
+
+  const winIdx=Math.floor(Math.random()*n);
+  _pickerWinnerV=vinyls[winIdx];
+
+  // apagón: oscurece todas menos la primera, mantén un instante y arranca el ticker
+  units.forEach((u,i)=>{ if(i>0) u.classList.add('picker-dim'); });
+  units[0].classList.add('picker-lit');
+  setTimeout(()=>{
+    if(_pickerAbort!==myRun) return;
+    units[0].classList.remove('picker-lit');
+    _runShelfPickerTick(n,winIdx,units,vinyls,myRun);
+  },300);
+}
+
+function _runShelfPickerTick(n,winIdx,units,vinyls,myRun){
+  units.forEach(u=>u.classList.add('picker-dim'));
+  const{totalSteps,delays}=_buildPickTimings(n,winIdx);
+  let step=0,litIdx=-1;
+  let nextTime=performance.now();
+  function tick(now){
+    if(_pickerAbort!==myRun) return;
+    if(now<nextTime){ requestAnimationFrame(tick); return; }
+    if(litIdx>=0){units[litIdx].classList.remove('picker-lit');units[litIdx].classList.add('picker-dim');}
+    litIdx=step%n;
+    const isLast=step===totalSteps-1;
+    if(isLast){
+      units[litIdx].classList.remove('picker-dim');
+      units[litIdx].classList.add('picker-lit');
+      setTimeout(()=>{
+        if(_pickerAbort!==myRun) return;
+        units[litIdx].classList.add('picker-winner');
+        setTimeout(()=>{
+          if(_pickerAbort!==myRun) return;
+          _shelfPickerFinish(winIdx,units,vinyls,myRun);
+        },600);
+      },250);
+      return;
+    }
+    units[litIdx].classList.add('picker-lit');
+    units[litIdx].classList.remove('picker-dim');
+    nextTime+=delays[step+1];
+    step++;
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+function _shelfPickerFinish(winIdx,units,vinyls,myRun){
+  if(_pickerAbort!==myRun) return;
+  units.forEach(u=>u.classList.remove('picker-dim','picker-lit','picker-winner'));
+  selV=vinyls[winIdx];
+  _pickerWinnerV=selV;
+  applyShelfState(false); // glow de selección (.sel) sobre el ganador
+  updateBbar();
+  const wb=document.getElementById('winnerBanner');
+  if(wb){
+    document.getElementById('wbArtist').textContent=vinyls[winIdx].artist;
+    document.getElementById('wbAlbum').textContent=vinyls[winIdx].album;
+    wb.classList.add('show');
+  }
+  ['randBtn','rerollBtn'].forEach(id=>{const b=document.getElementById(id);if(b)b.disabled=false;});
+  setTimeout(()=>{ wb&&wb.classList.remove('show'); _pickerRunning=false; },2600);
 }
 
 function _getPickLayout(n,gridW,gridH){
