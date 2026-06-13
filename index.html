@@ -469,7 +469,7 @@ select.finput option{background:var(--s2);}
   transition:right .35s cubic-bezier(.34,1.4,.5,1), opacity .3s;}
 #shelfView .scover{position:absolute;inset:0;overflow:hidden;
   box-shadow:3px 5px 10px rgba(0,0,0,.65), inset 0 0 0 1px rgba(255,255,255,.04);
-  transition:box-shadow .35s, transform .35s cubic-bezier(.34,1.4,.5,1);}
+  transition:box-shadow .35s, transform .35s cubic-bezier(.34,1.4,.5,1), opacity .3s;}
 #shelfView .scover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
 #shelfView .sfall{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
   background:linear-gradient(160deg,#1a1611,#0d0b08);color:var(--accent2);
@@ -493,8 +493,7 @@ select.finput option{background:var(--s2);}
   50%{box-shadow:0 0 13px 2px rgba(201,169,110,.32), 1px 2px 5px rgba(0,0,0,.6), -6px 3px 10px rgba(0,0,0,.5);}
 }
 /* estado sonando */
-#shelfView .unit.nowplaying .scover{box-shadow:0 0 0 2px #d4af5e, 0 0 10px 1px rgba(212,175,94,.35),
-  3px 5px 10px rgba(0,0,0,.65);}
+#shelfView .unit.nowplaying .scover{opacity:0;} /* la carátula "está" en el atril */
 #shelfView .unit.nowplaying .sdisc{opacity:0;} /* el disco "está" en el tocadiscos */
 #shelfView .unit.nowplaying .stack::after{content:'♪ SONANDO';position:absolute;left:50%;bottom:-2px;
   transform:translateX(-50%);font-size:clamp(6px,calc(var(--cell,60px)*.12),9px);letter-spacing:.12em;
@@ -509,7 +508,7 @@ select.finput option{background:var(--s2);}
 
 /* tocadiscos AT-LP60XBT (clon decorativo, mockup v14) */
 #shelfView .player{position:relative;z-index:2;height:134px;display:flex;justify-content:center;
-  align-items:flex-end;padding-bottom:8px;animation:shFadeUp .6s .5s ease both;}
+  align-items:flex-end;padding-bottom:28px;animation:shFadeUp .6s .5s ease both;}
 #shelfView .tt{position:relative;width:264px;transform:scale(.65);transform-origin:bottom center;
   filter:drop-shadow(0 12px 16px rgba(0,0,0,.65));
   font-family:system-ui,-apple-system,sans-serif;}
@@ -624,6 +623,73 @@ select.finput option{background:var(--s2);}
 #shelfView .tt::before,#shelfView .tt::after{content:'';position:absolute;bottom:-7px;width:17px;height:7px;
   border-radius:0 0 5px 5px;background:#070707;}
 #shelfView .tt::before{left:20px}#shelfView .tt::after{right:20px}
+
+/* atril de alambre «A» (decoración, a la izquierda del tocadiscos) */
+#shelfView .easel-deco{position:absolute;left:8px;bottom:-16px;
+  transform:scale(.78);transform-origin:50% 81.7%;pointer-events:none;}
+#shelfView .easel-deco .estage{position:relative;width:150px;height:230px;perspective:820px;perspective-origin:50% 42%;}
+#shelfView .easel-deco .easel{position:relative;width:150px;height:230px;transform-style:preserve-3d;}
+#shelfView .easel-deco .epose{position:absolute;inset:0;transform-style:preserve-3d;transform:rotateY(0deg);}
+#shelfView .easel-deco .ground{position:absolute;left:50%;bottom:40px;width:140px;height:26px;transform:translateX(-50%);
+  background:radial-gradient(ellipse at 50% 50%,rgba(0,0,0,.62),rgba(0,0,0,.28) 46%,transparent 72%);filter:blur(2px);z-index:0;}
+#shelfView .easel-deco .plane{position:absolute;inset:0;transform-style:preserve-3d;transform-origin:50% 8px;}
+#shelfView .easel-deco .fp{transform:rotateX(6deg);}
+#shelfView .easel-deco .bp{transform:rotateX(-30deg);}
+#shelfView .easel-deco .wire{position:absolute;border-radius:40px;}
+#shelfView .easel-deco .wire.v{background:var(--wire-v);}
+#shelfView .easel-deco .aframe{position:absolute;inset:0;width:150px;height:230px;overflow:visible;transform:translateZ(0);}
+#shelfView .easel-deco .aframe path{fill:none;stroke-linecap:round;stroke-linejoin:round;}
+#shelfView .easel-deco .aframe .base{stroke:var(--wire-base);stroke-width:4.4;}
+#shelfView .easel-deco .aframe .hi{stroke:var(--wire-hi);stroke-width:1.4;opacity:.85;}
+#shelfView .easel-deco .curl{position:absolute;width:18px;height:26px;transform-style:preserve-3d;}
+#shelfView .easel-deco .cwire{position:absolute;inset:0;overflow:visible;}
+#shelfView .easel-deco .cwire path{fill:none;stroke-linecap:round;stroke-linejoin:round;}
+#shelfView .easel-deco .cwire .base{stroke:var(--wire-base);stroke-width:4.4;}
+#shelfView .easel-deco .cwire .hi{stroke:var(--wire-hi);stroke-width:1.4;opacity:.85;}
+#shelfView .easel-deco .curl .knob{position:absolute;width:9px;height:9px;border-radius:50%;background:var(--knob);
+  box-shadow:0 2px 3px rgba(0,0,0,.5), inset 0 -1px 2px rgba(0,0,0,.5), inset 1px 1px 2px rgba(255,255,255,.5);}
+#shelfView .easel-deco .curl.l{left:16px;top:162px;transform-origin:12px 24px;transform:rotateX(-42deg) rotateY(38deg);}
+#shelfView .easel-deco .curl.r{left:116px;top:162px;transform-origin:6px 24px;transform:rotateX(-42deg) rotateY(-38deg);}
+#shelfView .easel-deco .curl.l .knob{left:0.5px;top:0.5px;transform:rotateY(-38deg) rotateX(42deg);}
+#shelfView .easel-deco .curl.r .knob{right:0.5px;top:0.5px;transform:rotateY(38deg) rotateX(42deg);}
+#shelfView .easel-deco .bleg{width:3px;height:176px;top:8px;left:73.5px;transform-origin:50% 0;}
+#shelfView .easel-deco .foot{position:absolute;width:9px;height:9px;border-radius:50%;background:var(--knob);
+  box-shadow:0 2px 3px rgba(0,0,0,.5), inset 0 -1px 2px rgba(0,0,0,.5), inset 1px 1px 2px rgba(255,255,255,.5);}
+#shelfView .easel-deco .cover{display:none;position:absolute;left:17px;top:66px;width:116px;height:116px;transform:translateZ(3px) scale(1.2);transform-origin:50% 100%;
+  background:
+    radial-gradient(circle at 30% 24%,rgba(255,255,255,.12),transparent 46%),
+    linear-gradient(150deg,#2b2118,#15100a 72%);
+  border-radius:2px;
+  box-shadow:0 5px 12px rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,255,255,.06), inset 0 0 26px rgba(0,0,0,.45);}
+#shelfView .easel-deco .cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:2px;z-index:2;}
+#shelfView .easel-deco .cover::before{content:'';position:absolute;left:50%;top:48%;transform:translate(-50%,-50%);
+  width:46px;height:46px;border-radius:50%;
+  background:radial-gradient(circle at 40% 36%,#d4af5e,#7c5a22 60%,#3a2a10);
+  box-shadow:0 2px 6px rgba(0,0,0,.5),inset 0 1px 2px rgba(255,255,255,.4);opacity:.9;}
+#shelfView .easel-deco .cover::after{content:'';position:absolute;left:50%;top:48%;transform:translate(-50%,-50%);
+  width:6px;height:6px;border-radius:50%;background:#0d0a06;box-shadow:0 0 0 2px rgba(255,255,255,.12);}
+#shelfView .easel-deco.playing .cover{display:block;}
+#shelfView .easel-deco.laton{
+  --wire-v:linear-gradient(90deg,#3f3010,#9c7a30 28%,#f4e2a4 50%,#a07c34 70%,#3f3010);
+  --wire-base:#5e4a1e; --wire-hi:#f4e2a4; --ball:#d9bf78;
+  --knob:radial-gradient(circle at 38% 32%,#fff7e0,#caa24f 55%,#6e5320);
+}
+
+/* mesa de madera sobre la que descansan tocadiscos y atril */
+#shelfView .vtable{position:absolute;left:0;right:0;bottom:0;z-index:0;
+  display:flex;flex-direction:column;align-items:center;pointer-events:none;}
+#shelfView .vtop{width:100%;height:96px;clip-path:polygon(5% 0,95% 0,100% 100%,0 100%);
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.13),rgba(0,0,0,.08) 50%,rgba(0,0,0,.20)),
+    repeating-linear-gradient(90deg,rgba(0,0,0,.05) 0 3px,rgba(255,255,255,.03) 3px 6px),
+    linear-gradient(180deg,#b89358,#946f3c);
+  box-shadow:inset 0 2px 5px rgba(255,255,255,.18);}
+#shelfView .vfront{width:100%;height:16px;
+  background:linear-gradient(180deg,#6b5230,#3f3019);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 8px 14px rgba(0,0,0,.55);}
+#shelfView .ttcontact{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);z-index:0;
+  width:150px;height:20px;pointer-events:none;
+  background:radial-gradient(ellipse,rgba(0,0,0,.55),rgba(0,0,0,.25) 45%,transparent 72%);}
 
 .flyDisc{position:fixed;z-index:99;border-radius:50%;pointer-events:none;
   box-shadow:1px 2px 5px rgba(0,0,0,.6);}
@@ -864,6 +930,41 @@ select.finput option{background:var(--s2);}
       <div class="spot"></div>
       <div id="shelfGrid"></div>
       <div class="player" aria-hidden="true">
+        <div class="vtable"><div class="vtop"></div><div class="vfront"></div></div>
+        <div class="ttcontact"></div>
+        <div class="easel-deco laton">
+          <div class="estage">
+            <div class="easel">
+              <div class="ground"></div>
+              <div class="epose">
+                <div class="plane bp">
+                  <div class="wire v bleg"></div><div class="foot" style="top:179px;left:70.5px"></div>
+                </div>
+                <div class="plane fp">
+                  <div class="cover" id="shelfEaselCover"><img id="shelfEaselCoverImg" alt="" style="display:none" onerror="this.style.display='none'"></div>
+                  <svg class="aframe" viewBox="0 0 150 230" aria-hidden="true">
+                    <path class="base" d="M28 186 L71 9 Q75 4 79 9 L122 186"/>
+                    <path class="hi"   d="M28 186 L71 9 Q75 4 79 9 L122 186"/>
+                  </svg>
+                  <div class="curl l">
+                    <svg class="cwire" viewBox="0 0 18 26" aria-hidden="true">
+                      <path class="base" d="M12 24 C8 16 5 10 5 5"/>
+                      <path class="hi"   d="M12 24 C8 16 5 10 5 5"/>
+                    </svg>
+                    <span class="knob"></span>
+                  </div>
+                  <div class="curl r">
+                    <svg class="cwire" viewBox="0 0 18 26" aria-hidden="true">
+                      <path class="base" d="M6 24 C10 16 13 10 13 5"/>
+                      <path class="hi"   d="M6 24 C10 16 13 10 13 5"/>
+                    </svg>
+                    <span class="knob"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="tt" id="shelfTT">
           <div class="hinge hg1"></div><div class="hinge hg2"></div>
           <div class="lid">
@@ -1956,7 +2057,18 @@ function applyShelfState(instant){
   const tt=document.getElementById('shelfTT');
   tt.classList.toggle('playing',playing);
   document.getElementById('shelfPdisc').classList.toggle('on',playing);
+  setEaselCover(playing?npId:null);
   if(instant){void view.offsetWidth;view.classList.remove('instant');}
+}
+function setEaselCover(vinylId){
+  const easel=document.querySelector('#shelfView .easel-deco');
+  if(!easel) return;
+  const playing=vinylId!=null;
+  easel.classList.toggle('playing',playing);
+  const img=document.getElementById('shelfEaselCoverImg');
+  const v=playing?DB.vinyls.find(x=>String(x.id)===String(vinylId)):null;
+  if(v&&v.cover){img.src=v.cover;img.style.display='';}
+  else{img.removeAttribute('src');img.style.display='none';}
 }
 /* coreografía: tapa abre (.75s) → +650ms vuelo FLIP (950ms) → disco gira +
    aguja (+250ms) → tapa cierra (+1150ms) → estado nowplaying */
@@ -1970,6 +2082,7 @@ function shelfPlaySequence(vinylId){
   }
   grid.querySelectorAll('.unit.nowplaying').forEach(u=>u.classList.remove('nowplaying'));
   tt.classList.remove('playing');pdisc.classList.remove('on');
+  setEaselCover(null);
   tt.classList.add('open');
   // failsafe: si onfinish del vuelo nunca dispara (app a segundo plano en Android,
   // WAAPI throttled), el flag quedaría en true y applyShelfState muerto para siempre
