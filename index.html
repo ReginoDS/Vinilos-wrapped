@@ -2967,6 +2967,12 @@ function openEditVinyl(){
   document.getElementById('edYoutube').value = v.youtube||'';
   editGenres = [...(v.genres||[])];
   renderGenreTagsEdit();
+  editColor=v.color||'';
+  document.getElementById('edTranslucido').checked=!!v.translucido;
+  document.getElementById('edColorPicker').value=v.color||'#c0392b';
+  updateColorSwatch('ed');
+  renderColorQuick('ed');
+  fillDuration('ed',v.duration);
   // Populate country dropdown
   const countries=[...new Set(DB.vinyls.map(x=>x.country).filter(Boolean))].sort();
   const sel=document.getElementById('edCountrySelect');
@@ -3016,7 +3022,7 @@ function saveEdit(){
   const yt=document.getElementById('edYoutube').value.trim();
   const csel=document.getElementById('edCountrySelect').value;
   const country=csel==='__new__'?document.getElementById('edCountryNew').value.trim():csel;
-  DB.editVinyl(selV.id,{artist:ar,album:al,edition:ed,year:yr,genres:[...editGenres],country,cover:cov,youtube:yt});
+  DB.editVinyl(selV.id,{artist:ar,album:al,edition:ed,year:yr,genres:[...editGenres],country,cover:cov,youtube:yt,color:editColor||null,translucido:document.getElementById('edTranslucido').checked,duration:durationToSeconds('ed')});
   selV=DB.vinyls.find(x=>x.id===selV.id)||null;
   closeModal('editModal');
   renderAll();
