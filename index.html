@@ -506,6 +506,8 @@ select.finput option{background:var(--s2);}
 /* estado sonando */
 #shelfView .unit.nowplaying .scover{opacity:0;} /* la carátula "está" en el atril */
 #shelfView .unit.nowplaying .sdisc{opacity:0;} /* el disco "está" en el tocadiscos */
+#shelfView .sdisc.translucido{opacity:.35;}
+#shelfView .platterDisc .spin.translucido{opacity:.35;}
 /* restauración sin transiciones */
 #shelfView.instant *{transition:none!important;}
 
@@ -2064,14 +2066,41 @@ function fitShelfGrid(){
   _shelfCols=bestCols;
 }
 
+// Oscurece un hex por un factor 0..1 (para los surcos del disco)
+function _shade(hex,factor){
+  const m=/^#?([0-9a-fA-F]{6})$/.exec(hex||'');
+  if(!m) return hex;
+  const n=parseInt(m[1],16);
+  let r=(n>>16)&255,g=(n>>8)&255,b=n&255;
+  r=Math.round(r*(1-factor));g=Math.round(g*(1-factor));b=Math.round(b*(1-factor));
+  return '#'+((1<<24)|(r<<16)|(g<<8)|b).toString(16).slice(1);
+}
+// Gradiente del disco a partir del color del vinilo. '' → usa el negro por defecto del CSS.
+function discBackground(color){
+  if(!color) return '';
+  const groove=_shade(color,.45);
+  return `radial-gradient(circle,#3a3024 0 13%,${color} 13.5% 100%),`+
+         `repeating-radial-gradient(circle,${groove} 0 1.5px,${color} 1.5px 3px)`;
+}
+// Aplica color + translucidez al disco del tocadiscos según el vinilo que suena (o null).
+function _colorPlatter(vinylId){
+  const spin=document.querySelector('#shelfPdisc .spin');
+  if(!spin) return;
+  const v=vinylId!=null?DB.vinyls.find(x=>String(x.id)===String(vinylId)):null;
+  spin.style.background=v&&v.color?discBackground(v.color):'';
+  spin.classList.toggle('translucido',!!(v&&v.translucido));
+}
 const SHELF_BALDA=`<svg class="balda" viewBox="0 0 100 8" preserveAspectRatio="none">
   <path d="M2,5 Q2,2 8,2 L92,2 Q98,2 98,5" vector-effect="non-scaling-stroke"/>
 </svg>`;
 function _shelfUnitHTML(v,i){
   const initials=String(v.album||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase()||'?';
   const cov=v.cover?`<img src="${h(v.cover)}" alt="" loading="lazy" onerror="this.style.display='none'">`:'';
+  const dbg=discBackground(v.color);
+  const sdiscStyle=dbg?` style="background:${dbg}"`:'';
+  const sdiscCls=v.translucido?'sdisc translucido':'sdisc';
   return `<div class="unit" data-id="${v.id}" onclick="selectV(${v.id})" style="animation-delay:${(0.05+i*0.022).toFixed(3)}s">
-    <div class="stack"><div class="sdisc"></div><div class="scover"><div class="sfall">${h(initials)}</div>${cov}</div></div>
+    <div class="stack"><div class="${sdiscCls}"${sdiscStyle}></div><div class="scover"><div class="sfall">${h(initials)}</div>${cov}</div></div>
     ${SHELF_BALDA}</div>`;
 }
 
@@ -2114,6 +2143,7 @@ function applyShelfState(instant){
   });
   const tt=document.getElementById('shelfTT');
   tt.classList.toggle('playing',playing);
+  _colorPlatter(playing?npId:null);
   document.getElementById('shelfPdisc').classList.toggle('on',playing);
   setEaselCover(playing?npId:null);
   if(instant){void view.offsetWidth;view.classList.remove('instant');}
@@ -2218,6 +2248,7 @@ function _shelfDiscToDeck(unit,tt,pdisc,slide){
     disc.style.opacity='';
     unit.classList.remove('sel','edgeL','edgeR');
     unit.classList.add('nowplaying'); // mantiene el sdisc oculto vía clase
+    _colorPlatter(unit.dataset.id);
     pdisc.classList.add('on');
     setTimeout(()=>tt.classList.add('playing'),250);
     setTimeout(()=>{
