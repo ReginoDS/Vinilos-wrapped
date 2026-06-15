@@ -2229,7 +2229,9 @@ function _shelfDiscToDeck(unit,tt,pdisc,slide){
   const d=disc.getBoundingClientRect(),m=mat.getBoundingClientRect();
   const clone=document.createElement('div');
   clone.className='flyDisc';
-  clone.style.background=getComputedStyle(disc).background;
+  const cs=getComputedStyle(disc);
+  clone.style.background=cs.background;
+  clone.style.opacity=cs.opacity;
   clone.style.left=d.left+'px';clone.style.top=d.top+'px';
   clone.style.width=d.width+'px';clone.style.height=d.height+'px';
   document.body.appendChild(clone);
