@@ -2077,7 +2077,7 @@ function _shade(hex,factor){
 }
 // Gradiente del disco a partir del color del vinilo. '' → usa el negro por defecto del CSS.
 function discBackground(color){
-  if(!color) return '';
+  if(!color || !/^#[0-9a-fA-F]{6}$/.test(color)) return '';
   const groove=_shade(color,.45);
   return `radial-gradient(circle,#3a3024 0 13%,${color} 13.5% 100%),`+
          `repeating-radial-gradient(circle,${groove} 0 1.5px,${color} 1.5px 3px)`;
