@@ -2113,7 +2113,7 @@ function renderShelf(instant){
   applyShelfWall();
   const vinyls=sortedVinyls();
   const grid=document.getElementById('shelfGrid');
-  const key=colSortMode()+'|'+vinyls.map(v=>v.id+':'+v.album+':'+(v.cover||'')).join('|');
+  const key=colSortMode()+'|'+vinyls.map(v=>v.id+':'+v.album+':'+(v.cover||'')+':'+(v.color||'')+':'+(v.translucido?1:0)).join('|');
   // durante la coreografía no se reconstruye la cuadrícula (desancla los nodos del
   // vuelo); al no actualizar _shelfRenderKey, el rebuild queda aplazado al siguiente render
   if((key!==_shelfRenderKey||grid.children.length!==vinyls.length)&&!_shelfAnimating){
