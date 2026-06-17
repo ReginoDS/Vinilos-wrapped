@@ -211,6 +211,17 @@ select.finput option{background:var(--s2);}
 .genre-add-row .finput{flex:1;font-size:12px;padding:8px 10px;}
 .genre-add-btn{background:var(--s2);border:1px solid var(--border);color:var(--muted);padding:8px 14px;border-radius:var(--radius);cursor:pointer;font-size:12px;white-space:nowrap;}
 .genre-add-btn:active{transform:scale(.95);}
+/* COLOR + DURACIÓN (form add/edit) */
+.color-row{display:flex;align-items:center;gap:10px;position:relative;}
+.color-swatch{width:38px;height:38px;border-radius:8px;border:1px solid var(--border);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#fff;text-shadow:0 0 4px #000;padding:0;line-height:1;}
+.color-native{position:absolute;width:0;height:0;opacity:0;pointer-events:none;}
+.color-quick{display:grid;grid-template-columns:repeat(9,1fr);gap:5px;flex:1;}
+.color-q{aspect-ratio:1;border-radius:5px;border:1px solid var(--border);cursor:pointer;padding:0;}
+.color-q:active{transform:scale(.9);}
+.field label.color-check{display:flex;align-items:center;gap:8px;margin-top:10px;margin-bottom:0;font-size:13px;text-transform:none;letter-spacing:0;color:var(--text);}
+.color-check input{width:16px;height:16px;}
+.dur-row{display:flex;gap:8px;}
+.dur-in{text-align:center;}
 
 /* CONFIRM PLAY */
 .conf-info{background:var(--s2);border:1px solid var(--border);border-radius:var(--radius);padding:13px;margin-bottom:16px;display:flex;gap:13px;align-items:center;}
@@ -495,6 +506,8 @@ select.finput option{background:var(--s2);}
 /* estado sonando */
 #shelfView .unit.nowplaying .scover{opacity:0;} /* la carátula "está" en el atril */
 #shelfView .unit.nowplaying .sdisc{opacity:0;} /* el disco "está" en el tocadiscos */
+#shelfView .sdisc.translucido{opacity:.35;}
+#shelfView .platterDisc .spin.translucido{opacity:.35;}
 /* restauración sin transiciones */
 #shelfView.instant *{transition:none!important;}
 
@@ -572,9 +585,13 @@ select.finput option{background:var(--s2);}
   width:180px;height:107px;border-radius:50%;
   background:linear-gradient(180deg,#666 0%,#9a9a9a 60%,#f1f1f1 90%,#c4c4c4 100%);
   box-shadow:0 2px 6px rgba(0,0,0,.6);}
-#shelfView .mat{position:absolute;left:48%;top:52%;transform:translate(-50%,calc(-50% - 2px));
-  width:176px;height:103px;border-radius:50%;
-  background:radial-gradient(ellipse at 50% 42%,#1d1d1d,#0c0c0c 75%);}
+#shelfView .mat{position:absolute;left:48%;top:52%;
+  transform:translate(-50%,calc(-50% - 2px)) scaleY(.585);
+  width:176px;height:176px;border-radius:50%;
+  background:radial-gradient(circle at 50% 42%,#1d1d1d,#0c0c0c 75%);}
+#shelfView .matspin{position:relative;width:100%;height:100%;border-radius:50%;
+  animation:ttRev 1.8s linear infinite paused;}
+#shelfView .tt.playing .matspin{animation-play-state:running;}
 #shelfView .mat .mtxt{position:absolute;left:53%;top:32%;transform:translate(-50%,-50%) rotate(-13deg);
   font-size:7px;letter-spacing:.04em;color:rgba(255,255,255,.40);white-space:nowrap;}
 #shelfView .mat .mlogo{position:absolute;left:50%;bottom:13%;transform:translateX(-50%);
@@ -800,6 +817,23 @@ select.finput option{background:var(--s2);}
   <div class="field"><label>Edición <span style="color:var(--dim)">(opcional)</span></label><input type="text" id="inEdition" class="finput" placeholder="ej: 10th Anniversary Edition" autocomplete="off"></div>
   <div class="field"><label>Año</label><input type="number" id="inYear" class="finput" placeholder="ej: 2021" min="1900" max="2099"></div>
   <div class="field">
+    <label>Color del vinilo</label>
+    <div class="color-row">
+      <button type="button" class="color-swatch" id="inColorSwatch" onclick="document.getElementById('inColorPicker').click()">+</button>
+      <input type="color" id="inColorPicker" class="color-native" oninput="pickVinylColor('in',this.value)">
+      <div class="color-quick" id="inColorQuick"></div>
+    </div>
+    <label class="color-check"><input type="checkbox" id="inTranslucido"> Translúcido</label>
+  </div>
+  <div class="field">
+    <label>Duración del álbum <span style="color:var(--dim)">(opcional)</span></label>
+    <div class="dur-row">
+      <input type="number" id="inDurH" class="finput dur-in" placeholder="h" min="0" inputmode="numeric">
+      <input type="number" id="inDurM" class="finput dur-in" placeholder="min" min="0" max="59" inputmode="numeric">
+      <input type="number" id="inDurS" class="finput dur-in" placeholder="s" min="0" max="59" inputmode="numeric">
+    </div>
+  </div>
+  <div class="field">
     <label>Géneros</label>
     <div class="genres-wrap" id="genreTagsNew"></div>
     <div class="genre-add-row">
@@ -834,6 +868,23 @@ select.finput option{background:var(--s2);}
   <div class="field"><label>Artista</label><input type="text" id="edArtist" class="finput" autocomplete="off"></div>
   <div class="field"><label>Edición <span style="color:var(--dim)">(opcional)</span></label><input type="text" id="edEdition" class="finput" autocomplete="off"></div>
   <div class="field"><label>Año</label><input type="number" id="edYear" class="finput" min="1900" max="2099"></div>
+  <div class="field">
+    <label>Color del vinilo</label>
+    <div class="color-row">
+      <button type="button" class="color-swatch" id="edColorSwatch" onclick="document.getElementById('edColorPicker').click()">+</button>
+      <input type="color" id="edColorPicker" class="color-native" oninput="pickVinylColor('ed',this.value)">
+      <div class="color-quick" id="edColorQuick"></div>
+    </div>
+    <label class="color-check"><input type="checkbox" id="edTranslucido"> Translúcido</label>
+  </div>
+  <div class="field">
+    <label>Duración del álbum <span style="color:var(--dim)">(opcional)</span></label>
+    <div class="dur-row">
+      <input type="number" id="edDurH" class="finput dur-in" placeholder="h" min="0" inputmode="numeric">
+      <input type="number" id="edDurM" class="finput dur-in" placeholder="min" min="0" max="59" inputmode="numeric">
+      <input type="number" id="edDurS" class="finput dur-in" placeholder="s" min="0" max="59" inputmode="numeric">
+    </div>
+  </div>
   <div class="field">
     <label>Géneros</label>
     <div class="genres-wrap" id="genreTagsEdit"></div>
@@ -982,8 +1033,10 @@ select.finput option{background:var(--s2);}
             <div class="deckTop">
               <div class="rim"></div>
               <div class="mat">
-                <span class="mtxt">audio-technica</span>
-                <span class="mlogo">&#9398; audio-technica</span>
+                <div class="matspin">
+                  <span class="mtxt">audio-technica</span>
+                  <span class="mlogo">&#9398; audio-technica</span>
+                </div>
               </div>
               <div class="platterDisc" id="shelfPdisc"><div class="spin"></div></div>
               <div class="spindle"></div>
@@ -1811,6 +1864,8 @@ let _pickerRunning=false;
 let _pickerWinnerV=null; // set when a vinyl was chosen via random picker
 let currentTab='col';
 let addGenres=[];
+let addColor='';
+let editColor='';
 
 
 // ════════════════════════════════════════════════════════════
@@ -2017,14 +2072,41 @@ function fitShelfGrid(){
   _shelfCols=bestCols;
 }
 
+// Oscurece un hex por un factor 0..1 (para los surcos del disco)
+function _shade(hex,factor){
+  const m=/^#?([0-9a-fA-F]{6})$/.exec(hex||'');
+  if(!m) return hex;
+  const n=parseInt(m[1],16);
+  let r=(n>>16)&255,g=(n>>8)&255,b=n&255;
+  r=Math.round(r*(1-factor));g=Math.round(g*(1-factor));b=Math.round(b*(1-factor));
+  return '#'+((1<<24)|(r<<16)|(g<<8)|b).toString(16).slice(1);
+}
+// Gradiente del disco a partir del color del vinilo. '' → usa el negro por defecto del CSS.
+function discBackground(color){
+  if(!color || !/^#[0-9a-fA-F]{6}$/.test(color)) return '';
+  const groove=_shade(color,.45);
+  return `radial-gradient(circle,#3a3024 0 13%,${color} 13.5% 100%),`+
+         `repeating-radial-gradient(circle,${groove} 0 1.5px,${color} 1.5px 3px)`;
+}
+// Aplica color + translucidez al disco del tocadiscos según el vinilo que suena (o null).
+function _colorPlatter(vinylId){
+  const spin=document.querySelector('#shelfPdisc .spin');
+  if(!spin) return;
+  const v=vinylId!=null?DB.vinyls.find(x=>String(x.id)===String(vinylId)):null;
+  spin.style.background=v&&v.color?discBackground(v.color):'';
+  spin.classList.toggle('translucido',!!(v&&v.translucido));
+}
 const SHELF_BALDA=`<svg class="balda" viewBox="0 0 100 8" preserveAspectRatio="none">
   <path d="M2,5 Q2,2 8,2 L92,2 Q98,2 98,5" vector-effect="non-scaling-stroke"/>
 </svg>`;
 function _shelfUnitHTML(v,i){
   const initials=String(v.album||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase()||'?';
   const cov=v.cover?`<img src="${h(v.cover)}" alt="" loading="lazy" onerror="this.style.display='none'">`:'';
+  const dbg=discBackground(v.color);
+  const sdiscStyle=dbg?` style="background:${dbg}"`:'';
+  const sdiscCls=v.translucido?'sdisc translucido':'sdisc';
   return `<div class="unit" data-id="${v.id}" onclick="selectV(${v.id})" style="animation-delay:${(0.05+i*0.022).toFixed(3)}s">
-    <div class="stack"><div class="sdisc"></div><div class="scover"><div class="sfall">${h(initials)}</div>${cov}</div></div>
+    <div class="stack"><div class="${sdiscCls}"${sdiscStyle}></div><div class="scover"><div class="sfall">${h(initials)}</div>${cov}</div></div>
     ${SHELF_BALDA}</div>`;
 }
 
@@ -2037,7 +2119,7 @@ function renderShelf(instant){
   applyShelfWall();
   const vinyls=sortedVinyls();
   const grid=document.getElementById('shelfGrid');
-  const key=colSortMode()+'|'+vinyls.map(v=>v.id+':'+v.album+':'+(v.cover||'')).join('|');
+  const key=colSortMode()+'|'+vinyls.map(v=>v.id+':'+v.album+':'+(v.cover||'')+':'+(v.color||'')+':'+(v.translucido?1:0)).join('|');
   // durante la coreografía no se reconstruye la cuadrícula (desancla los nodos del
   // vuelo); al no actualizar _shelfRenderKey, el rebuild queda aplazado al siguiente render
   if((key!==_shelfRenderKey||grid.children.length!==vinyls.length)&&!_shelfAnimating){
@@ -2067,6 +2149,7 @@ function applyShelfState(instant){
   });
   const tt=document.getElementById('shelfTT');
   tt.classList.toggle('playing',playing);
+  _colorPlatter(playing?npId:null);
   document.getElementById('shelfPdisc').classList.toggle('on',playing);
   setEaselCover(playing?npId:null);
   if(instant){void view.offsetWidth;view.classList.remove('instant');}
@@ -2152,7 +2235,9 @@ function _shelfDiscToDeck(unit,tt,pdisc,slide){
   const d=disc.getBoundingClientRect(),m=mat.getBoundingClientRect();
   const clone=document.createElement('div');
   clone.className='flyDisc';
-  clone.style.background=getComputedStyle(disc).background;
+  const cs=getComputedStyle(disc);
+  clone.style.background=cs.background;
+  clone.style.opacity=cs.opacity;
   clone.style.left=d.left+'px';clone.style.top=d.top+'px';
   clone.style.width=d.width+'px';clone.style.height=d.height+'px';
   document.body.appendChild(clone);
@@ -2171,6 +2256,7 @@ function _shelfDiscToDeck(unit,tt,pdisc,slide){
     disc.style.opacity='';
     unit.classList.remove('sel','edgeL','edgeR');
     unit.classList.add('nowplaying'); // mantiene el sdisc oculto vía clase
+    _colorPlatter(unit.dataset.id);
     pdisc.classList.add('on');
     setTimeout(()=>tt.classList.add('playing'),250);
     setTimeout(()=>{
@@ -2830,6 +2916,12 @@ function openAddVinyl(){
   document.getElementById('inCountrySelect').value='';
   document.getElementById('inCountryNew').style.display='none';
   renderGenreTagsNew();
+  addColor='';
+  document.getElementById('inTranslucido').checked=false;
+  document.getElementById('inColorPicker').value='#c0392b';
+  updateColorSwatch('in');
+  renderColorQuick('in');
+  fillDuration('in',null);
   // Populate country dropdown from existing vinyls
   const countries=[...new Set(DB.vinyls.map(v=>v.country).filter(Boolean))].sort();
   const sel=document.getElementById('inCountrySelect');
@@ -2857,6 +2949,16 @@ function addGenreNew(){
 function removeGenreNew(i){ addGenres.splice(i,1); renderGenreTagsNew(); }
 document.getElementById('inGenreInput')?.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===','){e.preventDefault();addGenreNew();}});
 
+const COLOR_PRESETS=['#111111','#f5f5f5','#c0392b','#2563eb','#16a34a','#eab308','#ea580c','#7c3aed','#9ca3af'];
+const RAINBOW_SWATCH='conic-gradient(#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00)';
+function vinylColorState(prefix){ return prefix==='in'?addColor:editColor; }
+function setVinylColorState(prefix,hex){ if(prefix==='in') addColor=hex; else editColor=hex; }
+function updateColorSwatch(prefix){ const sw=document.getElementById(prefix+'ColorSwatch'); const c=vinylColorState(prefix); if(c){ sw.style.background=c; sw.textContent=''; } else { sw.style.background=RAINBOW_SWATCH; sw.textContent='+'; } }
+function pickVinylColor(prefix,hex){ setVinylColorState(prefix,hex); document.getElementById(prefix+'ColorPicker').value=hex; updateColorSwatch(prefix); }
+function renderColorQuick(prefix){ document.getElementById(prefix+'ColorQuick').innerHTML=COLOR_PRESETS.map(c=>`<button type="button" class="color-q" style="background:${c}" onclick="pickVinylColor('${prefix}','${c}')"></button>`).join(''); }
+function durationToSeconds(prefix){ const hh=parseInt(document.getElementById(prefix+'DurH').value)||0; const mm=parseInt(document.getElementById(prefix+'DurM').value)||0; const ss=parseInt(document.getElementById(prefix+'DurS').value)||0; const total=hh*3600+mm*60+ss; return total>0?total:null; }
+function fillDuration(prefix,seconds){ const s=seconds||0; document.getElementById(prefix+'DurH').value=s?Math.floor(s/3600):''; document.getElementById(prefix+'DurM').value=s?Math.floor((s%3600)/60):''; document.getElementById(prefix+'DurS').value=s?s%60:''; }
+
 // Auto-convert Wikipedia media URLs to Special:FilePath on blur
 document.getElementById('inCover').addEventListener('blur', function() {
   const v = this.value.trim();
@@ -2880,7 +2982,7 @@ function saveVinyl(){
   const yt=document.getElementById('inYoutube').value.trim();
   const csel=document.getElementById('inCountrySelect').value;
   const country=csel==='__new__'?document.getElementById('inCountryNew').value.trim():csel;
-  DB.addVinyl({artist:ar,album:al,edition:ed,year:yr,genres:[...addGenres],country,cover:cov,youtube:yt});
+  DB.addVinyl({artist:ar,album:al,edition:ed,year:yr,genres:[...addGenres],country,cover:cov,youtube:yt,color:addColor||null,translucido:document.getElementById('inTranslucido').checked,duration:durationToSeconds('in')});
   closeModal('addModal');
   renderAll();
   showToast('Vinilo añadido ✓');
@@ -2904,6 +3006,12 @@ function openEditVinyl(){
   document.getElementById('edYoutube').value = v.youtube||'';
   editGenres = [...(v.genres||[])];
   renderGenreTagsEdit();
+  editColor=v.color||'';
+  document.getElementById('edTranslucido').checked=!!v.translucido;
+  document.getElementById('edColorPicker').value=v.color||'#c0392b';
+  updateColorSwatch('ed');
+  renderColorQuick('ed');
+  fillDuration('ed',v.duration);
   // Populate country dropdown
   const countries=[...new Set(DB.vinyls.map(x=>x.country).filter(Boolean))].sort();
   const sel=document.getElementById('edCountrySelect');
@@ -2953,7 +3061,7 @@ function saveEdit(){
   const yt=document.getElementById('edYoutube').value.trim();
   const csel=document.getElementById('edCountrySelect').value;
   const country=csel==='__new__'?document.getElementById('edCountryNew').value.trim():csel;
-  DB.editVinyl(selV.id,{artist:ar,album:al,edition:ed,year:yr,genres:[...editGenres],country,cover:cov,youtube:yt});
+  DB.editVinyl(selV.id,{artist:ar,album:al,edition:ed,year:yr,genres:[...editGenres],country,cover:cov,youtube:yt,color:editColor||null,translucido:document.getElementById('edTranslucido').checked,duration:durationToSeconds('ed')});
   selV=DB.vinyls.find(x=>x.id===selV.id)||null;
   closeModal('editModal');
   renderAll();
