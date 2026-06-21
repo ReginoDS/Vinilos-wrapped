@@ -2169,32 +2169,7 @@ function applyShelfState(instant){
   document.getElementById('shelfPdisc').classList.toggle('on',playing);
   setEaselCover(playing?npId:null);
   _npApplied=playing?String(npId):null;
-  _npDebug(playing,npId);
   if(instant){void view.offsetWidth;view.classList.remove('instant');}
-}
-// Overlay de diagnóstico (solo localhost): muestra qué vinilo está en el tocadiscos, a qué
-// hora termina su ventana "sonando" y si usa la duración real del álbum o el fallback.
-function _npDebug(playing,npId){
-  if(!DEV_READONLY) return;
-  let el=document.getElementById('npDbg');
-  if(!el){
-    el=document.createElement('div');
-    el.id='npDbg';
-    el.style.cssText='position:absolute;top:4px;left:4px;z-index:50;font:10px/1.35 monospace;'+
-      'color:#7CFC00;background:rgba(0,0,0,.66);padding:3px 6px;border-radius:4px;pointer-events:none;white-space:pre;';
-    const view=document.getElementById('shelfView');
-    if(view) view.appendChild(el);
-  }
-  if(!playing){ el.textContent='dev · nada en el tocadiscos'; return; }
-  let last=null;
-  for(const p of DB.plays) if(!last||p.ts>last.ts) last=p;
-  const v=DB.vinyls.find(x=>String(x.id)===String(npId));
-  const winMs=nowPlayingWindowMs(npId);
-  const src=(v&&v.duration>0)?('duración '+Math.floor(v.duration/60)+':'+String(v.duration%60).padStart(2,'0')):'FALLBACK 1.5h (sin duración)';
-  const pad=n=>String(n).padStart(2,'0');
-  const end=last?new Date(new Date(last.ts).getTime()+winMs):null;
-  const endStr=end?pad(end.getHours())+':'+pad(end.getMinutes()):'??:??';
-  el.textContent='▶ '+(v?v.album:('id '+npId))+'\nfin a las '+endStr+'  ['+src+']';
 }
 // Refresco en vivo: en reposo nada dispara un render, así que cada 60 s comprobamos si la
 // ventana "sonando" ya expiró (estado derivado de los datos) y, solo si cambió, recogemos.
