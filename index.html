@@ -504,6 +504,7 @@ select.finput option{background:var(--s2);}
   50%{box-shadow:0 0 13px 2px rgba(201,169,110,.32), 1px 2px 5px rgba(0,0,0,.6), -6px 3px 10px rgba(0,0,0,.5);}
 }
 /* estado sonando */
+#shelfView .unit.nowplaying{pointer-events:none;} /* el hueco vacío no reacciona: el toque va al atril */
 #shelfView .unit.nowplaying .scover{opacity:0;} /* la carátula "está" en el atril */
 #shelfView .unit.nowplaying .sdisc{opacity:0;} /* el disco "está" en el tocadiscos */
 #shelfView .sdisc.translucido{opacity:.35;}
@@ -694,7 +695,7 @@ select.finput option{background:var(--s2);}
   box-shadow:0 2px 6px rgba(0,0,0,.5),inset 0 1px 2px rgba(255,255,255,.4);opacity:.9;}
 #shelfView .easel-deco .cover::after{content:'';position:absolute;left:50%;top:48%;transform:translate(-50%,-50%);
   width:6px;height:6px;border-radius:50%;background:#0d0a06;box-shadow:0 0 0 2px rgba(255,255,255,.12);}
-#shelfView .easel-deco.playing .cover{display:block;}
+#shelfView .easel-deco.playing .cover{display:block;pointer-events:auto;cursor:pointer;}
 #shelfView .easel-deco.laton{
   --wire-v:linear-gradient(90deg,#3f3010,#9c7a30 28%,#f4e2a4 50%,#a07c34 70%,#3f3010);
   --wire-base:#5e4a1e; --wire-hi:#f4e2a4; --ball:#d9bf78;
@@ -1003,7 +1004,7 @@ select.finput option{background:var(--s2);}
                   <div class="wire v bleg"></div><div class="foot" style="top:179px;left:70.5px"></div>
                 </div>
                 <div class="plane fp">
-                  <div class="cover" id="shelfEaselCover"><img id="shelfEaselCoverImg" alt="" style="display:none" onerror="this.style.display='none'"></div>
+                  <div class="cover" id="shelfEaselCover" onclick="selectNowPlaying()"><img id="shelfEaselCoverImg" alt="" style="display:none" onerror="this.style.display='none'"></div>
                   <svg class="aframe" viewBox="0 0 150 230" aria-hidden="true">
                     <path class="base" d="M28 186 L71 9 Q75 4 79 9 L122 186"/>
                     <path class="hi"   d="M28 186 L71 9 Q75 4 79 9 L122 186"/>
@@ -1947,13 +1948,27 @@ function setColView(view){
 
 /* ── ESTANTERÍA ─────────────────────────────────────────────── */
 const COL_VIEW_KEY='vinilos_colView';
-const NOWPLAYING_WINDOW_MS=3*3600*1000; // ventana "sonando" tras la última escucha (ajustable)
+const NOWPLAYING_FALLBACK_MS=1.5*3600*1000; // sin duración registrada: ventana fija de 1,5 h
+// La ventana "sonando" dura lo que dura el álbum (duration en segundos). Cuando se cumple,
+// el vinilo deja de considerarse en reproducción y vuelve a su hueco. Sin duración → fallback.
+function nowPlayingWindowMs(vinylId){
+  const v=DB.vinyls.find(x=>String(x.id)===String(vinylId));
+  return (v&&v.duration>0)?v.duration*1000:NOWPLAYING_FALLBACK_MS;
+}
 function nowPlayingVinylId(){
   let last=null;
   for(const p of DB.plays) if(!last||p.ts>last.ts) last=p; // ts ISO: comparable como string
   if(!last) return null;
-  if(Date.now()-new Date(last.ts).getTime()>NOWPLAYING_WINDOW_MS) return null;
+  if(Date.now()-new Date(last.ts).getTime()>nowPlayingWindowMs(last.vinylId)) return null;
   return last.vinylId;
+}
+// El vinilo que suena vive en el atril (easel), no en su hueco: tocar la carátula del
+// atril lo selecciona para poder editarlo/registrarlo.
+function selectNowPlaying(){
+  const id=nowPlayingVinylId();
+  if(id==null) return;
+  const v=DB.vinyls.find(x=>String(x.id)===String(id));
+  if(v) selectV(v.id);
 }
 const SHELF_TONE_KEY='vinilos_shelfTone';
 const SHELF_ROUGH_KEY='vinilos_shelfRough';
@@ -2114,6 +2129,7 @@ let _shelfRenderKey=null;
 let _shelfCols=1;
 let _shelfAnimating=false;
 let _shelfFailsafe=null;
+let _npApplied=null; // id (string) del vinilo que el último applyShelfState pintó como "sonando", o null
 function renderShelf(instant){
   if(colView()!=='shelf'){_shelfRenderKey=null;return;}
   applyShelfWall();
@@ -2152,8 +2168,43 @@ function applyShelfState(instant){
   _colorPlatter(playing?npId:null);
   document.getElementById('shelfPdisc').classList.toggle('on',playing);
   setEaselCover(playing?npId:null);
+  _npApplied=playing?String(npId):null;
+  _npDebug(playing,npId);
   if(instant){void view.offsetWidth;view.classList.remove('instant');}
 }
+// Overlay de diagnóstico (solo localhost): muestra qué vinilo está en el tocadiscos, a qué
+// hora termina su ventana "sonando" y si usa la duración real del álbum o el fallback.
+function _npDebug(playing,npId){
+  if(!DEV_READONLY) return;
+  let el=document.getElementById('npDbg');
+  if(!el){
+    el=document.createElement('div');
+    el.id='npDbg';
+    el.style.cssText='position:absolute;top:4px;left:4px;z-index:50;font:10px/1.35 monospace;'+
+      'color:#7CFC00;background:rgba(0,0,0,.66);padding:3px 6px;border-radius:4px;pointer-events:none;white-space:pre;';
+    const view=document.getElementById('shelfView');
+    if(view) view.appendChild(el);
+  }
+  if(!playing){ el.textContent='dev · nada en el tocadiscos'; return; }
+  let last=null;
+  for(const p of DB.plays) if(!last||p.ts>last.ts) last=p;
+  const v=DB.vinyls.find(x=>String(x.id)===String(npId));
+  const winMs=nowPlayingWindowMs(npId);
+  const src=(v&&v.duration>0)?('duración '+Math.floor(v.duration/60)+':'+String(v.duration%60).padStart(2,'0')):'FALLBACK 1.5h (sin duración)';
+  const pad=n=>String(n).padStart(2,'0');
+  const end=last?new Date(new Date(last.ts).getTime()+winMs):null;
+  const endStr=end?pad(end.getHours())+':'+pad(end.getMinutes()):'??:??';
+  el.textContent='▶ '+(v?v.album:('id '+npId))+'\nfin a las '+endStr+'  ['+src+']';
+}
+// Refresco en vivo: en reposo nada dispara un render, así que cada 60 s comprobamos si la
+// ventana "sonando" ya expiró (estado derivado de los datos) y, solo si cambió, recogemos.
+function _nowPlayingTick(){
+  if(colView()!=='shelf'||currentTab!=='col'||_shelfAnimating) return;
+  const cur=nowPlayingVinylId();
+  const curKey=cur!=null?String(cur):null;
+  if(curKey!==_npApplied) applyShelfState(false);
+}
+setInterval(_nowPlayingTick,60000);
 function setEaselCover(vinylId){
   const easel=document.querySelector('#shelfView .easel-deco');
   if(!easel) return;
@@ -2525,6 +2576,13 @@ function startPickerShelf(){
   const units=Array.from(grid.children);
   if(units.length!==n) return;
 
+  // un vinilo sonando no entra en el sorteo ni se ilumina: se excluye de los candidatos
+  const npId=nowPlayingVinylId();
+  const cand=[]; // índices de unidades elegibles (todas menos la que suena)
+  units.forEach((u,i)=>{ if(npId==null||String(npId)!==u.dataset.id) cand.push(i); });
+  const m=cand.length;
+  if(!m) return; // sólo hay un vinilo y está sonando: nada que elegir
+
   // cancela cualquier picker en curso y arranca limpio
   if(_pickerAbort!==null) _pickerAbort++;
   const myRun=(_pickerAbort===null?0:_pickerAbort);
@@ -2540,36 +2598,39 @@ function startPickerShelf(){
   applyShelfState(true);
   updateBbar();
 
-  const winIdx=Math.floor(Math.random()*n);
+  const winPos=Math.floor(Math.random()*m);
+  const winIdx=cand[winPos];
   _pickerWinnerV=vinyls[winIdx];
 
-  // apagón: oscurece todas menos la primera, mantén un instante y arranca el ticker
-  units.forEach((u,i)=>{ if(i>0) u.classList.add('picker-dim'); });
-  units[0].classList.add('picker-lit');
+  // apagón: oscurece todas, ilumina la primera candidata, mantén un instante y arranca
+  units.forEach(u=>u.classList.add('picker-dim'));
+  units[cand[0]].classList.remove('picker-dim');
+  units[cand[0]].classList.add('picker-lit');
   setTimeout(()=>{
     if(_pickerAbort!==myRun) return;
-    units[0].classList.remove('picker-lit');
-    _runShelfPickerTick(n,winIdx,units,vinyls,myRun);
+    units[cand[0]].classList.remove('picker-lit');
+    _runShelfPickerTick(m,winPos,winIdx,cand,units,vinyls,myRun);
   },300);
 }
 
-function _runShelfPickerTick(n,winIdx,units,vinyls,myRun){
+function _runShelfPickerTick(m,winPos,winIdx,cand,units,vinyls,myRun){
   units.forEach(u=>u.classList.add('picker-dim'));
-  const{totalSteps,delays}=_buildPickTimings(n,winIdx);
-  let step=0,litIdx=-1;
+  const{totalSteps,delays}=_buildPickTimings(m,winPos);
+  let step=0,litPos=-1;
   let nextTime=performance.now();
   function tick(now){
     if(_pickerAbort!==myRun) return;
     if(now<nextTime){ requestAnimationFrame(tick); return; }
-    if(litIdx>=0){units[litIdx].classList.remove('picker-lit');units[litIdx].classList.add('picker-dim');}
-    litIdx=step%n;
+    if(litPos>=0){units[cand[litPos]].classList.remove('picker-lit');units[cand[litPos]].classList.add('picker-dim');}
+    litPos=step%m;
+    const unit=units[cand[litPos]];
     const isLast=step===totalSteps-1;
     if(isLast){
-      units[litIdx].classList.remove('picker-dim');
-      units[litIdx].classList.add('picker-lit');
+      unit.classList.remove('picker-dim');
+      unit.classList.add('picker-lit');
       setTimeout(()=>{
         if(_pickerAbort!==myRun) return;
-        units[litIdx].classList.add('picker-winner');
+        unit.classList.add('picker-winner');
         setTimeout(()=>{
           if(_pickerAbort!==myRun) return;
           _shelfPickerFinish(winIdx,units,vinyls,myRun);
@@ -2577,8 +2638,8 @@ function _runShelfPickerTick(n,winIdx,units,vinyls,myRun){
       },250);
       return;
     }
-    units[litIdx].classList.add('picker-lit');
-    units[litIdx].classList.remove('picker-dim');
+    unit.classList.add('picker-lit');
+    unit.classList.remove('picker-dim');
     nextTime+=delays[step+1];
     step++;
     requestAnimationFrame(tick);
