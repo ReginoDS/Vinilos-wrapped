@@ -532,7 +532,7 @@ select.finput option{background:var(--s2);}
 /* tocadiscos AT-LP60XBT (clon decorativo, mockup v14) */
 #shelfView .player{position:relative;z-index:2;height:134px;display:flex;justify-content:center;
   align-items:flex-end;padding-bottom:28px;animation:shFadeUp .6s .5s ease both;}
-#shelfView .tt{position:relative;width:264px;transform:scale(.65);transform-origin:bottom center;
+#shelfView .tt{position:relative;width:264px;transform:scale(var(--tt-scale,.65));transform-origin:bottom center;
   filter:drop-shadow(0 12px 16px rgba(0,0,0,.65));
   font-family:system-ui,-apple-system,sans-serif;}
 #shelfView .hinge{position:absolute;top:-6px;width:20px;height:8px;z-index:1;
@@ -652,8 +652,8 @@ select.finput option{background:var(--s2);}
 #shelfView .tt::before{left:20px}#shelfView .tt::after{right:20px}
 
 /* atril de alambre «A» (decoración, a la izquierda del tocadiscos) */
-#shelfView .easel-deco{position:absolute;left:8px;bottom:-16px;
-  transform:scale(.78);transform-origin:50% 81.7%;pointer-events:none;}
+#shelfView .easel-deco{position:absolute;left:var(--easel-left,8px);bottom:-16px;
+  transform:scale(var(--easel-scale,.78));transform-origin:50% 81.7%;pointer-events:none;}
 #shelfView .easel-deco .estage{position:relative;width:150px;height:230px;perspective:820px;perspective-origin:50% 42%;}
 #shelfView .easel-deco .easel{position:relative;width:150px;height:230px;transform-style:preserve-3d;}
 #shelfView .easel-deco .epose{position:absolute;inset:0;transform-style:preserve-3d;transform:rotateY(0deg);}
@@ -715,7 +715,7 @@ select.finput option{background:var(--s2);}
   background:linear-gradient(180deg,#6b5230,#3f3019);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 8px 14px rgba(0,0,0,.55);}
 #shelfView .ttcontact{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);z-index:0;
-  width:150px;height:20px;pointer-events:none;
+  width:var(--contact-w,150px);height:20px;pointer-events:none;
   background:radial-gradient(ellipse,rgba(0,0,0,.55),rgba(0,0,0,.25) 45%,transparent 72%);}
 
 .flyDisc{position:fixed;z-index:99;border-radius:50%;pointer-events:none;
@@ -2085,6 +2085,22 @@ function fitShelfGrid(){
   grid.style.gridTemplateColumns=`repeat(${bestCols},${bestCell.toFixed(1)}px)`;
   grid.style.setProperty('--cell',bestCell.toFixed(1)+'px');
   _shelfCols=bestCols;
+  fitShelfTable();
+}
+
+// Escala y posiciona las piezas de la mesa (tocadiscos, atril, sombra) como % del ancho
+// disponible, para que se comporten igual que las carátulas de pared y no se solapen al
+// estrechar. El tocadiscos va centrado (flex 50%); el atril se ancla por su centro a un %
+// del ancho. % calibrados sobre los tamaños/posiciones actuales tomados como el look a 480px.
+function fitShelfTable(){
+  const view=document.getElementById('shelfView');
+  if(!view) return;
+  const W=Math.min(view.clientWidth,480);
+  view.style.setProperty('--tt-scale',(0.358*W/264).toFixed(4));
+  view.style.setProperty('--easel-scale',(0.244*W/150).toFixed(4));
+  view.style.setProperty('--contact-w',(0.313*W).toFixed(1)+'px');
+  // centro del atril al 17.3% del ancho; el box mide 150px (origin 50%), de ahí el -75
+  view.style.setProperty('--easel-left',(0.173*W-75).toFixed(1)+'px');
 }
 
 // Oscurece un hex por un factor 0..1 (para los surcos del disco)
