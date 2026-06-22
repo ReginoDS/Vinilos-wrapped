@@ -705,7 +705,7 @@ select.finput option{background:var(--s2);}
 /* mesa de madera sobre la que descansan tocadiscos y atril */
 #shelfView .vtable{position:absolute;left:0;right:0;bottom:0;z-index:0;
   display:flex;flex-direction:column;align-items:center;pointer-events:none;}
-#shelfView .vtop{width:100%;height:96px;clip-path:polygon(5% 0,95% 0,100% 100%,0 100%);
+#shelfView .vtop{width:100%;height:var(--vtop-h,96px);clip-path:polygon(5% 0,95% 0,100% 100%,0 100%);
   background:
     linear-gradient(180deg,rgba(255,255,255,.13),rgba(0,0,0,.08) 50%,rgba(0,0,0,.20)),
     repeating-linear-gradient(90deg,rgba(0,0,0,.05) 0 3px,rgba(255,255,255,.03) 3px 6px),
@@ -2096,11 +2096,24 @@ function fitShelfTable(){
   const view=document.getElementById('shelfView');
   if(!view) return;
   const W=Math.min(view.clientWidth,480);
-  view.style.setProperty('--tt-scale',(0.358*W/264).toFixed(4));
+  const ttScale=0.358*W/264;
+  view.style.setProperty('--tt-scale',ttScale.toFixed(4));
   view.style.setProperty('--easel-scale',(0.244*W/150).toFixed(4));
   view.style.setProperty('--contact-w',(0.313*W).toFixed(1)+'px');
   // centro del atril al 17.3% del ancho; el box mide 150px (origin 50%), de ahí el -75
   view.style.setProperty('--easel-left',(0.173*W-75).toFixed(1)+'px');
+  // Altura variable de la mesa (.vtop): el canto superior se mantiene a un voladizo constante
+  // por debajo del top del tocadiscos escalado, así en anchos estrechos la mesa no queda
+  // desproporcionadamente alta sobre un objeto diminuto. Calibrado al look de referencia
+  // (W=480 → vtop 96px). objH = altura intrínseca del .tt * ttScale; vtop=96 cuando W=480.
+  const tt=document.getElementById('shelfTT');
+  if(tt){
+    const objH=tt.getBoundingClientRect().height;
+    if(objH>0){
+      const vtop=96+objH*(1-480/W);
+      view.style.setProperty('--vtop-h',Math.max(20,vtop).toFixed(1)+'px');
+    }
+  }
 }
 
 // Oscurece un hex por un factor 0..1 (para los surcos del disco)
