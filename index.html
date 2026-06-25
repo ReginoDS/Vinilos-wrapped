@@ -202,6 +202,34 @@ select.finput{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xm
 select.finput option{background:var(--s2);}
 .macts{display:flex;gap:10px;margin-top:18px;}
 
+/* ADD-VINYL SEARCH BOX */
+.search-box{margin:4px 0 16px;}
+.search-msg{font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.5;text-align:center;}
+.search-acts{display:flex;flex-direction:column;gap:8px;}
+.search-acts .btn:disabled{opacity:.65;cursor:default;}
+.search-note{font-size:11px;margin-top:12px;line-height:1.5;text-align:center;color:var(--accent2);}
+.spinner{display:inline-block;width:13px;height:13px;border:2px solid rgba(201,169,110,.3);border-top-color:var(--accent2);border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px;margin-right:8px;}
+.cover-row{display:flex;gap:10px;align-items:flex-start;}
+.cover-row .finput{flex:1;min-width:0;}
+.cover-prev{width:54px;height:54px;border-radius:6px;object-fit:cover;border:1px solid rgba(255,255,255,.15);flex:0 0 auto;}
+.ac-wrap{position:relative;}
+.ac-results{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:30;background:#1b1b1f;border:1px solid rgba(255,255,255,.14);border-radius:10px;max-height:320px;overflow-y:auto;box-shadow:0 10px 30px rgba(0,0,0,.5);}
+.ac-row{display:flex;gap:10px;align-items:center;padding:8px 10px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.06);}
+.ac-row:last-child{border-bottom:none;}
+.ac-row:hover{background:rgba(255,255,255,.06);}
+.ac-thumb{width:44px;height:44px;border-radius:5px;object-fit:cover;background:rgba(255,255,255,.05);flex:0 0 auto;}
+.ac-info{min-width:0;flex:1;}
+.ac-title{font-size:13px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ac-sub{font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ac-empty{padding:12px;font-size:12px;color:var(--muted);text-align:center;}
+.tracklist{margin:-4px 0 14px;}
+.tracklist-h{font-size:11px;color:var(--muted);margin-bottom:6px;}
+.tl-list{max-height:180px;overflow-y:auto;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:6px 8px;background:rgba(0,0,0,.15);}
+.tl-row{display:flex;gap:8px;align-items:baseline;padding:2px 0;font-size:12px;}
+.tl-pos{color:var(--dim);min-width:28px;flex:0 0 auto;}
+.tl-title{flex:1;min-width:0;}
+.tl-dur{color:var(--muted);flex:0 0 auto;font-variant-numeric:tabular-nums;}
+
 /* GENRES */
 .genres-wrap{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
 .genre-tag{background:var(--s2);border:1px solid var(--border);color:var(--muted);font-size:10px;padding:4px 10px;border-radius:100px;display:flex;align-items:center;gap:5px;cursor:default;}
@@ -813,9 +841,26 @@ select.finput option{background:var(--s2);}
   <div class="mhandle"></div>
   <div class="mtitle">Nuevo vinilo</div>
   <div class="msub">Añade un disco a tu colección</div>
+  <div id="addSearchBox" class="search-box">
+    <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px;">Buscar álbum en Discogs</label>
+    <div class="ac-wrap">
+      <input type="text" id="addSearchInput" class="finput" placeholder="Escribe el álbum…" autocomplete="off" oninput="onSearchInput()">
+      <div id="addSearchResults" class="ac-results" style="display:none"></div>
+    </div>
+    <div class="search-acts" style="margin-top:10px">
+      <button class="btn btn-s" id="addManualBtn" onclick="showRestFieldsManual()">Incluir los datos manualmente</button>
+    </div>
+    <div class="search-note" id="addSearchNote" style="display:none"></div>
+  </div>
+  <div id="addRestFields" style="display:none">
   <div class="field"><label>Álbum</label><input type="text" id="inAlbum" class="finput" placeholder="Título del álbum" autocomplete="off"></div>
   <div class="field"><label>Artista</label><input type="text" id="inArtist" class="finput" placeholder="Nombre del artista" autocomplete="off"></div>
   <div class="field"><label>Edición <span style="color:var(--dim)">(opcional)</span></label><input type="text" id="inEdition" class="finput" placeholder="ej: 10th Anniversary Edition" autocomplete="off"></div>
+  <div id="addTracklist" class="tracklist" style="display:none">
+    <div class="tracklist-h">Tracklist de la edición</div>
+    <div id="addTracklistList" class="tl-list"></div>
+  </div>
+  <div class="field"><label>Prensado <span style="color:var(--dim)">(opcional)</span></label><input type="text" id="inPressing" class="finput" placeholder="ej: Europa · 2020 · Limited Edition" autocomplete="off"></div>
   <div class="field"><label>Año</label><input type="number" id="inYear" class="finput" placeholder="ej: 2021" min="1900" max="2099"></div>
   <div class="field">
     <label>Color del vinilo</label>
@@ -847,11 +892,17 @@ select.finput option{background:var(--s2);}
     <select id="inCountrySelect" class="finput" onchange="onCountrySelect()"><option value="">Selecciona…</option><option value="__new__">Otro país…</option></select>
     <input type="text" id="inCountryNew" class="finput" placeholder="Escribe el país" style="display:none;margin-top:6px" autocomplete="off">
   </div>
-  <div class="field"><label>URL portada <span style="color:var(--dim)">(opcional)</span></label><input type="url" id="inCover" class="finput" placeholder="https://… o URL de Wikipedia" autocomplete="off"></div>
+  <div class="field"><label>URL portada <span style="color:var(--dim)">(opcional)</span></label>
+    <div class="cover-row">
+      <input type="url" id="inCover" class="finput" placeholder="https://… o URL de Wikipedia" autocomplete="off" oninput="updateCoverPreview()">
+      <img id="inCoverPreview" class="cover-prev" alt="" style="display:none">
+    </div>
+  </div>
   <div class="field"><label>Lista de YouTube <span style="color:var(--dim)">(opcional)</span></label><input type="url" id="inYoutube" class="finput" placeholder="https://youtube.com/playlist?list=…" autocomplete="off"></div>
+  </div>
   <div class="macts">
     <button class="btn btn-s" onclick="closeModal('addModal')" style="flex:.5">Cancelar</button>
-    <button class="btn btn-p" onclick="saveVinyl()">Añadir vinilo</button>
+    <button class="btn btn-p" id="addSaveBtn" onclick="saveVinyl()" style="display:none">Añadir vinilo</button>
   </div>
 </div>
 </div>
@@ -868,6 +919,7 @@ select.finput option{background:var(--s2);}
   <div class="field"><label>Álbum</label><input type="text" id="edAlbum" class="finput" autocomplete="off"></div>
   <div class="field"><label>Artista</label><input type="text" id="edArtist" class="finput" autocomplete="off"></div>
   <div class="field"><label>Edición <span style="color:var(--dim)">(opcional)</span></label><input type="text" id="edEdition" class="finput" autocomplete="off"></div>
+  <div class="field"><label>Prensado <span style="color:var(--dim)">(opcional)</span></label><input type="text" id="edPressing" class="finput" autocomplete="off"></div>
   <div class="field"><label>Año</label><input type="number" id="edYear" class="finput" min="1900" max="2099"></div>
   <div class="field">
     <label>Color del vinilo</label>
@@ -2976,7 +3028,7 @@ function updateBbar(){
 // ════════════════════════════════════════════════════════════
 function openAddVinyl(){
   addGenres=[];
-  ['inArtist','inAlbum','inEdition','inCover','inYoutube','inGenreInput','inCountryNew'].forEach(id=>document.getElementById(id).value='');
+  ['inArtist','inAlbum','inEdition','inPressing','inCover','inYoutube','inGenreInput','inCountryNew'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('inYear').value='';
   document.getElementById('inCountrySelect').value='';
   document.getElementById('inCountryNew').style.display='none';
@@ -2991,8 +3043,357 @@ function openAddVinyl(){
   const countries=[...new Set(DB.vinyls.map(v=>v.country).filter(Boolean))].sort();
   const sel=document.getElementById('inCountrySelect');
   sel.innerHTML='<option value="">Selecciona…</option>'+countries.map(c=>`<option value="${h(c)}">${h(c)}</option>`).join('')+'<option value="__new__">Otro país…</option>';
+  resetAddSearchUI();
   openModal('addModal');
-  setTimeout(()=>document.getElementById('inArtist').focus(),350);
+  setTimeout(()=>document.getElementById('addSearchInput').focus(),350);
+}
+
+// ════════════════════════════════════════════════════════════
+//  AUTO-FILL: Discogs (principal) + MusicBrainz (fallback)
+// ════════════════════════════════════════════════════════════
+const DISCOGS_PROXY = 'https://vinilos-discogs-proxy-regino.vercel.app/api';
+const MB_BASE = 'https://musicbrainz.org/ws/2';
+const CAA_BASE = 'https://coverartarchive.org';
+
+// Descripciones de formato que NO aportan info de edición (se filtran)
+const GENERIC_FMT = new Set(['lp','album','vinyl','stereo','mono','single','ep',
+  'maxi-single','12"','7"','10"','45 rpm','33 ⅓ rpm','33 rpm','compilation']);
+
+// Buscador typeahead: resultados planos de la última búsqueda (una fila por
+// versión), nº de secuencia para descartar respuestas atrasadas, temporizador
+// de debounce, caché de búsquedas por texto y caché del detalle /releases/<id>.
+let addResults=[], addSearchSeq=0, addSearchTimer=null, addSearchCache={};
+let addRelCache={};
+
+function resetAddSearchUI(){
+  document.getElementById('addRestFields').style.display='none';
+  document.getElementById('addSaveBtn').style.display='none';
+  document.getElementById('addSearchBox').style.display='block';
+  const note=document.getElementById('addSearchNote');
+  note.style.display='none'; note.textContent='';
+  document.getElementById('addSearchInput').value='';
+  hideSearchResults();
+  hideTracklist();
+  document.getElementById('inPressing').value='';
+  addResults=[]; addRelCache={}; addSearchCache={}; addSearchSeq++;
+  if(addSearchTimer){ clearTimeout(addSearchTimer); addSearchTimer=null; }
+  updateCoverPreview();
+}
+
+function hideSearchResults(){
+  const box=document.getElementById('addSearchResults');
+  if(box){ box.style.display='none'; box.innerHTML=''; }
+}
+
+function showRestFields(){
+  document.getElementById('addRestFields').style.display='block';
+  document.getElementById('addSaveBtn').style.display='';
+}
+
+function showRestFieldsManual(){
+  showRestFields();
+  hideTracklist();
+  hideSearchResults();
+  document.getElementById('addSearchBox').style.display='none';
+  setTimeout(()=>document.getElementById('inAlbum').focus(),50);
+}
+
+// ── Buscador typeahead estilo Discogs ────────────────────────
+// Cada pulsación reinicia el debounce; tras ~400ms sin teclear se lanza UNA
+// búsqueda. addSearchSeq descarta respuestas que lleguen fuera de orden.
+function onSearchInput(){
+  const q=document.getElementById('addSearchInput').value.trim();
+  if(addSearchTimer) clearTimeout(addSearchTimer);
+  if(q.length<3){ hideSearchResults(); return; }
+  addSearchTimer=setTimeout(()=>runSearch(q),400);
+}
+
+async function runSearch(q){
+  const seq=++addSearchSeq;
+  showSearchLoading();
+  let results=addSearchCache[q];
+  if(!results){
+    try{ results=await searchDiscogs(q); }catch(e){ results=[]; }
+    addSearchCache[q]=results;
+  }
+  if(seq!==addSearchSeq) return;   // ya hay una búsqueda más nueva → descartar esta
+  addResults=results;
+  renderSearchResults(results);
+}
+
+function showSearchLoading(){
+  const box=document.getElementById('addSearchResults');
+  box.innerHTML='<div class="ac-empty"><span class="spinner"></span>Buscando…</div>';
+  box.style.display='block';
+}
+
+// Una fila por versión: miniatura + álbum (con edición) + artista · prensado.
+function renderSearchResults(results){
+  const box=document.getElementById('addSearchResults');
+  box.innerHTML='';
+  if(!results.length){
+    box.innerHTML='<div class="ac-empty">Sin resultados en Discogs</div>';
+    box.style.display='block';
+    return;
+  }
+  for(const r of results){
+    const p=parseDiscogsTitle(r.title);
+    const row=document.createElement('div'); row.className='ac-row';
+    const img=document.createElement('img'); img.className='ac-thumb'; img.alt='';
+    const thumb=r.thumb||r.cover_image||''; if(thumb) img.src=thumb;
+    const info=document.createElement('div'); info.className='ac-info';
+    const title=document.createElement('div'); title.className='ac-title';
+    title.textContent=p.album+(p.edition?' ('+p.edition+')':'');   // textContent escapa solo
+    const sub=document.createElement('div'); sub.className='ac-sub';
+    sub.textContent=[p.artist, pressingLabel(r,null)].filter(Boolean).join(' · ');
+    info.appendChild(title); info.appendChild(sub);
+    row.appendChild(img); row.appendChild(info);
+    row.addEventListener('click',()=>pickResult(r));
+    box.appendChild(row);
+  }
+  box.style.display='block';
+}
+
+// Al elegir una fila: rellena álbum/artista al instante y carga el resto.
+async function pickResult(cand){
+  const p=parseDiscogsTitle(cand.title);
+  cand._album=p.album; cand._artist=p.artist; cand._editionName=p.edition;
+  document.getElementById('addSearchInput').value=p.album;
+  hideSearchResults();
+  await fillFromCandidate(cand);
+}
+
+// Parsea un título de Discogs ("Artista - Álbum (Edición)") en sus partes. La
+// edición es el paréntesis final del título (convención de Discogs para
+// distinguir versiones con nombre: "(The Moonlight Edition)"). "" = estándar.
+function parseDiscogsTitle(title){
+  const t=String(title||'');
+  const i=t.indexOf(' - ');
+  let artist='', albumFull=t;
+  if(i!==-1){ artist=t.slice(0,i).trim(); albumFull=t.slice(i+3).trim(); }
+  artist=artist.replace(/\s*\(\d+\)\s*$/,'');   // Discogs añade "(2)" para desambiguar homónimos
+  const m=albumFull.match(/\(([^()]*)\)\s*$/);
+  const edition=m?m[1].trim():'';
+  const album=m?albumFull.slice(0,m.index).trim():albumFull;
+  return {artist, album, edition};
+}
+
+// Etiqueta de prensado: país · año · variante (Reissue, Limited Edition, Picture Disc…).
+function pressingLabel(s, rel){
+  const country=(rel&&rel.country)||s.country||'';
+  const year=(rel&&rel.year)||s.year||'';
+  const extra=editionFromFormats((rel&&rel.formats)||s.formats||[]);
+  return [country, (year && String(year)!=='0') ? String(year) : '', extra].filter(Boolean).join(' · ');
+}
+
+function applyFetchedData(d, cover){
+  // Se reasignan siempre (no solo si hay valor) para que al elegir otra versión
+  // los campos reflejen la nueva y no queden restos de la anterior.
+  if(d.album!==undefined) document.getElementById('inAlbum').value = d.album || '';
+  if(d.artist!==undefined) document.getElementById('inArtist').value = d.artist || '';
+  document.getElementById('inEdition').value = d.edition || '';
+  document.getElementById('inPressing').value = d.pressing || '';
+  document.getElementById('inYear').value = d.year || '';
+  if(d.country) setCountryValue(d.country); else resetCountry();
+  fillDuration('in', d.duration || 0);
+  addGenres = (d.genres && d.genres.length) ? [...new Set(d.genres.map(g=>g.toLowerCase()))] : [];
+  renderGenreTagsNew();
+  if(cover) document.getElementById('inCover').value=cover;
+  updateCoverPreview();
+  // color y youtube: nunca se rellenan automáticamente
+}
+
+// Miniatura de la portada junto al input. Se oculta si no hay URL o si la
+// imagen no carga (URL inválida o rota).
+function updateCoverPreview(){
+  const url=document.getElementById('inCover').value.trim();
+  const img=document.getElementById('inCoverPreview');
+  if(!url){ img.style.display='none'; img.removeAttribute('src'); return; }
+  img.onload=()=>{ img.style.display=''; };
+  img.onerror=()=>{ img.style.display='none'; img.removeAttribute('src'); };
+  img.src=url;
+}
+
+function resetCountry(){
+  document.getElementById('inCountrySelect').value='';
+  document.getElementById('inCountryNew').style.display='none';
+}
+
+function setCountryValue(country){
+  const sel=document.getElementById('inCountrySelect');
+  if(![...sel.options].some(o=>o.value===country)){
+    const opt=document.createElement('option');
+    opt.value=country; opt.textContent=country;
+    const newOpt=[...sel.options].find(o=>o.value==='__new__');
+    sel.insertBefore(opt, newOpt);
+  }
+  sel.value=country;
+  document.getElementById('inCountryNew').style.display='none';
+}
+
+// ── Discogs ──────────────────────────────────────────────────
+// Búsqueda por título (typeahead): solo q, sin artista. Una fila por versión.
+async function searchDiscogs(q){
+  const sres=await discogsFetch('database/search', { q, type:'release', format:'Vinyl', per_page:'15' });
+  if(!sres || !sres.ok) return [];
+  return (await sres.json()).results||[];
+}
+
+// Pide el detalle de la versión elegida, lo mapea y vuelca los datos en el
+// formulario. La portada es la de esa versión en Discogs; si faltara, MusicBrainz.
+async function fillFromCandidate(cand){
+  const note=document.getElementById('addSearchNote');
+  note.style.display='block'; note.style.color='var(--muted)';
+  note.textContent='Cargando datos de la versión…';
+
+  // Cache por id: solo se pide /releases/<id> la primera vez que se elige esta
+  // versión. Reelegirla no dispara otra query.
+  let rel=addRelCache[cand.id];
+  if(rel===undefined){
+    rel=null;
+    try{ const rres=await discogsFetch('releases/'+cand.id); if(rres && rres.ok) rel=await rres.json(); }catch(e){}
+    addRelCache[cand.id]=rel;
+  }
+  const data=mapDiscogs(cand, rel);
+  let cover=cand.cover_image||'';
+  if(!cover){   // Discogs casi siempre trae portada; si no, fallback a MusicBrainz
+    try{ const mb=await fetchFromMusicBrainz(data.album, data.artist); if(mb) cover=mb.cover; }catch(e){}
+  }
+  applyFetchedData(data, cover);
+  renderTracklist(rel);
+  showRestFields();
+  note.style.display='block'; note.style.color='var(--accent2)';
+  note.textContent='Datos de Discogs · revisa antes de guardar';
+}
+
+// Tracklist de solo lectura: ayuda a distinguir ediciones. Se muestra solo si
+// el detalle del release trae pistas; no es un campo editable ni se guarda.
+function renderTracklist(rel){
+  const box=document.getElementById('addTracklist');
+  const list=document.getElementById('addTracklistList');
+  list.innerHTML='';
+  const tracks=((rel&&rel.tracklist)||[]).filter(t=>!t.type_ || t.type_==='track');
+  if(!tracks.length){ hideTracklist(); return; }
+  for(const t of tracks){
+    const row=document.createElement('div'); row.className='tl-row';
+    const pos=document.createElement('span'); pos.className='tl-pos'; pos.textContent=t.position||'';
+    const title=document.createElement('span'); title.className='tl-title'; title.textContent=t.title||'';
+    const dur=document.createElement('span'); dur.className='tl-dur'; dur.textContent=(t.duration||'').trim();
+    row.appendChild(pos); row.appendChild(title); row.appendChild(dur);
+    list.appendChild(row);
+  }
+  box.style.display='';
+}
+
+function hideTracklist(){
+  const box=document.getElementById('addTracklist');
+  if(box) box.style.display='none';
+  const list=document.getElementById('addTracklistList');
+  if(list) list.innerHTML='';
+}
+
+// Llama al proxy (ruta fija /api/proxy; el path de Discogs va en ?path=).
+// Reintenta solo si la IP de salida está saturada (HTTP 429): en Vercel cada
+// invocación puede salir por otra IP, así que reintentar ayuda. Un 404/200 no.
+async function discogsFetch(path, params, tries=3){
+  const qs=new URLSearchParams({ path, ...(params||{}) }).toString();
+  const url=`${DISCOGS_PROXY}/proxy?${qs}`;
+  for(let i=0;i<tries;i++){
+    let res;
+    try{ res=await fetch(url); }
+    catch(e){ if(i===tries-1) return null; await new Promise(r=>setTimeout(r,700)); continue; }
+    if(res.status!==429) return res;          // éxito o "no encontrado" → no reintentar
+    if(i===tries-1) return res;               // agotados los intentos → devuelve el 429
+    await new Promise(r=>setTimeout(r,700));   // IP saturada → espera y reintenta
+  }
+  return null;
+}
+
+function mapDiscogs(s, rel){
+  const out={ album:'', artist:'', edition:'', pressing:'', year:null, country:'', genres:[], duration:null };
+  out.album = s._album || '';
+  out.artist = s._artist || '';
+  out.year = (rel&&rel.year) || parseInt(s.year) || null;
+  out.country = (rel&&rel.country) || s.country || '';
+  const g = [].concat((rel&&rel.genres)||s.genre||[], (rel&&rel.styles)||s.style||[]);
+  out.genres = [...new Set(g.map(x=>String(x).toLowerCase()))];
+  // Edición = nombre del título ("The Moonlight Edition"…); prensado = país·año·variante.
+  out.edition = s._editionName || '';
+  out.pressing = pressingLabel(s, rel);
+  out.duration = durationFromTracklist((rel&&rel.tracklist)||[]);
+  return out;
+}
+
+function editionFromFormats(formats){
+  const parts=[];
+  for(const f of formats){
+    for(const d of (f.descriptions||[])){
+      if(!GENERIC_FMT.has(d.trim().toLowerCase())) parts.push(d.trim());
+    }
+    // f.text suele traer info distintiva del prensado (ej. "Los Angeles Pressing",
+    // "Deluxe Edition"), que no está en descriptions. Es lo que mejor diferencia.
+    if(f.text && f.text.trim()) parts.push(f.text.trim());
+  }
+  return [...new Set(parts)].join(', ');
+}
+
+function durationFromTracklist(tracklist){
+  const tracks=tracklist.filter(t=>!t.type_ || t.type_==='track');
+  let total=0, counted=0;
+  for(const t of tracks){
+    const dur=(t.duration||'').trim();
+    if(!dur) continue;
+    const p=dur.split(':').map(n=>parseInt(n)||0);
+    let secs = p.length===3 ? p[0]*3600+p[1]*60+p[2] : p.length===2 ? p[0]*60+p[1] : p[0];
+    if(secs>0){ total+=secs; counted++; }
+  }
+  if(counted===0 || counted < tracks.length) return null; // vacío/incompleto → lo cubre MB
+  return total;
+}
+
+// ── MusicBrainz + Cover Art Archive ──────────────────────────
+async function fetchFromMusicBrainz(album, artist){
+  const q=`release:"${album}" AND artist:"${artist}"`;
+  const sres=await fetch(`${MB_BASE}/release/?query=${encodeURIComponent(q)}&fmt=json&limit=5`);
+  if(!sres.ok) return null;
+  const rels=(await sres.json()).releases||[];
+  if(!rels.length) return null;
+  const best=rels[0];
+  let det=null;
+  try{ const dres=await fetch(`${MB_BASE}/release/${best.id}?inc=recordings+genres&fmt=json`); if(dres.ok) det=await dres.json(); }catch(e){}
+  const fields=mapMusicBrainz(best, det);
+  const cover=await fetchCover(best.id, best['release-group'] && best['release-group'].id);
+  return { fields, cover };
+}
+
+function mapMusicBrainz(s, det){
+  const out={ edition:'', year:null, country:'', genres:[], duration:null };
+  const date=(det&&det.date)||s.date||'';
+  out.year = date ? (parseInt(date.slice(0,4))||null) : null;
+  out.country = (det&&det.country)||s.country||'';
+  const gsrc=(det&&det.genres)||s.genres||[];
+  out.genres=[...new Set(gsrc.map(g=>(g.name||'').toLowerCase()).filter(Boolean))];
+  if(det&&det.media){
+    let total=0, ok=true, n=0;
+    for(const m of det.media){ for(const t of (m.tracks||[])){ if(t.length){ total+=t.length; n++; } else ok=false; } }
+    if(n>0 && ok) out.duration=Math.round(total/1000);
+  }
+  return out;
+}
+
+async function fetchCover(releaseId, rgId){
+  const urls=[`${CAA_BASE}/release/${releaseId}`];
+  if(rgId) urls.push(`${CAA_BASE}/release-group/${rgId}`);
+  for(const url of urls){
+    try{
+      const r=await fetch(url,{headers:{'Accept':'application/json'}});
+      if(!r.ok) continue;
+      const imgs=(await r.json()).images||[];
+      const front=imgs.find(im=>im.front)||imgs[0];
+      if(front){ return (front.thumbnails && (front.thumbnails['500']||front.thumbnails.large))||front.image; }
+    }catch(e){}
+  }
+  return '';
 }
 
 function onCountrySelect(){
@@ -3035,6 +3436,7 @@ document.getElementById('inCover').addEventListener('blur', function() {
     const filename = decodeURIComponent(m[1]);
     this.value = `https://en.wikipedia.org/w/index.php?title=Special:FilePath/${encodeURIComponent(filename)}&width=300`;
   }
+  updateCoverPreview();
 });
 
 function saveVinyl(){
@@ -3042,12 +3444,13 @@ function saveVinyl(){
   const al=document.getElementById('inAlbum').value.trim();
   if(!ar||!al){ showToast('Artista y álbum son obligatorios'); return; }
   const ed=document.getElementById('inEdition').value.trim();
+  const pr=document.getElementById('inPressing').value.trim();
   const yr=parseInt(document.getElementById('inYear').value)||null;
   const cov=document.getElementById('inCover').value.trim();
   const yt=document.getElementById('inYoutube').value.trim();
   const csel=document.getElementById('inCountrySelect').value;
   const country=csel==='__new__'?document.getElementById('inCountryNew').value.trim():csel;
-  DB.addVinyl({artist:ar,album:al,edition:ed,year:yr,genres:[...addGenres],country,cover:cov,youtube:yt,color:addColor||null,translucido:document.getElementById('inTranslucido').checked,duration:durationToSeconds('in')});
+  DB.addVinyl({artist:ar,album:al,edition:ed,pressing:pr,year:yr,genres:[...addGenres],country,cover:cov,youtube:yt,color:addColor||null,translucido:document.getElementById('inTranslucido').checked,duration:durationToSeconds('in')});
   closeModal('addModal');
   renderAll();
   showToast('Vinilo añadido ✓');
@@ -3066,6 +3469,7 @@ function openEditVinyl(){
   document.getElementById('edArtist').value = v.artist||'';
   document.getElementById('edAlbum').value = v.album||'';
   document.getElementById('edEdition').value = v.edition||'';
+  document.getElementById('edPressing').value = v.pressing||'';
   document.getElementById('edYear').value = v.year||'';
   document.getElementById('edCover').value = v.cover||'';
   document.getElementById('edYoutube').value = v.youtube||'';
@@ -3121,12 +3525,13 @@ function saveEdit(){
   const al=document.getElementById('edAlbum').value.trim();
   if(!ar||!al){ showToast('Artista y álbum son obligatorios'); return; }
   const ed=document.getElementById('edEdition').value.trim();
+  const pr=document.getElementById('edPressing').value.trim();
   const yr=parseInt(document.getElementById('edYear').value)||null;
   const cov=document.getElementById('edCover').value.trim();
   const yt=document.getElementById('edYoutube').value.trim();
   const csel=document.getElementById('edCountrySelect').value;
   const country=csel==='__new__'?document.getElementById('edCountryNew').value.trim():csel;
-  DB.editVinyl(selV.id,{artist:ar,album:al,edition:ed,year:yr,genres:[...editGenres],country,cover:cov,youtube:yt,color:editColor||null,translucido:document.getElementById('edTranslucido').checked,duration:durationToSeconds('ed')});
+  DB.editVinyl(selV.id,{artist:ar,album:al,edition:ed,pressing:pr,year:yr,genres:[...editGenres],country,cover:cov,youtube:yt,color:editColor||null,translucido:document.getElementById('edTranslucido').checked,duration:durationToSeconds('ed')});
   selV=DB.vinyls.find(x=>x.id===selV.id)||null;
   closeModal('editModal');
   renderAll();
