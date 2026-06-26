@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
 <meta name="theme-color" content="#0a0a0a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
@@ -222,6 +222,13 @@ select.finput option{background:var(--s2);}
 .ac-title{font-size:13px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .ac-sub{font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .ac-empty{padding:12px;font-size:12px;color:var(--muted);text-align:center;}
+/* Modo búsqueda: hoja alta y estable + lista de resultados en flujo, de modo
+   que el input quede arriba y la lista tenga sitio por encima del teclado (y no
+   se aplaste al cerrarse). Depende de interactive-widget=resizes-content. */
+#addModal.searching .modal{height:90dvh;display:flex;flex-direction:column;}
+#addModal.searching #addSearchBox{flex:1;min-height:0;display:flex;flex-direction:column;margin-bottom:0;}
+#addModal.searching .ac-wrap{flex:1;min-height:0;display:flex;flex-direction:column;}
+#addModal.searching .ac-results{position:static;flex:0 1 auto;min-height:0;max-height:100%;margin-top:8px;}
 .tracklist{margin:-4px 0 14px;}
 .tracklist-h{font-size:11px;color:var(--muted);margin-bottom:6px;}
 .tl-list{max-height:180px;overflow-y:auto;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:6px 8px;background:rgba(0,0,0,.15);}
@@ -3066,6 +3073,7 @@ let addResults=[], addSearchSeq=0, addSearchTimer=null, addSearchCache={};
 let addRelCache={};
 
 function resetAddSearchUI(){
+  document.getElementById('addModal').classList.add('searching');
   document.getElementById('addRestFields').style.display='none';
   document.getElementById('addSaveBtn').style.display='none';
   document.getElementById('addSearchBox').style.display='block';
@@ -3086,6 +3094,7 @@ function hideSearchResults(){
 }
 
 function showRestFields(){
+  document.getElementById('addModal').classList.remove('searching');
   document.getElementById('addRestFields').style.display='block';
   document.getElementById('addSaveBtn').style.display='';
 }
