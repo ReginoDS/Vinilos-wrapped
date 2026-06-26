@@ -228,11 +228,12 @@ select.finput option{background:var(--s2);}
    fija abajo con Cancelar + "Incluir los datos manualmente" del mismo tamaño,
    siempre visibles (los resultados nunca pasan por debajo). Depende de
    interactive-widget=resizes-content para quedar por encima del teclado.
-   .ac-wrap usa display:contents para que el input y la lista sean hijos flex
-   directos de #addSearchBox. */
-#addModal.searching .modal{height:90dvh;display:flex;flex-direction:column;}
+   Cadena flex con caja real en cada nivel (.modal → #addSearchBox → .ac-wrap →
+   .ac-results); NO se usa display:contents (frágil en WebView). OJO: #addSearchBox
+   NO debe recibir display:block inline desde JS, o rompe la cadena flex. */
+#addModal.searching .modal{height:90dvh;display:flex;flex-direction:column;overflow:hidden;}
 #addModal.searching #addSearchBox{flex:1;min-height:0;display:flex;flex-direction:column;margin-bottom:0;}
-#addModal.searching .ac-wrap{display:contents;}
+#addModal.searching .ac-wrap{flex:1;min-height:0;display:flex;flex-direction:column;}
 #addModal.searching #addSearchInput{flex:0 0 auto;}
 #addModal.searching .ac-results{position:static;flex:1 1 auto;min-height:0;max-height:none;margin-top:8px;}
 #addModal.searching .macts{flex:0 0 auto;}
@@ -3083,7 +3084,7 @@ function resetAddSearchUI(){
   document.getElementById('addModal').classList.add('searching');
   document.getElementById('addRestFields').style.display='none';
   document.getElementById('addSaveBtn').style.display='none';
-  document.getElementById('addSearchBox').style.display='block';
+  document.getElementById('addSearchBox').style.display='';
   const note=document.getElementById('addSearchNote');
   note.style.display='none'; note.textContent='';
   document.getElementById('addSearchInput').value='';

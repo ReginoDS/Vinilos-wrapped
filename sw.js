@@ -1,5 +1,5 @@
 // Service Worker — Vinilos PWA
-const APP_VERSION = '12.3';
+const APP_VERSION = '12.4';
 const CACHE = 'vinilos-v' + APP_VERSION;
 const PRECACHE = ['./manifest.json'];
 
