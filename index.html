@@ -205,7 +205,7 @@ select.finput option{background:var(--s2);}
 /* ADD-VINYL SEARCH BOX */
 .search-box{margin:4px 0 16px;}
 .search-msg{font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.5;text-align:center;}
-.search-acts{display:flex;flex-direction:column;gap:8px;}
+.search-acts{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
 .search-acts .btn:disabled{opacity:.65;cursor:default;}
 .search-note{font-size:11px;margin-top:12px;line-height:1.5;text-align:center;color:var(--accent2);}
 .spinner{display:inline-block;width:13px;height:13px;border:2px solid rgba(201,169,110,.3);border-top-color:var(--accent2);border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px;margin-right:8px;}
@@ -222,13 +222,17 @@ select.finput option{background:var(--s2);}
 .ac-title{font-size:13px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .ac-sub{font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .ac-empty{padding:12px;font-size:12px;color:var(--muted);text-align:center;}
-/* Modo búsqueda: hoja alta y estable + lista de resultados en flujo, de modo
-   que el input quede arriba y la lista tenga sitio por encima del teclado (y no
-   se aplaste al cerrarse). Depende de interactive-widget=resizes-content. */
+/* Modo búsqueda: hoja alta y estable con tres zonas — barra de búsqueda fija
+   arriba, resultados scrollables en medio (único scroll), botón "incluir
+   manualmente" fijo abajo. Depende de interactive-widget=resizes-content para
+   quedar por encima del teclado. .ac-wrap usa display:contents para que el
+   input y la lista sean hijos flex directos de #addSearchBox. */
 #addModal.searching .modal{height:90dvh;display:flex;flex-direction:column;}
 #addModal.searching #addSearchBox{flex:1;min-height:0;display:flex;flex-direction:column;margin-bottom:0;}
-#addModal.searching .ac-wrap{flex:1;min-height:0;display:flex;flex-direction:column;}
-#addModal.searching .ac-results{position:static;flex:0 1 auto;min-height:0;max-height:100%;margin-top:8px;}
+#addModal.searching .ac-wrap{display:contents;}
+#addModal.searching #addSearchInput{flex:0 0 auto;}
+#addModal.searching .ac-results{position:static;flex:1 1 auto;min-height:0;max-height:none;margin-top:8px;}
+#addModal.searching .search-acts{flex:0 0 auto;margin-top:auto;}
 .tracklist{margin:-4px 0 14px;}
 .tracklist-h{font-size:11px;color:var(--muted);margin-bottom:6px;}
 .tl-list{max-height:180px;overflow-y:auto;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:6px 8px;background:rgba(0,0,0,.15);}
@@ -854,7 +858,7 @@ select.finput option{background:var(--s2);}
       <input type="text" id="addSearchInput" class="finput" placeholder="Escribe el álbum…" autocomplete="off" oninput="onSearchInput()">
       <div id="addSearchResults" class="ac-results" style="display:none"></div>
     </div>
-    <div class="search-acts" style="margin-top:10px">
+    <div class="search-acts">
       <button class="btn btn-s" id="addManualBtn" onclick="showRestFieldsManual()">Incluir los datos manualmente</button>
     </div>
     <div class="search-note" id="addSearchNote" style="display:none"></div>
